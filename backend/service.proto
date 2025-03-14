@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+service LoggerService {
+  rpc LogRequest (LogMessage) returns (LogResponse);
+}
+
+message LogMessage {
+  string timestamp = 1;
+  string request_id = 2;
+  string log_level = 3;
+  string message = 4;
+}
+
+message LogResponse {
+  string status = 1;
+}
