@@ -1,0 +1,186 @@
+import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/custom.css";
+
+export default function Dashboard({ role }) {
+  const [selectedMenu, setSelectedMenu] = useState("home");
+
+  const menuItems = [
+    { key: "home", label: "Home", roles: ["admin", "creator", "approver"] },
+    { key: "manageUsers", label: "Manage Users", roles: ["admin"] },
+    { key: "createTransaction", label: "Create Transaction", roles: ["creator", "admin"] },
+    { key: "approvePayments", label: "Approve Payments", roles: ["approver", "admin"] },
+    { key: "reports", label: "Reports", roles: ["admin", "creator", "approver"] },
+  ];
+
+  const renderHome = () => (
+    <div className="container-fluid">
+      <div className="row g-4 mb-4">
+        <div className="col-md-4">
+          <div className="card gradient-card shadow-sm text-white">
+            <div className="card-body">
+              <h5 className="card-title">Account Balance</h5>
+              <h3>₹ 2,45,000</h3>
+              <p>Updated just now</p>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className="card gradient-card-2 shadow-sm text-white">
+            <div className="card-body">
+              <h5 className="card-title">Approval Status</h5>
+              <h3>5 Pending</h3>
+              <p>Awaiting action</p>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className="card gradient-card-3 shadow-sm text-white">
+            <div className="card-body">
+              <h5 className="card-title">Transactions Today</h5>
+              <h3>23</h3>
+              <p>Including drafts</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card shadow-sm mb-4">
+        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <span>Transaction History</span>
+          <button className="btn btn-light btn-sm">⬇ Download History</button>
+        </div>
+        <div className="table-responsive">
+          <table className="table table-hover modern-table mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>14 Aug 2025</td>
+                <td>Credit</td>
+                <td>₹ 15,000</td>
+                <td><span className="badge bg-success">Completed</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>14 Aug 2025</td>
+                <td>Debit</td>
+                <td>₹ 7,500</td>
+                <td><span className="badge bg-warning">Pending</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>13 Aug 2025</td>
+                <td>Credit</td>
+                <td>₹ 25,000</td>
+                <td><span className="badge bg-danger">Failed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    const menu = menuItems.find((item) => item.key === selectedMenu);
+    if (!menu.roles.includes(role)) {
+      return <div className="alert alert-danger">You are restricted</div>;
+    }
+    if (menu.key === "home") return renderHome();
+    return (
+      <div className="p-3">
+        <h4>{menu.label}</h4>
+        <p>Content for {menu.label}</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="d-flex dashboard-container">
+      <div className="sidebar bg-dark text-white p-3">
+        <h4 className="mb-4">Banking Portal</h4>
+        {menuItems.map((item) => (
+          <button
+            key={item.key}
+            className={`btn w-100 mb-2 text-start ${selectedMenu === item.key ? "btn-primary" : "btn-secondary"}`}
+            onClick={() => setSelectedMenu(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-grow-1 p-4 bg-light">{renderContent()}</div>
+    </div>
+  );
+}
+
+
+
+
+.dashboard-container {
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  border: none;
+  border-radius: 10px;
+}
+
+.gradient-card-2 {
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  border: none;
+  border-radius: 10px;
+}
+
+.gradient-card-3 {
+  background: linear-gradient(135deg, #43cea2, #185a9d);
+  border: none;
+  border-radius: 10px;
+}
+
+.card {
+  border-radius: 10px;
+}
+
+.modern-table thead {
+  background: #0d6efd;
+  color: white;
+}
+
+.modern-table tbody tr:hover {
+  background: #f1f5ff;
+}
+
+.badge {
+  font-size: 0.85rem;
+}
+
+
+
+
+import React from "react";
+import Dashboard from "./components/Dashboard";
+import "./styles/custom.css";
+
+function App() {
+  // Role will later come from backend
+  const role = "creator"; // admin | creator | approver
+  return <Dashboard role={role} />;
+}
+
+export default App;
