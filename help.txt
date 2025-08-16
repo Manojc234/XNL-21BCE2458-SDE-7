@@ -246,4 +246,104 @@ function App() {
 }
 
 export default App;
+
+
+
+public class TableOf10 {
+    public static void main(String[] args) {
+        int num = 10;
+        for (int i = 1; i <= 10; i++) {
+            System.out.println(num + " x " + i + " = " + (num * i));
+        }
+    }
+}
+
  
+public class FibonacciSeries {
+    public static void main(String[] args) {
+        int n = 10;
+        int a = 0, b = 0, c = 1;
+
+        System.out.print("Fibonacci Series: ");
+        for (int i = 1; i <= n; i++) {
+            System.out.print(a + " ");
+            a = b;
+            b = c;
+            c = a + b;
+        }
+    }
+}
+
+import java.util.Scanner;
+
+public class OddEvenCheck {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter a number: ");
+        int num = sc.nextInt();
+
+        if (num % 2 == 0) {
+            System.out.println(num + " is Even.");
+        } else {
+            System.out.println(num + " is Odd.");
+        }
+        sc.close();
+    }
+}
+
+
+import java.util.Scanner;
+
+public class LargestOfTwo {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter first number: ");
+        int num1 = sc.nextInt();
+
+        System.out.print("Enter second number: ");
+        int num2 = sc.nextInt();
+
+        if (num1 > num2) {
+            System.out.println(num1 + " is larger.");
+        } else if (num2 > num1) {
+            System.out.println(num2 + " is larger.");
+        } else {
+            System.out.println("Both numbers are equal.");
+        }
+        sc.close();
+    }
+}
+
+
+import java.util.Arrays;
+
+public class ArraySortExample {
+    public static void main(String[] args) {
+        int[] arr = {45, 12, 67, 23, 89, 5};
+
+        System.out.println("Original Array: " + Arrays.toString(arr));
+
+        Arrays.sort(arr);
+        System.out.println("Sorted Array: " + Arrays.toString(arr));
+    }
+}
+
+
+
+import java.util.Arrays;
+
+public class ArrayReverseExample {
+    public static void main(String[] args) {
+        int[] arr = {10, 20, 30, 40, 50};
+
+        System.out.println("Original Array: " + Arrays.toString(arr));
+
+        System.out.print("Reversed Array: [");
+        for (int i = arr.length - 1; i >= 0; i--) {
+            System.out.print(arr[i]);
+            if (i != 0) System.out.print(", ");
+        }
+        System.out.println("]");
+    }
+}
