@@ -1,20 +1,26 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../styles/custom.css";
+import "../Styles/custom.css";
+import ScLogo from "../assets/ScLogo.jpg";
+import Logout from "../assets/Logout.png";
+import user from "../assets/user.jpg";
+import Home from "../assets/Home.png";
+import payroll from "../assets/payroll.png";
 
-export default function Dashboard({ role }) {
+function Dashboard({ role }) {
   const [selectedMenu, setSelectedMenu] = useState("home");
 
   const menuItems = [
-    { key: "home", label: "Home", roles: ["admin", "creator", "approver"] },
-    { key: "manageUsers", label: "Manage Users", roles: ["admin"] },
-    { key: "createTransaction", label: "Create Transaction", roles: ["creator", "admin"] },
-    { key: "approvePayments", label: "Approve Payments", roles: ["approver", "admin"] },
-    { key: "reports", label: "Reports", roles: ["admin", "creator", "approver"] },
+    { key: "home",label: "HOME", img:<img class="logo4" src={Home} alt="none"/>,roles: ["admin", "creator", "approver"] },
+    { key: "manageUsers", label: "MANAGE",img:<img class="logo4" src={payroll} alt="none"/>, roles: ["admin"] },
+    { key: "createTransaction", label: "CREATE",img:<img class="logo4" src={payroll} alt="none"/>, roles: ["creator", "admin"] },
+    { key: "approvePayments", label: "APPROVE",img:<img class="logo4" src={Home} alt="none"/>, roles: ["approver", "admin"] },
+    { key: "reports", label: "REPORTS",img:<img class="logo4" src={Home} alt="none"/>, roles: ["admin", "creator", "approver"] },
   ];
 
   const renderHome = () => (
     <div className="container-fluid">
+      <div className="nav"></div>
       <div className="row g-4 mb-4">
         <div className="col-md-4">
           <div className="card gradient-card shadow-sm text-white">
@@ -46,7 +52,7 @@ export default function Dashboard({ role }) {
       </div>
 
       <div className="card shadow-sm mb-4">
-        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div className="card-header text-white d-flex justify-content-between align-items-center">
           <span>Transaction History</span>
           <button className="btn btn-light btn-sm">⬇ Download History</button>
         </div>
@@ -65,7 +71,7 @@ export default function Dashboard({ role }) {
               <tr>
                 <td>1</td>
                 <td>14 Aug 2025</td>
-                <td>Credit</td>
+                <td>Debit</td>
                 <td>₹ 15,000</td>
                 <td><span className="badge bg-success">Completed</span></td>
               </tr>
@@ -79,7 +85,7 @@ export default function Dashboard({ role }) {
               <tr>
                 <td>3</td>
                 <td>13 Aug 2025</td>
-                <td>Credit</td>
+                <td>Debit</td>
                 <td>₹ 25,000</td>
                 <td><span className="badge bg-danger">Failed</span></td>
               </tr>
@@ -106,77 +112,133 @@ export default function Dashboard({ role }) {
 
   return (
     <div className="d-flex dashboard-container">
-      <div className="sidebar bg-dark text-white p-3">
-        <h4 className="mb-4">Banking Portal</h4>
+      <div className="bar text-white p-3">
+        <img class="logo" src={ScLogo} alt="none"/>
         {menuItems.map((item) => (
-          <button
+          <div 
             key={item.key}
-            className={`btn w-100 mb-2 text-start ${selectedMenu === item.key ? "btn-primary" : "btn-secondary"}`}
+            className={`content btn w-100 mb-2 text-light text-start ${selectedMenu === item.key}`}
             onClick={() => setSelectedMenu(item.key)}
           >
+            <span className="me-2">{item.img}</span>
             {item.label}
-          </button>
+          </div>
         ))}
       </div>
-      <div className="flex-grow-1 p-4 bg-light">{renderContent()}</div>
+      <div className="flex-grow-1 d-flex flex-column">
+        <nav className="px-3 d-flex justify-content-between align-items-center">
+          <div className="userprofile text-light"><img class="logo2" src={user} alt="none"/>  SCB0334</div>
+          <img class="logo1"src={Logout} alt="none"/>
+        </nav>
+        <div className="flex-grow-1 p-4 bg-light">{renderContent()}</div>
+        
+      </div>
+      
     </div>
   );
 }
-
-
+export default Dashboard;
 
 
 .dashboard-container {
   height: 100vh;
 }
+  
+  .bar {
+    width: 220px;
+    min-height: 100vh;
+    background-color: #023b97dc;
+  }
+  
+  .gradient-card {
+    background-color: #023b97dc;
+    border: none;
+    border-radius: 10px;
+  }
+  
+  .gradient-card-2 {
+    background-color: #023b97dc;
+    border: none;
+    border-radius: 10px;
+  }
+  
+  .gradient-card-3 {
+    background-color: #023b97dc;
+    border: none;
+    border-radius: 10px;
+  }
+  
+  .card {
+    border-radius: 10px;
+  }
+  
+  .modern-table thead {
+    background-color: #023b97dc;
+    color: white;
+  }
+  
+  .modern-table tbody tr:hover {
+    background: #f1f5ff;
+  }
+  
+  .badge {
+    font-size: 0.85rem;
+  }
+  .logo{
+    height: 80px;
+    width:80px;
+    margin-bottom: 40px;
+    margin-left: 30px;
+    border-radius: 40px;
+  }
+  .logo1{
+    height: 30px;
+    width:30px;
+    border-radius: 40px;
+    
+  }
+  .px-3{
+    background-color: #023b97dc;
+    height: 80px;
+    
+  }
+  .content{
+    cursor: pointer;
+    margin-top: 5px;
+    
+  }
+  .content:hover{
+    background-color:#04215f ;
 
-.sidebar {
-  width: 220px;
-  min-height: 100vh;
-}
-
-.gradient-card {
-  background: linear-gradient(135deg, #007bff, #00c6ff);
-  border: none;
-  border-radius: 10px;
-}
-
-.gradient-card-2 {
-  background: linear-gradient(135deg, #ff7e5f, #feb47b);
-  border: none;
-  border-radius: 10px;
-}
-
-.gradient-card-3 {
-  background: linear-gradient(135deg, #43cea2, #185a9d);
-  border: none;
-  border-radius: 10px;
-}
-
-.card {
-  border-radius: 10px;
-}
-
-.modern-table thead {
-  background: #0d6efd;
-  color: white;
-}
-
-.modern-table tbody tr:hover {
-  background: #f1f5ff;
-}
-
-.badge {
-  font-size: 0.85rem;
-}
+  }
+  .userprofile{
+    margin-left: 800px;
+    cursor: pointer;
+  }
+  .logo2{
+    height: 20px;
+    border-radius: 40px;
+    margin-top: -1px;
 
 
+  }
+  .logo4{
+    height: 20px;
+    border-radius: 40px;
 
 
+  }
+  .card-header{
+    background-color: #023b97dc;
+  }
+
+
+ 
 import React from "react";
-import Dashboard from "./components/Dashboard";
-import "./styles/custom.css";
 
+
+import Dashboard from "./Components/Dashboard";
+import "./Styles/custom.css";
 function App() {
   // Role will later come from backend
   const role = "creator"; // admin | creator | approver
@@ -184,3 +246,4 @@ function App() {
 }
 
 export default App;
+ 
