@@ -1,21 +1,23 @@
+Dashboard.js
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../Styles/custom.css";
 import ScLogo from "../assets/ScLogo.jpg";
 import Logout from "../assets/Logout.png";
 import user from "../assets/user.jpg";
-import Home from "../assets/Home.png";
-import payroll from "../assets/payroll.png";
+import {FaHome,FaUsersCog,FaPlusCircle,FaChartBar, FaCheckSquare} from "react-icons/fa";
 
 function Dashboard({ role }) {
   const [selectedMenu, setSelectedMenu] = useState("home");
+  const [hoveredMenu,setHoveredMenu]=useState(null);
+  const [showBalance,setShowBalance]=useState('false');
 
   const menuItems = [
-    { key: "home",label: "HOME", img:<img class="logo4" src={Home} alt="none"/>,roles: ["admin", "creator", "approver"] },
-    { key: "manageUsers", label: "MANAGE",img:<img class="logo4" src={payroll} alt="none"/>, roles: ["admin"] },
-    { key: "createTransaction", label: "CREATE",img:<img class="logo4" src={payroll} alt="none"/>, roles: ["creator", "admin"] },
-    { key: "approvePayments", label: "APPROVE",img:<img class="logo4" src={Home} alt="none"/>, roles: ["approver", "admin"] },
-    { key: "reports", label: "REPORTS",img:<img class="logo4" src={Home} alt="none"/>, roles: ["admin", "creator", "approver"] },
+    { key: "home",label: "HOME", icon:<FaHome/>,roles: ["operator", "creator", "approver"] },
+    { key: "manageUsers", label: "MANAGE",icon:<FaUsersCog/>, roles: ["operator"],subMenu:["Users","Profile Settings","Add Approvers","View Transactions"] },
+    { key: "createTransaction", label: "CREATE",icon:<FaPlusCircle/>, roles: ["creator"],subMenu:["Payroll","Profile Settings","Approvals","View Transactions"] },
+    { key: "approvePayments", label: "APPROVE",icon:<FaCheckSquare/>, roles: ["approver"],subMenu:["Approvals","Profile Settings","View Transactions"] },
+    { key: "reports", label: "REPORTS",icon:<FaChartBar/>,roles: ["operator", "creator", "approver"],subMenu:["View Transactions","download e-statement"] }
   ];
 
   const renderHome = () => (
@@ -26,8 +28,17 @@ function Dashboard({ role }) {
           <div className="card gradient-card shadow-sm text-white">
             <div className="card-body">
               <h5 className="card-title">Account Balance</h5>
-              <h3>₹ 2,45,000</h3>
-              <p>Updated just now</p>
+              {
+                showBalance ?(
+                  <h3>₹ 2,00,45,000</h3>
+                ):(
+                  <h3>  </h3>
+                )
+              }
+              <button className="b btn btn-light btn-sm mt-2" 
+              onClick={()=>setShowBalance(!showBalance)}>
+                {showBalance ? "Close Balance" : "View Balance"}
+              </button>
             </div>
           </div>
         </div>
@@ -36,7 +47,7 @@ function Dashboard({ role }) {
             <div className="card-body">
               <h5 className="card-title">Approval Status</h5>
               <h3>5 Pending</h3>
-              <p>Awaiting action</p>
+              <button className="b btn btn-light btn-sm mt-2" >Approve</button>
             </div>
           </div>
         </div>
@@ -45,7 +56,7 @@ function Dashboard({ role }) {
             <div className="card-body">
               <h5 className="card-title">Transactions Today</h5>
               <h3>23</h3>
-              <p>Including drafts</p>
+              <button className="b btn btn-light btn-sm mt-2" >Transactions</button>
             </div>
           </div>
         </div>
@@ -54,40 +65,48 @@ function Dashboard({ role }) {
       <div className="card shadow-sm mb-4">
         <div className="card-header text-white d-flex justify-content-between align-items-center">
           <span>Transaction History</span>
-          <button className="btn btn-light btn-sm">⬇ Download History</button>
+          <button className="Q btn btn-sm"> Download History</button>
         </div>
         <div className="table-responsive">
-          <table className="table table-hover modern-table mb-0">
+          <table className="table modern-service-table mb-0 align-items-center">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                <th>Type</th>
-                <th>Amount</th>
+                <th>Refernce ID</th>
+                <th>Total Amount</th>
+                <th>Number of Employees</th>
                 <th>Status</th>
+                <th>Remarks</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>1</td>
                 <td>14 Aug 2025</td>
-                <td>Debit</td>
-                <td>₹ 15,000</td>
-                <td><span className="badge bg-success">Completed</span></td>
+                <td>TNX123t56</td>
+                <td>15,00,000</td>
+                <td><pre>    20</pre></td>
+                <td><span className="badge bg-light text-dark">Rolled</span></td>
+                <td></td>
               </tr>
               <tr>
                 <td>2</td>
                 <td>14 Aug 2025</td>
-                <td>Debit</td>
-                <td>₹ 7,500</td>
-                <td><span className="badge bg-warning">Pending</span></td>
+                <td>HG123T106</td>
+                <td>12,34,012</td>
+                <td><pre>    27</pre> </td>
+                <td><span className="badge bg-light text-dark">Rolled</span></td>
+                <td></td>
               </tr>
               <tr>
                 <td>3</td>
                 <td>13 Aug 2025</td>
-                <td>Debit</td>
-                <td>₹ 25,000</td>
-                <td><span className="badge bg-danger">Failed</span></td>
+                <td>RE33310Y6</td>
+                <td>2,00,000</td>
+                <td><pre>    4</pre></td>
+                <td><span className="badge bg-light text-dark">Rolled</span></td>
+                <td></td>
               </tr>
             </tbody>
           </table>
@@ -114,14 +133,27 @@ function Dashboard({ role }) {
     <div className="d-flex dashboard-container">
       <div className="bar text-white p-3">
         <img class="logo" src={ScLogo} alt="none"/>
+        <span className="brand-name text-light">Straight2Bank</span>
         {menuItems.map((item) => (
           <div 
             key={item.key}
             className={`content btn w-100 mb-2 text-light text-start ${selectedMenu === item.key}`}
             onClick={() => setSelectedMenu(item.key)}
+            onMouseEnter={()=>setHoveredMenu(item.key)}
+            onMouseLeave={()=>setHoveredMenu(null)}
+            style={{position:"relative"}}
           >
-            <span className="me-2">{item.img}</span>
+            <span className="me-2">{item.icon}</span>
             {item.label}
+            {hoveredMenu===item.key && item.subMenu &&(
+              <div className="submenu shadow-sm">
+                {item.subMenu.map((sub,idx)=>(
+                  <div key={idx} className="submenu-item">
+                    {sub}
+                  </div>
+                ))}
+                </div>
+            )}
           </div>
         ))}
       </div>
@@ -139,62 +171,49 @@ function Dashboard({ role }) {
 }
 export default Dashboard;
 
-
+custom.css
 .dashboard-container {
   height: 100vh;
 }
   
   .bar {
-    width: 220px;
+    width: 150px;
     min-height: 100vh;
     background-color: #023b97dc;
   }
   
-  .gradient-card {
-    background-color: #023b97dc;
-    border: none;
-    border-radius: 10px;
-  }
-  
-  .gradient-card-2 {
-    background-color: #023b97dc;
-    border: none;
-    border-radius: 10px;
-  }
-  
-  .gradient-card-3 {
-    background-color: #023b97dc;
-    border: none;
-    border-radius: 10px;
-  }
-  
   .card {
     border-radius: 10px;
-  }
-  
-  .modern-table thead {
     background-color: #023b97dc;
-    color: white;
+    border: none;
+    
   }
-  
-  .modern-table tbody tr:hover {
-    background: #f1f5ff;
+  .gradient-card-1:hover{
+    color:#04215f;
+    cursor:pointer;
   }
-  
+  .card-body:hover{
+    background-color: #04215f;
+    border-radius: 10px;
+    border: none;
+    
+  }
   .badge {
     font-size: 0.85rem;
   }
   .logo{
-    height: 80px;
-    width:80px;
+    height: 60px;
+    width:60px;
     margin-bottom: 40px;
     margin-left: 30px;
     border-radius: 40px;
+    cursor:pointer;
   }
   .logo1{
     height: 30px;
     width:30px;
     border-radius: 40px;
+    cursor:pointer;
     
   }
   .px-3{
@@ -212,7 +231,7 @@ export default Dashboard;
 
   }
   .userprofile{
-    margin-left: 800px;
+    margin-left: 900px;
     cursor: pointer;
   }
   .logo2{
@@ -231,9 +250,71 @@ export default Dashboard;
   .card-header{
     background-color: #023b97dc;
   }
+  .card-header:hover
+  {
+    background-color: #04215f;
+  }
+.submenu{
+  position:absolute;
+  left:100%;
+  top:10%;
+  background: #023b97dc;
+  color:white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  min-width: 200px;
+  z-index: 50;
+}
+.submenu-item{
+  padding:12px 6px;
+  cursor:pointer;
+}
+.sub
+.submenu-item:hover{
+  background-color:#023b97dc;
+}
+.b{
+  color:black;
+  background-color:#f1f5ff;
+  border:none;
+}
+.b:hover{
+  color:#f1f5ff;
+  background-color:#295caddc;
+
+}.modern-service-table{
+  width:100%;
+  border-collapse: seperate;
+  border-spacing: 0 10px;
+}
+.modern-service-table thead{
+  background-color: #023b97dc;
+  color:white;
+}
+.modern-service-table thead th{
+  padding:12px;
+  text-align: left;
+}
+.modern-service-table tbody tr{
+  background-color: #fff;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+  border-radius: 8px;
+}
 
 
- 
+.Q{
+  background-color: #f1f5ff;
+  border: none;
+  color:black;
+}
+.brand-name{
+  position:relative;
+  top:-35px;
+  left:10px;
+}
+
+
+
 import React from "react";
 
 
@@ -241,109 +322,10 @@ import Dashboard from "./Components/Dashboard";
 import "./Styles/custom.css";
 function App() {
   // Role will later come from backend
-  const role = "creator"; // admin | creator | approver
+  const role = "operator"; // admin | creator | approver
   return <Dashboard role={role} />;
 }
 
 export default App;
-
-
-
-public class TableOf10 {
-    public static void main(String[] args) {
-        int num = 10;
-        for (int i = 1; i <= 10; i++) {
-            System.out.println(num + " x " + i + " = " + (num * i));
-        }
-    }
-}
-
  
-public class FibonacciSeries {
-    public static void main(String[] args) {
-        int n = 10;
-        int a = 0, b = 0, c = 1;
-
-        System.out.print("Fibonacci Series: ");
-        for (int i = 1; i <= n; i++) {
-            System.out.print(a + " ");
-            a = b;
-            b = c;
-            c = a + b;
-        }
-    }
-}
-
-import java.util.Scanner;
-
-public class OddEvenCheck {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Enter a number: ");
-        int num = sc.nextInt();
-
-        if (num % 2 == 0) {
-            System.out.println(num + " is Even.");
-        } else {
-            System.out.println(num + " is Odd.");
-        }
-        sc.close();
-    }
-}
-
-
-import java.util.Scanner;
-
-public class LargestOfTwo {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-
-        System.out.print("Enter first number: ");
-        int num1 = sc.nextInt();
-
-        System.out.print("Enter second number: ");
-        int num2 = sc.nextInt();
-
-        if (num1 > num2) {
-            System.out.println(num1 + " is larger.");
-        } else if (num2 > num1) {
-            System.out.println(num2 + " is larger.");
-        } else {
-            System.out.println("Both numbers are equal.");
-        }
-        sc.close();
-    }
-}
-
-
-import java.util.Arrays;
-
-public class ArraySortExample {
-    public static void main(String[] args) {
-        int[] arr = {45, 12, 67, 23, 89, 5};
-
-        System.out.println("Original Array: " + Arrays.toString(arr));
-
-        Arrays.sort(arr);
-        System.out.println("Sorted Array: " + Arrays.toString(arr));
-    }
-}
-
-
-
-import java.util.Arrays;
-
-public class ArrayReverseExample {
-    public static void main(String[] args) {
-        int[] arr = {10, 20, 30, 40, 50};
-
-        System.out.println("Original Array: " + Arrays.toString(arr));
-
-        System.out.print("Reversed Array: [");
-        for (int i = arr.length - 1; i >= 0; i--) {
-            System.out.print(arr[i]);
-            if (i != 0) System.out.print(", ");
-        }
-        System.out.println("]");
-    }
-}
+ 
