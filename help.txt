@@ -5,6 +5,7 @@ import "./App.css";
 function Sidebar({ role }) {
   const [activeMenu, setActiveMenu] = useState(null);      // For column 2
   const [hoverSubMenu, setHoverSubMenu] = useState(null);  // For column 3
+  const [lockSubMenu, setLockSubMenu] = useState(false);   // Keeps 3rd menu open
 
   // Role-based access filter
   const checkAccess = (menuKey) => {
@@ -22,7 +23,11 @@ function Sidebar({ role }) {
           <div
             key={menuKey}
             className={`menu-item ${activeMenu === menuKey ? "active" : ""}`}
-            onClick={() => setActiveMenu(menuKey)}
+            onClick={() => {
+              setActiveMenu(menuKey);
+              setHoverSubMenu(null);
+              setLockSubMenu(false);
+            }}
           >
             <span className="icon big">{menuVal.icon}</span>
             <span>{menuKey}</span>
@@ -38,9 +43,11 @@ function Sidebar({ role }) {
               checkAccess(subKey) && (
                 <div
                   key={subKey}
-                  className="menu-item"
-                  onMouseEnter={() => setHoverSubMenu(subKey)}
-                  onMouseLeave={() => setHoverSubMenu(null)}
+                  className={`menu-item ${hoverSubMenu === subKey ? "active" : ""}`}
+                  onMouseEnter={() => {
+                    setHoverSubMenu(subKey);
+                    setLockSubMenu(true);
+                  }}
                 >
                   <span className="icon">{subVal.icon}</span>
                   <span>{subKey}</span>
@@ -51,110 +58,29 @@ function Sidebar({ role }) {
       )}
 
       {/* Column 3 - Hover SubSubMenu */}
-      {activeMenu && hoverSubMenu && SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu && (
-        <div className="col hover-col">
-          {Object.entries(
-            SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
-          ).map(([thirdKey, thirdVal]) => (
-            <div key={thirdKey} className="menu-item leaf">
-              <span className="icon">{thirdVal}</span>
-              <span>{thirdKey}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {activeMenu &&
+        hoverSubMenu &&
+        SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu && (
+          <div
+            className="col hover-col"
+            onMouseEnter={() => setLockSubMenu(true)}
+            onMouseLeave={() => {
+              setLockSubMenu(false);
+              setHoverSubMenu(null);
+            }}
+          >
+            {Object.entries(
+              SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
+            ).map(([thirdKey, thirdVal]) => (
+              <div key={thirdKey} className="menu-item leaf">
+                <span className="icon">{thirdVal}</span>
+                <span>{thirdKey}</span>
+              </div>
+            ))}
+          </div>
+        )}
     </div>
   );
 }
 
 export default Sidebar;
-
-
-.app {
-  display: flex;
-  height: 100vh;
-  font-family: "Segoe UI", sans-serif;
-}
-
-.sidebar {
-  display: flex;
-  background: #f9f9f9;
-  border-right: 1px solid #ddd;
-  height: 100%;
-}
-
-.col {
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  border-right: 1px solid #eee;
-  padding: 10px;
-}
-
-.main-col {
-  background: #fff;
-}
-
-.sub-col {
-  background: #fafafa;
-}
-
-.hover-col {
-  background: #f0f8ff;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  margin: 4px 0;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.2s;
-  font-size: 15px;
-  color: #333;
-}
-
-.menu-item:hover {
-  background: #e3f2fd;
-  color: #0d47a1;
-}
-
-.menu-item.active {
-  background: #bbdefb;
-  color: #0d47a1;
-  font-weight: 600;
-}
-
-.menu-item.leaf {
-  font-size: 14px;
-}
-
-.icon {
-  font-size: 18px;
-  color: #0d47a1;
-}
-
-.icon.big {
-  font-size: 22px;  /* Bigger for main menus */
-}
-import React from "react";
-import Sidebar from "./Sidebar";
-import "./App.css";
-
-function App() {
-  const role = "creator"; // try: creator | manager | approver
-
-  return (
-    <div className="app">
-      <Sidebar role={role} />
-      <div className="content">
-        <h1>Dashboard - {role}</h1>
-        <p>Select menus on the left. Role-based access applied.</p>
-      </div>
-    </div>
-  );
-}
-
-export default App;
