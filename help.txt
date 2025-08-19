@@ -14,10 +14,10 @@ import {
 } from "react-icons/fa";
 
 function Dashboard({ role = "operator" }) {
-  const [openTop, setOpenTop] = useState("accounts");
-  const [hoverSection, setHoverSection] = useState({ top: null, section: null });
+  const [openTop, setOpenTop] = useState(null); // ✅ active 1st layer
+  const [hoverSection, setHoverSection] = useState(null); // ✅ hovered 2nd layer
   const [selectedPath, setSelectedPath] = useState([]);
-  const [collapsed, setCollapsed] = useState(false); // ✅ sidebar collapse toggle
+  const [collapsed, setCollapsed] = useState(false); // ✅ collapse toggle
 
   const MENU = [
     {
@@ -136,22 +136,21 @@ function Dashboard({ role = "operator" }) {
     setSelectedPath([tLabel, sLabel, iLabel]);
   };
 
-  const renderThirdPanel = (sec, tLabel) => {
-    return (
-      <div className="third-panel-horizontal"> {/* ✅ horizontal submenu */}
-        {sec.items.map((it) => (
-          <div
-            key={it.key}
-            className="third-item-h"
-            onClick={() => onClickFinalItem(tLabel, sec.label, it.label)}
-          >
-            <span className="me-1">{it.icon}</span>
-            {it.label}
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // ✅ Render 3rd layer (hover only)
+  const renderThirdPanel = (sec, tLabel) => (
+    <div className="third-panel-horizontal">
+      {sec.items.map((it) => (
+        <div
+          key={it.key}
+          className="third-item-h"
+          onClick={() => onClickFinalItem(tLabel, sec.label, it.label)}
+        >
+          <span className="me-1">{it.icon}</span>
+          {it.label}
+        </div>
+      ))}
+    </div>
+  );
 
   const renderSidebar = () => (
     <>
@@ -159,17 +158,12 @@ function Dashboard({ role = "operator" }) {
         <img className="logo" src={ScLogo} alt="logo" />
         {!collapsed && <span className="brand-name text-light">Straight2Bank</span>}
       </div>
-      <button
-        className="collapse-btn"
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        {collapsed ? "»" : "«"}
-      </button>
 
       {MENU.map((top) => {
         const sections = filterSectionsByRole(top);
         return (
           <div key={top.key} className="top-block border-bottom">
+            {/* ✅ Sidebar expand/collapse on click */}
             <button
               className={`top-item ${openTop === top.key ? "active" : ""}`}
               onClick={() => setOpenTop(openTop === top.key ? null : top.key)}
@@ -181,11 +175,19 @@ function Dashboard({ role = "operator" }) {
               </span>
             </button>
 
-            {openTop === top.key && !collapsed && (
+            {/* ✅ 2nd layer shows only if expanded */}
+            {openTop === top.key && (
               <div className="second-list-horizontal">
                 {sections.map((sec) => (
-                  <div key={sec.key} className="second-item-h">
-                    {renderThirdPanel(sec, top.label)}
+                  <div
+                    key={sec.key}
+                    className="second-item-h"
+                    onMouseEnter={() => setHoverSection(sec.key)}
+                    onMouseLeave={() => setHoverSection(null)}
+                  >
+                    {sec.label}
+                    {/* ✅ 3rd layer by hover */}
+                    {hoverSection === sec.key && renderThirdPanel(sec, top.label)}
                   </div>
                 ))}
               </div>
@@ -195,57 +197,6 @@ function Dashboard({ role = "operator" }) {
       })}
     </>
   );
-
-  const renderMain = () => {
-    if (selectedPath.length === 0) {
-      return (
-        <div className="container-fluid">
-          <div className="row g-4 mb-4">
-            <div className="col-md-4">
-              <div className="card gradient-card shadow-sm text-white">
-                <div className="card-body">
-                  <h5 className="card-title">Account Balance</h5>
-                  <h3>₹ 2,00,45,000</h3>
-                  <button className="b btn btn-light btn-sm mt-2">View Balance</button>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card gradient-card-2 shadow-sm text-white">
-                <div className="card-body">
-                  <h5 className="card-title">Approval Status</h5>
-                  <h3>5 Pending</h3>
-                  <button className="b btn btn-light btn-sm mt-2">Approve</button>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="card gradient-card-3 shadow-sm text-white">
-                <div className="card-body">
-                  <h5 className="card-title">Transactions Today</h5>
-                  <h3>23</h3>
-                  <button className="b btn btn-light btn-sm mt-2">Transactions</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="p-4">
-        <div className="breadcrumbx">
-          {selectedPath.join("  ›  ")}
-        </div>
-        <div className="mt-3">
-          <h4>{selectedPath[selectedPath.length - 1]}</h4>
-          <p className="text-muted">
-            This is placeholder content for <strong>{selectedPath.join(" / ")}</strong>.
-          </p>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="d-flex dashboard-container">
@@ -261,7 +212,15 @@ function Dashboard({ role = "operator" }) {
           <img className="logo1" src={Logout} alt="logout" />
         </nav>
         <div className="flex-grow-1 p-4 bg-light">
-          {renderMain()}
+          {/* ✅ main content */}
+          {selectedPath.length === 0 ? (
+            <h5 className="text-muted">Welcome to Straight2Bank Dashboard</h5>
+          ) : (
+            <div>
+              <div className="breadcrumbx">{selectedPath.join(" › ")}</div>
+              <h4>{selectedPath[selectedPath.length - 1]}</h4>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -270,119 +229,65 @@ function Dashboard({ role = "operator" }) {
 
 export default Dashboard;
 
-
-
-.dashboard-container {
-  height: 100vh;
-}
-
+/* Sidebar */
 .bar {
-  background: #004d40; /* ✅ SCB dark teal */
-  width: 260px;
-  transition: width 0.3s ease;
-  overflow-x: hidden;
-}
-
-.bar.collapsed {
   width: 80px;
+  background: #004c45; /* ✅ SCB dark green */
+  transition: width 0.3s ease;
 }
-
-.brand-name {
-  font-size: 1.1rem;
-  font-weight: 600;
+.bar:not(.collapsed) {
+  width: 260px; /* ✅ expand on click */
 }
-
-.topbar {
-  background: #00695c; /* ✅ SCB green */
-  height: 60px;
-}
-
-.logo {
-  width: 40px;
-  border-radius: 50%;
-}
-
-.logo1 {
-  width: 28px;
-  cursor: pointer;
-}
-
-.logo2 {
-  width: 28px;
-  margin-right: 8px;
-  border-radius: 50%;
-}
-
 .top-item {
   background: transparent;
   border: none;
-  color: white;
+  color: #fff;
   width: 100%;
   text-align: left;
   padding: 10px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   cursor: pointer;
 }
-
+.top-block {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* ✅ line divider */
+}
 .top-item.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: #006f61; /* ✅ lighter green */
 }
 
-.collapse-btn {
-  background: none;
-  border: none;
-  color: white;
-  margin-bottom: 10px;
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-/* ✅ Horizontal submenu */
+/* 2nd layer */
 .second-list-horizontal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #00594d;
+  padding: 8px;
+}
+.second-item-h {
+  color: #fff;
+  padding: 6px;
+  cursor: pointer;
+  position: relative;
+}
+.second-item-h:hover {
+  background: #007f70;
 }
 
+/* 3rd layer hover panel */
 .third-panel-horizontal {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: #007f70;
+  padding: 6px;
+  min-width: 200px;
+  z-index: 10;
 }
-
 .third-item-h {
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  padding: 6px;
   color: white;
   cursor: pointer;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
 }
-
 .third-item-h:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Dashboard cards gradient */
-.gradient-card {
-  background: linear-gradient(135deg, #00695c, #004d40);
-}
-
-.gradient-card-2 {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
-}
-
-.gradient-card-3 {
-  background: linear-gradient(135deg, #1565c0, #0d47a1);
-}
-
-.breadcrumbx {
-  font-size: 0.95rem;
-  color: #555;
+  background: #00a489;
 }
 
