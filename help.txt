@@ -415,3 +415,182 @@ export default Dashboard;
   background-color: #295caddc;
   color: white;
 }
+
+
+import React, { useState } from "react";
+import "../Styles/custom.css";
+
+const Dashboard = () => {
+  const [openMenu, setOpenMenu] = useState(null); // Track open Layer 1
+
+  const toggleMenu = (menu) => {
+    setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  // Sidebar menu data
+  const menuItems = {
+    Accounts: {
+      "Current Account": [
+        "Account Details",
+        "Service Request",
+        "Employees",
+      ],
+      "Change Account": [
+        "Add Account",
+        "Edit Account",
+        "Edit Employee Accounts",
+      ],
+    },
+    Cash: {
+      Create: [
+        "Payroll",
+        "Rolled Payees",
+        "Drafts",
+        "Quick Currency Calculator",
+      ],
+      Manage: ["Make Approvers", "View Rolled Payees"],
+      Approve: ["Approved Payees", "Pending Payees"],
+    },
+    Transactions: {
+      "Rolled Payees": [
+        "Failed Transactions",
+        "Successful Transactions",
+        "Hold Transactions",
+      ],
+      "E-Statements": [
+        "Filter Transactions",
+        "Download Transactions",
+        "Transactions Summary",
+      ],
+    },
+    Settings: {
+      "": [
+        "Change Password",
+        "View Approvers",
+        "View Managers",
+        "View Creates",
+      ],
+    },
+  };
+
+  return (
+    <div className="dashboard-container">
+      {/* Sidebar */}
+      <div className="bar">
+        <img src="/assets/ScLogo.jpg" alt="Logo" className="logo" />
+        <span className="brand-name">Straight2Bank</span>
+
+        {Object.keys(menuItems).map((main) => (
+          <div key={main}>
+            {/* Layer 1 */}
+            <div
+              className="content"
+              onClick={() => toggleMenu(main)}
+            >
+              {main}
+            </div>
+
+            {/* Layer 2 - static inside sidebar */}
+            {openMenu === main && (
+              <div className="submenu-expanded">
+                {Object.keys(menuItems[main]).map((sub) => (
+                  <div key={sub} className="submenu-item-expanded">
+                    {sub || main}
+                    {/* Layer 3 - hover menu */}
+                    {menuItems[main][sub].length > 0 && (
+                      <div className="hover-menu">
+                        {menuItems[main][sub].map((third, idx) => (
+                          <div key={idx} className="hover-item">
+                            {third}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="main-content" style={{ padding: "20px", flex: 1 }}>
+        <h2>Welcome to SCB Styled Dashboard</h2>
+        <p>Click left menu → hover submenus to navigate.</p>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+
+
+/* Sidebar */
+.bar {
+  width: 220px;
+  background-color: #005aa7; /* SCB blue */
+  color: white;
+  min-height: 100vh;
+  padding-top: 15px;
+}
+
+.logo {
+  width: 40px;
+  margin: 10px;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 5px 15px;
+  display: block;
+}
+
+/* Layer 1 */
+.content {
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.content:hover {
+  background-color: #004080;
+}
+
+/* Layer 2 */
+.submenu-expanded {
+  background-color: #004c97;
+}
+.submenu-item-expanded {
+  padding: 10px 25px;
+  font-size: 14px;
+  position: relative;
+  cursor: pointer;
+}
+.submenu-item-expanded:hover {
+  background-color: #003366;
+}
+
+/* Layer 3 - hover floating menu */
+.hover-menu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: white;
+  color: black;
+  min-width: 200px;
+  border: 1px solid #ddd;
+  z-index: 10;
+}
+.submenu-item-expanded:hover .hover-menu {
+  display: block;
+}
+.hover-item {
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.hover-item:hover {
+  background-color: #f0f0f0;
+}
