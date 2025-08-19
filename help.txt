@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Home,
   User,
   Settings,
   FileText,
@@ -14,36 +13,30 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-} from "lucide-react"; // icons
+  Upload,
+} from "lucide-react";
+import "./Sidebar.css";
 
-// 🎨 Bank blue theme
-const sidebarStyles = {
-  bg: "bg-[#002b5c]", // dark bank blue
-  hover: "hover:bg-[#004080]", // lighter hover blue
-  text: "text-white",
-  active: "bg-[#004d99]",
-};
-
-// 🔹 Sidebar Menu Data (dynamic)
+// 🔹 Sidebar menu data
 const menuData = [
   {
     title: "Accounts",
     icon: <User size={18} />,
-    subMenu: [
+    children: [
       {
         title: "Current Account",
-        subMenu: [
-          { title: "Account Details", icon: <FileText size={16} /> },
-          { title: "Service Request", icon: <ListChecks size={16} /> },
-          { title: "Employees", icon: <Users size={16} /> },
+        children: [
+          { title: "Account Details" },
+          { title: "Service Request" },
+          { title: "Employees" },
         ],
       },
       {
         title: "Change Account",
-        subMenu: [
-          { title: "Add Account", icon: <Plus size={16} /> },
-          { title: "Edit Account", icon: <FileText size={16} /> },
-          { title: "Edit Employee Accounts", icon: <Users size={16} /> },
+        children: [
+          { title: "Add Account" },
+          { title: "Edit Account" },
+          { title: "Edit Employee Accounts" },
         ],
       },
     ],
@@ -51,28 +44,35 @@ const menuData = [
   {
     title: "Cash",
     icon: <DollarSign size={18} />,
-    subMenu: [
+    children: [
       {
         title: "Create",
-        subMenu: [
-          { title: "Payroll", icon: <DollarSign size={16} /> },
-          { title: "Rolled Payees", icon: <Users size={16} /> },
-          { title: "Drafts", icon: <FileText size={16} /> },
-          { title: "Quick Currency Calculator", icon: <Calculator size={16} /> },
+        children: [
+          { title: "Payroll" },
+          { title: "Rolled Payees" },
+          { title: "Drafts" },
+          { title: "Quick Currency Calculator" },
         ],
       },
       {
         title: "Manage",
-        subMenu: [
-          { title: "Make Approvers", icon: <User size={16} /> },
-          { title: "View Rolled Payees", icon: <Eye size={16} /> },
+        children: [
+          { title: "Make Approvers" },
+          { title: "View Rolled Payees" },
         ],
       },
       {
         title: "Approve",
-        subMenu: [
-          { title: "Approved Payees", icon: <CheckCircle size={16} /> },
-          { title: "Pending Payees", icon: <Clock size={16} /> },
+        children: [
+          { title: "Approved Payees" },
+          { title: "Pending Payees" },
+        ],
+      },
+      {
+        title: "Upload",
+        children: [
+          { title: "Upload Payroll File" },
+          { title: "Upload Transactions" },
         ],
       },
     ],
@@ -80,21 +80,21 @@ const menuData = [
   {
     title: "Transactions",
     icon: <FileText size={18} />,
-    subMenu: [
+    children: [
       {
         title: "Rolled Payees",
-        subMenu: [
-          { title: "Failed Transactions", icon: <XCircle size={16} /> },
-          { title: "Successful Transactions", icon: <CheckCircle size={16} /> },
-          { title: "Hold Transactions", icon: <Clock size={16} /> },
+        children: [
+          { title: "Failed Transactions" },
+          { title: "Successful Transactions" },
+          { title: "Hold Transactions" },
         ],
       },
       {
         title: "E-statements",
-        subMenu: [
-          { title: "Filter Transactions", icon: <ListChecks size={16} /> },
-          { title: "Download Transactions", icon: <Download size={16} /> },
-          { title: "Transactions Summary", icon: <FileText size={16} /> },
+        children: [
+          { title: "Filter Transactions" },
+          { title: "Download Transactions" },
+          { title: "Transactions Summary" },
         ],
       },
     ],
@@ -102,11 +102,11 @@ const menuData = [
   {
     title: "Settings",
     icon: <Settings size={18} />,
-    subMenu: [
-      { title: "Change Password", icon: <Key size={16} /> },
-      { title: "View Approvers", icon: <Users size={16} /> },
-      { title: "View Managers", icon: <Users size={16} /> },
-      { title: "View Creates", icon: <Users size={16} /> },
+    children: [
+      { title: "Change Password" },
+      { title: "View Approvers" },
+      { title: "View Managers" },
+      { title: "View Creates" },
     ],
   },
 ];
@@ -116,54 +116,55 @@ const roleAccess = {
   creator: ["Create"],
   manager: ["Manage"],
   approver: ["Approve"],
-  everyone: ["Accounts", "Cash", "Transactions", "Settings"],
+  everyone: ["Accounts", "Cash", "Transactions", "Settings", "Upload"],
 };
 
-// 🔹 Recursive Menu Component
-const MenuItem = ({ item, role }) => {
-  const [open, setOpen] = useState(false);
+const Sidebar = ({ role }) => {
+  const [activeMenu, setActiveMenu] = useState(null);
 
-  // Hide restricted menus
-  if (
-    role !== "admin" &&
-    !roleAccess.everyone.includes(item.title) &&
-    !roleAccess[role]?.includes(item.title)
-  ) {
-    return null;
-  }
+  const handleHover = (menu) => {
+    setActiveMenu(menu);
+  };
 
   return (
-    <div>
-      <div
-        className={`flex items-center gap-2 p-2 cursor-pointer ${sidebarStyles.text} ${sidebarStyles.hover}`}
-        onClick={() => setOpen(!open)}
-      >
-        {item.icon}
-        <span>{item.title}</span>
+    <div className="sidebar-container">
+      {/* Left Blue Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-header">Dashboard</div>
+        {menuData.map((menu, idx) => (
+          <div
+            key={idx}
+            className="menu-item"
+            onMouseEnter={() => handleHover(menu.title)}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            {menu.icon}
+            <span>{menu.title}</span>
+          </div>
+        ))}
       </div>
 
-      {open && item.subMenu && (
-        <div className="ml-4 border-l border-gray-500">
-          {item.subMenu.map((sub, i) => (
-            <MenuItem key={i} item={sub} role={role} />
+      {/* Right White Submenu Panel */}
+      <div className="submenu-panel">
+        {menuData
+          .filter((m) => m.title === activeMenu)
+          .map((menu, i) => (
+            <div key={i}>
+              <h3 className="submenu-title">{menu.title}</h3>
+              {menu.children &&
+                menu.children.map((child, j) => (
+                  <div key={j} className="submenu-section">
+                    <strong>{child.title}</strong>
+                    <ul>
+                      {child.children &&
+                        child.children.map((sub, k) => (
+                          <li key={k}>{sub.title}</li>
+                        ))}
+                    </ul>
+                  </div>
+                ))}
+            </div>
           ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// 🔹 Main Sidebar Component
-const Sidebar = ({ role }) => {
-  return (
-    <div className={`w-64 h-screen ${sidebarStyles.bg} shadow-lg`}>
-      <h2 className="text-white text-lg font-bold p-4 border-b border-gray-700">
-        Dashboard
-      </h2>
-      <div className="p-2">
-        {menuData.map((item, i) => (
-          <MenuItem key={i} item={item} role={role} />
-        ))}
       </div>
     </div>
   );
@@ -173,38 +174,17 @@ export default Sidebar;
 
 
 
-import React from "react";
-import Sidebar from "./Sidebar"; // import the sidebar we built
-
-function App() {
-  // Change role here to see dynamic access (creator / manager / approver / admin)
-  const role = "creator";
-
-  return (
-    <div className="flex">
-      {/* Sidebar */}
-      <Sidebar role={role} />
-
-      {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100">
-        <h1 className="text-2xl font-bold">Welcome, {role}</h1>
-        <p className="mt-4">
-          This is your dashboard. The sidebar is fully dynamic and role-based.
-        </p>
-      </div>
-    </div>
-  );
+.sidebar-container {
+  display: flex;
+  height: 100vh;
 }
 
-export default App;
-
-
 .sidebar {
-  width: 250px;
-  height: 100vh;
-  background-color: #002b5c; /* Bank dark blue */
+  width: 220px;
+  background-color: #002b5c; /* dark blue */
   color: white;
-  box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
@@ -215,20 +195,70 @@ export default App;
 }
 
 .menu-item {
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  gap: 10px;
   cursor: pointer;
   transition: background 0.3s;
 }
 
 .menu-item:hover {
-  background-color: #004080; /* lighter hover blue */
+  background-color: #004080;
 }
 
-.submenu {
-  margin-left: 16px;
-  border-left: 1px solid #335c99;
+.submenu-panel {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-left: 1px solid #ddd;
+}
+
+.submenu-title {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #002b5c;
+  font-weight: bold;
+}
+
+.submenu-section {
+  margin-bottom: 15px;
+}
+
+.submenu-section strong {
+  display: block;
+  color: #004080;
+  margin-bottom: 5px;
+}
+
+.submenu-section ul {
+  list-style: none;
+  padding-left: 10px;
+}
+
+.submenu-section li {
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.submenu-section li:hover {
+  text-decoration: underline;
+  color: #002b5c;
 }
 
 
+
+import React from "react";
+import Sidebar from "./Sidebar";
+
+function App() {
+  const role = "creator"; // change role here
+
+  return (
+    <div>
+      <Sidebar role={role} />
+    </div>
+  );
+}
+
+export default App;
