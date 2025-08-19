@@ -1,262 +1,276 @@
-import React, { useState } from "react";
 import {
-  User,
-  Settings,
-  FileText,
-  DollarSign,
-  Users,
-  Key,
-  ListChecks,
-  Download,
-  Eye,
-  Calculator,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Upload,
-} from "lucide-react";
-import "./Sidebar.css";
+  MdAccountBalance,
+  MdOutlineManageAccounts,
+  MdAttachMoney,
+  MdOutlineSwapHoriz,
+  MdSettings,
+  MdPerson,
+  MdAdd,
+  MdEdit,
+  MdGroup,
+  MdCreate,
+  MdViewList,
+  MdCheckCircle,
+  MdPending,
+  MdError,
+  MdDownload,
+  MdFilterList,
+  MdSummarize,
+  MdPassword,
+  MdSupervisorAccount,
+} from "react-icons/md";
 
-// 🔹 Sidebar menu data
-const menuData = [
-  {
-    title: "Accounts",
-    icon: <User size={18} />,
-    children: [
-      {
-        title: "Current Account",
-        children: [
-          { title: "Account Details" },
-          { title: "Service Request" },
-          { title: "Employees" },
-        ],
+export const SidebarData = {
+  Accounts: {
+    icon: <MdAccountBalance />,
+    subMenu: {
+      "Current Account": {
+        icon: <MdOutlineManageAccounts />,
+        subMenu: {
+          "Account Details": <MdPerson />,
+          "Service Request": <MdGroup />,
+          Employees: <MdGroup />,
+        },
       },
-      {
-        title: "Change Account",
-        children: [
-          { title: "Add Account" },
-          { title: "Edit Account" },
-          { title: "Edit Employee Accounts" },
-        ],
+      "Change Account": {
+        icon: <MdOutlineManageAccounts />,
+        subMenu: {
+          "Add Account": <MdAdd />,
+          "Edit Account": <MdEdit />,
+          "Edit Employee Accounts": <MdEdit />,
+        },
       },
-    ],
+    },
   },
-  {
-    title: "Cash",
-    icon: <DollarSign size={18} />,
-    children: [
-      {
-        title: "Create",
-        children: [
-          { title: "Payroll" },
-          { title: "Rolled Payees" },
-          { title: "Drafts" },
-          { title: "Quick Currency Calculator" },
-        ],
+  Cash: {
+    icon: <MdAttachMoney />,
+    subMenu: {
+      Create: {
+        icon: <MdCreate />,
+        subMenu: {
+          Payroll: <MdCreate />,
+          "Rolled Payees": <MdGroup />,
+          Drafts: <MdCreate />,
+          "Quick Currency Calculator": <MdCreate />,
+        },
       },
-      {
-        title: "Manage",
-        children: [
-          { title: "Make Approvers" },
-          { title: "View Rolled Payees" },
-        ],
+      Manage: {
+        icon: <MdViewList />,
+        subMenu: {
+          "Make Approvers": <MdGroup />,
+          "View Rolled Payees": <MdGroup />,
+        },
       },
-      {
-        title: "Approve",
-        children: [
-          { title: "Approved Payees" },
-          { title: "Pending Payees" },
-        ],
+      Approver: {
+        icon: <MdCheckCircle />,
+        subMenu: {
+          "Approved Payees": <MdCheckCircle />,
+          "Pending Payees": <MdPending />,
+        },
       },
-      {
-        title: "Upload",
-        children: [
-          { title: "Upload Payroll File" },
-          { title: "Upload Transactions" },
-        ],
-      },
-    ],
+    },
   },
-  {
-    title: "Transactions",
-    icon: <FileText size={18} />,
-    children: [
-      {
-        title: "Rolled Payees",
-        children: [
-          { title: "Failed Transactions" },
-          { title: "Successful Transactions" },
-          { title: "Hold Transactions" },
-        ],
+  Transactions: {
+    icon: <MdOutlineSwapHoriz />,
+    subMenu: {
+      "Rolled Payees": {
+        icon: <MdGroup />,
+        subMenu: {
+          "Failed Transactions": <MdError />,
+          "Successful Transactions": <MdCheckCircle />,
+          "Hold Transactions": <MdPending />,
+        },
       },
-      {
-        title: "E-statements",
-        children: [
-          { title: "Filter Transactions" },
-          { title: "Download Transactions" },
-          { title: "Transactions Summary" },
-        ],
+      "E-Statements": {
+        icon: <MdDownload />,
+        subMenu: {
+          "Filter Transactions": <MdFilterList />,
+          "Download Transactions": <MdDownload />,
+          "Transactions Summary": <MdSummarize />,
+        },
       },
-    ],
+    },
   },
-  {
-    title: "Settings",
-    icon: <Settings size={18} />,
-    children: [
-      { title: "Change Password" },
-      { title: "View Approvers" },
-      { title: "View Managers" },
-      { title: "View Creates" },
-    ],
+  Settings: {
+    icon: <MdSettings />,
+    subMenu: {
+      "Change Password": <MdPassword />,
+      "View Approvers": <MdSupervisorAccount />,
+      "View Managers": <MdSupervisorAccount />,
+      "View Creates": <MdSupervisorAccount />,
+    },
   },
-];
-
-// 🔹 Role-based access
-const roleAccess = {
-  creator: ["Create"],
-  manager: ["Manage"],
-  approver: ["Approve"],
-  everyone: ["Accounts", "Cash", "Transactions", "Settings", "Upload"],
 };
 
-const Sidebar = ({ role }) => {
-  const [activeMenu, setActiveMenu] = useState(null);
 
-  const handleHover = (menu) => {
-    setActiveMenu(menu);
+import React, { useState } from "react";
+import { SidebarData } from "./SidebarData";
+import "./App.css";
+
+function Sidebar({ role }) {
+  const [openMenus, setOpenMenus] = useState({});
+
+  const toggleMenu = (menuPath) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [menuPath]: !prev[menuPath],
+    }));
+  };
+
+  // Role-based filter
+  const checkAccess = (menuKey) => {
+    if (menuKey === "Create" && role !== "creator") return false;
+    if (menuKey === "Manage" && role !== "manager") return false;
+    if (menuKey === "Approver" && role !== "approver") return false;
+    return true;
+  };
+
+  const renderMenu = (menu, parentKey = "") => {
+    return Object.entries(menu).map(([key, value]) => {
+      const menuPath = parentKey + key;
+
+      if (typeof value === "object" && value.subMenu) {
+        if (!checkAccess(key)) return null;
+
+        return (
+          <div key={menuPath} className="menu-item">
+            <div
+              className="menu-title"
+              onClick={() => toggleMenu(menuPath)}
+            >
+              <span className="icon">{value.icon}</span>
+              <span>{key}</span>
+              <span className="arrow">{openMenus[menuPath] ? "▲" : "▼"}</span>
+            </div>
+            {openMenus[menuPath] && (
+              <div className="submenu">{renderMenu(value.subMenu, menuPath)}</div>
+            )}
+          </div>
+        );
+      } else {
+        return (
+          <div key={menuPath} className="menu-item leaf">
+            <span className="icon">{value}</span>
+            <span>{key}</span>
+          </div>
+        );
+      }
+    });
   };
 
   return (
-    <div className="sidebar-container">
-      {/* Left Blue Sidebar */}
-      <div className="sidebar">
-        <div className="sidebar-header">Dashboard</div>
-        {menuData.map((menu, idx) => (
-          <div
-            key={idx}
-            className="menu-item"
-            onMouseEnter={() => handleHover(menu.title)}
-            onMouseLeave={() => setActiveMenu(null)}
-          >
-            {menu.icon}
-            <span>{menu.title}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Right White Submenu Panel */}
-      <div className="submenu-panel">
-        {menuData
-          .filter((m) => m.title === activeMenu)
-          .map((menu, i) => (
-            <div key={i}>
-              <h3 className="submenu-title">{menu.title}</h3>
-              {menu.children &&
-                menu.children.map((child, j) => (
-                  <div key={j} className="submenu-section">
-                    <strong>{child.title}</strong>
-                    <ul>
-                      {child.children &&
-                        child.children.map((sub, k) => (
-                          <li key={k}>{sub.title}</li>
-                        ))}
-                    </ul>
-                  </div>
-                ))}
-            </div>
-          ))}
-      </div>
+    <div className="sidebar">
+      <h2 className="logo">Dashboard</h2>
+      <div className="menu">{renderMenu(SidebarData)}</div>
     </div>
   );
-};
+}
 
 export default Sidebar;
 
 
-
-.sidebar-container {
+.app {
   display: flex;
   height: 100vh;
+  font-family: "Segoe UI", sans-serif;
 }
 
+/* Sidebar */
 .sidebar {
-  width: 220px;
-  background-color: #002b5c; /* dark blue */
-  color: white;
+  width: 260px;
+  background: #f9f9f9;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #0d47a1;
+}
+
+.menu {
   display: flex;
   flex-direction: column;
 }
 
-.sidebar-header {
-  padding: 16px;
-  font-size: 18px;
-  font-weight: bold;
-  border-bottom: 1px solid #004080;
+.menu-item {
+  margin-bottom: 8px;
 }
 
-.menu-item {
-  padding: 12px 16px;
+.menu-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+  color: #333;
+}
+
+.menu-title:hover {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.submenu {
+  margin-left: 20px;
+  margin-top: 6px;
+}
+
+.menu-item.leaf {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 6px 12px;
+  margin-left: 15px;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.3s;
+  border-radius: 6px;
+  transition: background 0.2s;
 }
 
-.menu-item:hover {
-  background-color: #004080;
+.menu-item.leaf:hover {
+  background: #e3f2fd;
+  color: #0d47a1;
 }
 
-.submenu-panel {
+.icon {
+  margin-right: 8px;
+}
+
+.arrow {
+  font-size: 12px;
+  margin-left: auto;
+  color: #777;
+}
+
+/* Content */
+.content {
   flex: 1;
-  background: white;
-  padding: 20px;
-  border-left: 1px solid #ddd;
-}
-
-.submenu-title {
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: #002b5c;
-  font-weight: bold;
-}
-
-.submenu-section {
-  margin-bottom: 15px;
-}
-
-.submenu-section strong {
-  display: block;
-  color: #004080;
-  margin-bottom: 5px;
-}
-
-.submenu-section ul {
-  list-style: none;
-  padding-left: 10px;
-}
-
-.submenu-section li {
-  padding: 5px 0;
-  cursor: pointer;
-}
-
-.submenu-section li:hover {
-  text-decoration: underline;
-  color: #002b5c;
+  padding: 40px;
 }
 
 
 
 import React from "react";
 import Sidebar from "./Sidebar";
+import "./App.css";
 
 function App() {
-  const role = "creator"; // change role here
+  // Try: "creator" | "manager" | "approver"
+  const role = "creator";
 
   return (
-    <div>
+    <div className="app">
       <Sidebar role={role} />
+      <div className="content">
+        <h1>Welcome, {role}</h1>
+        <p>This is your dashboard. Sidebar is dynamic and role-based.</p>
+      </div>
     </div>
   );
 }
