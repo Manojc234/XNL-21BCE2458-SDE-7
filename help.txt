@@ -6,7 +6,6 @@ import ScLogo from "../assets/ScLogo.jpg";
 import Logout from "../assets/Logout.png";
 import user from "../assets/user.jpg";
 
-import { motion } from "framer-motion"; // ✅ Motion import
 import { MdAccountBalance, MdOutlineManageAccounts } from "react-icons/md";
 import {
   FaMoneyCheckAlt, FaChevronRight, FaChevronDown, FaLock, FaUserShield,
@@ -18,6 +17,7 @@ function Dashboard({ role = "operator" }) {
   const [openTop, setOpenTop] = useState("accounts");
   const [hoverSection, setHoverSection] = useState({ top: null, section: null });
   const [selectedPath, setSelectedPath] = useState([]);
+  const [collapsed, setCollapsed] = useState(false); // ✅ sidebar collapse toggle
 
   const MENU = [
     {
@@ -136,36 +136,35 @@ function Dashboard({ role = "operator" }) {
     setSelectedPath([tLabel, sLabel, iLabel]);
   };
 
-  const renderThirdPanel = (topKey, sec, tLabel) => {
-    const isOpen = hoverSection.top === topKey && hoverSection.section === sec.key;
-    if (!isOpen) return null;
+  const renderThirdPanel = (sec, tLabel) => {
     return (
-      <motion.div
-        className="third-panel shadow-sm border"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="third-title border-bottom">{sec.label}</div>
+      <div className="third-panel-horizontal"> {/* ✅ horizontal submenu */}
         {sec.items.map((it) => (
           <div
             key={it.key}
-            className="third-item"
+            className="third-item-h"
             onClick={() => onClickFinalItem(tLabel, sec.label, it.label)}
           >
-            <span className="me-2">{it.icon}</span>
+            <span className="me-1">{it.icon}</span>
             {it.label}
           </div>
         ))}
-      </motion.div>
+      </div>
     );
   };
 
   const renderSidebar = () => (
     <>
-      <img className="logo" src={ScLogo} alt="logo" />
-      <span className="brand-name text-light">Straight2Bank</span>
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <img className="logo" src={ScLogo} alt="logo" />
+        {!collapsed && <span className="brand-name text-light">Straight2Bank</span>}
+      </div>
+      <button
+        className="collapse-btn"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? "»" : "«"}
+      </button>
 
       {MENU.map((top) => {
         const sections = filterSectionsByRole(top);
@@ -176,33 +175,20 @@ function Dashboard({ role = "operator" }) {
               onClick={() => setOpenTop(openTop === top.key ? null : top.key)}
             >
               <span className="me-2">{top.icon}</span>
-              {top.label}
+              {!collapsed && top.label}
               <span className="ms-auto">
                 {openTop === top.key ? <FaChevronDown /> : <FaChevronRight />}
               </span>
             </button>
 
-            {openTop === top.key && (
-              <motion.div
-                className="second-list border-start"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25 }}
-              >
+            {openTop === top.key && !collapsed && (
+              <div className="second-list-horizontal">
                 {sections.map((sec) => (
-                  <div
-                    className="second-item border-bottom"
-                    key={sec.key}
-                    onMouseEnter={() => setHoverSection({ top: top.key, section: sec.key })}
-                    onMouseLeave={() => setHoverSection({ top: null, section: null })}
-                  >
-                    <span>{sec.label}</span>
-                    <FaChevronRight className="chev" />
-                    {renderThirdPanel(top.key, sec, top.label)}
+                  <div key={sec.key} className="second-item-h">
+                    {renderThirdPanel(sec, top.label)}
                   </div>
                 ))}
-              </motion.div>
+              </div>
             )}
           </div>
         );
@@ -216,31 +202,31 @@ function Dashboard({ role = "operator" }) {
         <div className="container-fluid">
           <div className="row g-4 mb-4">
             <div className="col-md-4">
-              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card shadow-sm text-white">
+              <div className="card gradient-card shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Account Balance</h5>
                   <h3>₹ 2,00,45,000</h3>
                   <button className="b btn btn-light btn-sm mt-2">View Balance</button>
                 </div>
-              </motion.div>
+              </div>
             </div>
             <div className="col-md-4">
-              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card-2 shadow-sm text-white">
+              <div className="card gradient-card-2 shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Approval Status</h5>
                   <h3>5 Pending</h3>
                   <button className="b btn btn-light btn-sm mt-2">Approve</button>
                 </div>
-              </motion.div>
+              </div>
             </div>
             <div className="col-md-4">
-              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card-3 shadow-sm text-white">
+              <div className="card gradient-card-3 shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Transactions Today</h5>
                   <h3>23</h3>
                   <button className="b btn btn-light btn-sm mt-2">Transactions</button>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -248,7 +234,9 @@ function Dashboard({ role = "operator" }) {
     }
     return (
       <div className="p-4">
-        <div className="breadcrumbx">{selectedPath.join("  ›  ")}</div>
+        <div className="breadcrumbx">
+          {selectedPath.join("  ›  ")}
+        </div>
         <div className="mt-3">
           <h4>{selectedPath[selectedPath.length - 1]}</h4>
           <p className="text-muted">
@@ -261,16 +249,20 @@ function Dashboard({ role = "operator" }) {
 
   return (
     <div className="d-flex dashboard-container">
-      <div className="bar text-white p-3">{renderSidebar()}</div>
+      <div className={`bar text-white p-3 ${collapsed ? "collapsed" : ""}`}>
+        {renderSidebar()}
+      </div>
 
       <div className="flex-grow-1 d-flex flex-column">
-        <nav className="px-3 d-flex justify-content-between align-items-center">
+        <nav className="px-3 d-flex justify-content-between align-items-center topbar">
           <div className="userprofile text-light">
             <img className="logo2" src={user} alt="user" /> SCB0334
           </div>
           <img className="logo1" src={Logout} alt="logout" />
         </nav>
-        <div className="flex-grow-1 p-4 bg-light">{renderMain()}</div>
+        <div className="flex-grow-1 p-4 bg-light">
+          {renderMain()}
+        </div>
       </div>
     </div>
   );
@@ -282,124 +274,115 @@ export default Dashboard;
 
 .dashboard-container {
   height: 100vh;
-  overflow: hidden;
 }
 
 .bar {
+  background: #004d40; /* ✅ SCB dark teal */
   width: 260px;
-  background: linear-gradient(180deg, #002b5c, #004080);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
 }
 
-.logo {
-  width: 45px;
-  margin-bottom: 10px;
+.bar.collapsed {
+  width: 80px;
 }
 
 .brand-name {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.top-item {
-  width: 100%;
-  background: transparent;
-  border: none;
-  padding: 10px;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s;
+.topbar {
+  background: #00695c; /* ✅ SCB green */
+  height: 60px;
 }
 
-.top-item:hover,
-.top-item.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-}
-
-.second-list {
-  margin-left: 10px;
-  padding-left: 10px;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-.second-item {
-  padding: 8px;
-  color: #ddd;
-  cursor: pointer;
-  position: relative;
-}
-
-.second-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.third-panel {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  background: #fff;
-  color: #333;
-  padding: 10px;
-  min-width: 180px;
-  border-radius: 6px;
-  z-index: 1000;
-}
-
-.third-title {
-  font-weight: bold;
-  font-size: 0.9rem;
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-}
-
-.third-item {
-  padding: 6px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.third-item:hover {
-  background: #f5f5f5;
-}
-
-.breadcrumbx {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.gradient-card {
-  background: linear-gradient(135deg, #007bff, #00c6ff);
-  border-radius: 12px;
-}
-
-.gradient-card-2 {
-  background: linear-gradient(135deg, #ff6a00, #ee0979);
-  border-radius: 12px;
-}
-
-.gradient-card-3 {
-  background: linear-gradient(135deg, #28a745, #85dcb8);
-  border-radius: 12px;
+.logo {
+  width: 40px;
+  border-radius: 50%;
 }
 
 .logo1 {
-  width: 30px;
+  width: 28px;
   cursor: pointer;
 }
 
 .logo2 {
-  width: 35px;
-  border-radius: 50%;
+  width: 28px;
   margin-right: 8px;
+  border-radius: 50%;
 }
+
+.top-item {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.top-item.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  color: white;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* ✅ Horizontal submenu */
+.second-list-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.third-panel-horizontal {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.third-item-h {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.third-item-h:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Dashboard cards gradient */
+.gradient-card {
+  background: linear-gradient(135deg, #00695c, #004d40);
+}
+
+.gradient-card-2 {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+}
+
+.gradient-card-3 {
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+}
+
+.breadcrumbx {
+  font-size: 0.95rem;
+  color: #555;
+}
+
