@@ -1,123 +1,12 @@
-import {
-  MdAccountBalance,
-  MdOutlineManageAccounts,
-  MdAttachMoney,
-  MdOutlineSwapHoriz,
-  MdSettings,
-  MdPerson,
-  MdAdd,
-  MdEdit,
-  MdGroup,
-  MdCreate,
-  MdViewList,
-  MdCheckCircle,
-  MdPending,
-  MdError,
-  MdDownload,
-  MdFilterList,
-  MdSummarize,
-  MdPassword,
-  MdSupervisorAccount,
-} from "react-icons/md";
-
-export const SidebarData = {
-  Accounts: {
-    icon: <MdAccountBalance />,
-    subMenu: {
-      "Current Account": {
-        icon: <MdOutlineManageAccounts />,
-        subMenu: {
-          "Account Details": <MdPerson />,
-          "Service Request": <MdGroup />,
-          Employees: <MdGroup />,
-        },
-      },
-      "Change Account": {
-        icon: <MdOutlineManageAccounts />,
-        subMenu: {
-          "Add Account": <MdAdd />,
-          "Edit Account": <MdEdit />,
-          "Edit Employee Accounts": <MdEdit />,
-        },
-      },
-    },
-  },
-  Cash: {
-    icon: <MdAttachMoney />,
-    subMenu: {
-      Create: {
-        icon: <MdCreate />,
-        subMenu: {
-          Payroll: <MdCreate />,
-          "Rolled Payees": <MdGroup />,
-          Drafts: <MdCreate />,
-          "Quick Currency Calculator": <MdCreate />,
-        },
-      },
-      Manage: {
-        icon: <MdViewList />,
-        subMenu: {
-          "Make Approvers": <MdGroup />,
-          "View Rolled Payees": <MdGroup />,
-        },
-      },
-      Approver: {
-        icon: <MdCheckCircle />,
-        subMenu: {
-          "Approved Payees": <MdCheckCircle />,
-          "Pending Payees": <MdPending />,
-        },
-      },
-    },
-  },
-  Transactions: {
-    icon: <MdOutlineSwapHoriz />,
-    subMenu: {
-      "Rolled Payees": {
-        icon: <MdGroup />,
-        subMenu: {
-          "Failed Transactions": <MdError />,
-          "Successful Transactions": <MdCheckCircle />,
-          "Hold Transactions": <MdPending />,
-        },
-      },
-      "E-Statements": {
-        icon: <MdDownload />,
-        subMenu: {
-          "Filter Transactions": <MdFilterList />,
-          "Download Transactions": <MdDownload />,
-          "Transactions Summary": <MdSummarize />,
-        },
-      },
-    },
-  },
-  Settings: {
-    icon: <MdSettings />,
-    subMenu: {
-      "Change Password": <MdPassword />,
-      "View Approvers": <MdSupervisorAccount />,
-      "View Managers": <MdSupervisorAccount />,
-      "View Creates": <MdSupervisorAccount />,
-    },
-  },
-};
-
-
 import React, { useState } from "react";
 import { SidebarData } from "./SidebarData";
 import "./App.css";
 
 function Sidebar({ role }) {
-  const [openMenus, setOpenMenus] = useState({});
+  const [activeMenu, setActiveMenu] = useState(null);      // For column 2
+  const [hoverSubMenu, setHoverSubMenu] = useState(null);  // For column 3
 
-  const toggleMenu = (menuPath) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [menuPath]: !prev[menuPath],
-    }));
-  };
-
-  // Role-based filter
+  // Role-based access filter
   const checkAccess = (menuKey) => {
     if (menuKey === "Create" && role !== "creator") return false;
     if (menuKey === "Manage" && role !== "manager") return false;
@@ -125,43 +14,55 @@ function Sidebar({ role }) {
     return true;
   };
 
-  const renderMenu = (menu, parentKey = "") => {
-    return Object.entries(menu).map(([key, value]) => {
-      const menuPath = parentKey + key;
-
-      if (typeof value === "object" && value.subMenu) {
-        if (!checkAccess(key)) return null;
-
-        return (
-          <div key={menuPath} className="menu-item">
-            <div
-              className="menu-title"
-              onClick={() => toggleMenu(menuPath)}
-            >
-              <span className="icon">{value.icon}</span>
-              <span>{key}</span>
-              <span className="arrow">{openMenus[menuPath] ? "▲" : "▼"}</span>
-            </div>
-            {openMenus[menuPath] && (
-              <div className="submenu">{renderMenu(value.subMenu, menuPath)}</div>
-            )}
-          </div>
-        );
-      } else {
-        return (
-          <div key={menuPath} className="menu-item leaf">
-            <span className="icon">{value}</span>
-            <span>{key}</span>
-          </div>
-        );
-      }
-    });
-  };
-
   return (
     <div className="sidebar">
-      <h2 className="logo">Dashboard</h2>
-      <div className="menu">{renderMenu(SidebarData)}</div>
+      {/* Column 1 - Main Menu */}
+      <div className="col main-col">
+        {Object.entries(SidebarData).map(([menuKey, menuVal]) => (
+          <div
+            key={menuKey}
+            className={`menu-item ${activeMenu === menuKey ? "active" : ""}`}
+            onClick={() => setActiveMenu(menuKey)}
+          >
+            <span className="icon big">{menuVal.icon}</span>
+            <span>{menuKey}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Column 2 - SubMenu */}
+      {activeMenu && (
+        <div className="col sub-col">
+          {Object.entries(SidebarData[activeMenu].subMenu || {}).map(
+            ([subKey, subVal]) =>
+              checkAccess(subKey) && (
+                <div
+                  key={subKey}
+                  className="menu-item"
+                  onMouseEnter={() => setHoverSubMenu(subKey)}
+                  onMouseLeave={() => setHoverSubMenu(null)}
+                >
+                  <span className="icon">{subVal.icon}</span>
+                  <span>{subKey}</span>
+                </div>
+              )
+          )}
+        </div>
+      )}
+
+      {/* Column 3 - Hover SubSubMenu */}
+      {activeMenu && hoverSubMenu && SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu && (
+        <div className="col hover-col">
+          {Object.entries(
+            SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
+          ).map(([thirdKey, thirdVal]) => (
+            <div key={thirdKey} className="menu-item leaf">
+              <span className="icon">{thirdVal}</span>
+              <span>{thirdKey}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -175,101 +76,82 @@ export default Sidebar;
   font-family: "Segoe UI", sans-serif;
 }
 
-/* Sidebar */
 .sidebar {
-  width: 260px;
+  display: flex;
   background: #f9f9f9;
   border-right: 1px solid #ddd;
-  padding: 20px;
-  overflow-y: auto;
+  height: 100%;
 }
 
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #0d47a1;
-}
-
-.menu {
+.col {
   display: flex;
   flex-direction: column;
+  min-width: 220px;
+  border-right: 1px solid #eee;
+  padding: 10px;
+}
+
+.main-col {
+  background: #fff;
+}
+
+.sub-col {
+  background: #fafafa;
+}
+
+.hover-col {
+  background: #f0f8ff;
 }
 
 .menu-item {
-  margin-bottom: 8px;
-}
-
-.menu-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.2s ease;
-  color: #333;
-}
-
-.menu-title:hover {
-  background: #e3f2fd;
-  color: #0d47a1;
-}
-
-.submenu {
-  margin-left: 20px;
-  margin-top: 6px;
-}
-
-.menu-item.leaf {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  margin-left: 15px;
-  font-size: 14px;
+  gap: 12px;
+  padding: 10px;
+  margin: 4px 0;
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.2s;
+  font-size: 15px;
+  color: #333;
 }
 
-.menu-item.leaf:hover {
+.menu-item:hover {
   background: #e3f2fd;
   color: #0d47a1;
 }
 
+.menu-item.active {
+  background: #bbdefb;
+  color: #0d47a1;
+  font-weight: 600;
+}
+
+.menu-item.leaf {
+  font-size: 14px;
+}
+
 .icon {
-  margin-right: 8px;
+  font-size: 18px;
+  color: #0d47a1;
 }
 
-.arrow {
-  font-size: 12px;
-  margin-left: auto;
-  color: #777;
+.icon.big {
+  font-size: 22px;  /* Bigger for main menus */
 }
-
-/* Content */
-.content {
-  flex: 1;
-  padding: 40px;
-}
-
-
-
 import React from "react";
 import Sidebar from "./Sidebar";
 import "./App.css";
 
 function App() {
-  // Try: "creator" | "manager" | "approver"
-  const role = "creator";
+  const role = "creator"; // try: creator | manager | approver
 
   return (
     <div className="app">
       <Sidebar role={role} />
       <div className="content">
-        <h1>Welcome, {role}</h1>
-        <p>This is your dashboard. Sidebar is dynamic and role-based.</p>
+        <h1>Dashboard - {role}</h1>
+        <p>Select menus on the left. Role-based access applied.</p>
       </div>
     </div>
   );
