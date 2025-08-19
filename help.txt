@@ -1,86 +1,25 @@
-import React, { useState } from "react";
-import { SidebarData } from "./SidebarData";
-import "./App.css";
-
-function Sidebar({ role }) {
-  const [activeMenu, setActiveMenu] = useState(null);      // For column 2
-  const [hoverSubMenu, setHoverSubMenu] = useState(null);  // For column 3
-  const [lockSubMenu, setLockSubMenu] = useState(false);   // Keeps 3rd menu open
-
-  // Role-based access filter
-  const checkAccess = (menuKey) => {
-    if (menuKey === "Create" && role !== "creator") return false;
-    if (menuKey === "Manage" && role !== "manager") return false;
-    if (menuKey === "Approver" && role !== "approver") return false;
-    return true;
-  };
-
-  return (
-    <div className="sidebar">
-      {/* Column 1 - Main Menu */}
-      <div className="col main-col">
-        {Object.entries(SidebarData).map(([menuKey, menuVal]) => (
-          <div
-            key={menuKey}
-            className={`menu-item ${activeMenu === menuKey ? "active" : ""}`}
-            onClick={() => {
-              setActiveMenu(menuKey);
-              setHoverSubMenu(null);
-              setLockSubMenu(false);
-            }}
-          >
-            <span className="icon big">{menuVal.icon}</span>
-            <span>{menuKey}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Column 2 - SubMenu */}
-      {activeMenu && (
-        <div className="col sub-col">
-          {Object.entries(SidebarData[activeMenu].subMenu || {}).map(
-            ([subKey, subVal]) =>
-              checkAccess(subKey) && (
-                <div
-                  key={subKey}
-                  className={`menu-item ${hoverSubMenu === subKey ? "active" : ""}`}
-                  onMouseEnter={() => {
-                    setHoverSubMenu(subKey);
-                    setLockSubMenu(true);
-                  }}
-                >
-                  <span className="icon">{subVal.icon}</span>
-                  <span>{subKey}</span>
-                </div>
-              )
-          )}
-        </div>
-      )}
-
-      {/* Column 3 - Hover SubSubMenu */}
-      {activeMenu &&
-        hoverSubMenu &&
-        SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu && (
-          <div
-            className="col hover-col"
-            onMouseEnter={() => setLockSubMenu(true)}
-            onMouseLeave={() => {
-              setLockSubMenu(false);
-              setHoverSubMenu(null);
-            }}
-          >
-            {Object.entries(
-              SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
-            ).map(([thirdKey, thirdVal]) => (
-              <div key={thirdKey} className="menu-item leaf">
-                <span className="icon">{thirdVal}</span>
-                <span>{thirdKey}</span>
-              </div>
-            ))}
-          </div>
-        )}
-    </div>
-  );
+.sidebar .main-col .menu-item {
+  display: flex;
+  flex-direction: column;   /* icon on top, text below */
+  align-items: center;
+  justify-content: center;
+  padding: 15px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #dcdcdc;  /* divider line */
+  transition: background 0.3s;
 }
 
-export default Sidebar;
+.sidebar .main-col .menu-item:last-child {
+  border-bottom: none;  /* no divider after last item */
+}
+
+.sidebar .main-col .menu-item.active {
+  background: #e6f0ff;  /* highlight */
+  font-weight: bold;
+  border-left: 3px solid #004aad; /* bank blue accent */
+}
+
+.sidebar .main-col .menu-item .icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
