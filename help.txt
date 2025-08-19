@@ -1,293 +1,234 @@
 import React, { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "../Styles/custom.css";
-
-import ScLogo from "../assets/ScLogo.jpg";
-import Logout from "../assets/Logout.png";
-import user from "../assets/user.jpg";
-
-import { MdAccountBalance, MdOutlineManageAccounts } from "react-icons/md";
 import {
-  FaMoneyCheckAlt, FaChevronRight, FaChevronDown, FaLock, FaUserShield,
-  FaUserTie, FaPlusCircle, FaUserEdit, FaUserPlus, FaCalculator, FaFileAlt,
-  FaDownload, FaListUl, FaCheck, FaTimes, FaClipboardList, FaCheckSquare
-} from "react-icons/fa";
+  Home,
+  User,
+  Settings,
+  FileText,
+  DollarSign,
+  Users,
+  Key,
+  ListChecks,
+  Download,
+  Eye,
+  Calculator,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from "lucide-react"; // icons
 
-function Dashboard({ role = "operator" }) {
-  const [openTop, setOpenTop] = useState(null); // ✅ active 1st layer
-  const [hoverSection, setHoverSection] = useState(null); // ✅ hovered 2nd layer
-  const [selectedPath, setSelectedPath] = useState([]);
-  const [collapsed, setCollapsed] = useState(false); // ✅ collapse toggle
+// 🎨 Bank blue theme
+const sidebarStyles = {
+  bg: "bg-[#002b5c]", // dark bank blue
+  hover: "hover:bg-[#004080]", // lighter hover blue
+  text: "text-white",
+  active: "bg-[#004d99]",
+};
 
-  const MENU = [
-    {
-      key: "accounts",
-      label: "Accounts",
-      icon: <MdAccountBalance />,
-      sections: [
-        {
-          key: "current",
-          label: "Current Account",
-          items: [
-            { key: "accDetails", label: "Account Details", icon: <FaFileAlt /> },
-            { key: "serviceReq", label: "Service Request", icon: <FaClipboardList /> },
-            { key: "employees", label: "Employees", icon: <FaUserTie /> },
-          ],
-        },
-        {
-          key: "change",
-          label: "Change Account",
-          items: [
-            { key: "addAcc", label: "Add Account", icon: <FaUserPlus /> },
-            { key: "editAcc", label: "Edit Account", icon: <FaUserEdit /> },
-            { key: "editEmpAcc", label: "Edit Employee Accounts", icon: <MdOutlineManageAccounts /> },
-          ],
-        },
-      ],
-    },
-    {
-      key: "cash",
-      label: "Cash",
-      icon: <FaMoneyCheckAlt />,
-      sections: [
-        {
-          key: "create",
-          label: "Create",
-          roles: ["creator"],
-          items: [
-            { key: "payroll", label: "Payroll", icon: <FaCheckSquare /> },
-            { key: "rolledPayees", label: "Rolled Payees", icon: <FaUserTie /> },
-            { key: "drafts", label: "Drafts", icon: <FaFileAlt /> },
-            { key: "qcc", label: "Quick Currency Calculator", icon: <FaCalculator /> },
-          ],
-        },
-        {
-          key: "manage",
-          label: "Manage",
-          roles: ["manager"],
-          items: [
-            { key: "makeApprovers", label: "Make Approvers", icon: <FaUserShield /> },
-            { key: "viewRolled", label: "View Rolled Payees", icon: <FaUserTie /> },
-          ],
-        },
-        {
-          key: "approve",
-          label: "Approve",
-          roles: ["approver"],
-          items: [
-            { key: "approved", label: "Approved Payees", icon: <FaCheck /> },
-            { key: "pending", label: "Pending Payees", icon: <FaClipboardList /> },
-          ],
-        },
-      ],
-    },
-    {
-      key: "transactions",
-      label: "Transactions",
-      icon: <FaListUl />,
-      sections: [
-        {
-          key: "rolled",
-          label: "Rolled Payees",
-          items: [
-            { key: "failed", label: "Failed Transactions", icon: <FaTimes /> },
-            { key: "success", label: "Successful Transactions", icon: <FaCheck /> },
-            { key: "hold", label: "Hold Transactions", icon: <FaClipboardList /> },
-          ],
-        },
-        {
-          key: "estatements",
-          label: "E-Statements",
-          items: [
-            { key: "filter", label: "Filter Transactions", icon: <FaListUl /> },
-            { key: "download", label: "Download Transactions", icon: <FaDownload /> },
-            { key: "summary", label: "Transactions Summary", icon: <FaFileAlt /> },
-          ],
-        },
-      ],
-    },
-    {
-      key: "settings",
-      label: "Settings",
-      icon: <FaLock />,
-      sections: [
-        {
-          key: "settingsRoot",
-          label: "General",
-          items: [
-            { key: "changePwd", label: "Change Password", icon: <FaLock /> },
-            { key: "viewApprovers", label: "View Approvers", icon: <FaUserShield /> },
-            { key: "viewManagers", label: "View Managers", icon: <FaUserTie /> },
-            { key: "viewCreates", label: "View Creates", icon: <FaPlusCircle /> },
-          ],
-        },
-      ],
-    },
-  ];
+// 🔹 Sidebar Menu Data (dynamic)
+const menuData = [
+  {
+    title: "Accounts",
+    icon: <User size={18} />,
+    subMenu: [
+      {
+        title: "Current Account",
+        subMenu: [
+          { title: "Account Details", icon: <FileText size={16} /> },
+          { title: "Service Request", icon: <ListChecks size={16} /> },
+          { title: "Employees", icon: <Users size={16} /> },
+        ],
+      },
+      {
+        title: "Change Account",
+        subMenu: [
+          { title: "Add Account", icon: <Plus size={16} /> },
+          { title: "Edit Account", icon: <FileText size={16} /> },
+          { title: "Edit Employee Accounts", icon: <Users size={16} /> },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Cash",
+    icon: <DollarSign size={18} />,
+    subMenu: [
+      {
+        title: "Create",
+        subMenu: [
+          { title: "Payroll", icon: <DollarSign size={16} /> },
+          { title: "Rolled Payees", icon: <Users size={16} /> },
+          { title: "Drafts", icon: <FileText size={16} /> },
+          { title: "Quick Currency Calculator", icon: <Calculator size={16} /> },
+        ],
+      },
+      {
+        title: "Manage",
+        subMenu: [
+          { title: "Make Approvers", icon: <User size={16} /> },
+          { title: "View Rolled Payees", icon: <Eye size={16} /> },
+        ],
+      },
+      {
+        title: "Approve",
+        subMenu: [
+          { title: "Approved Payees", icon: <CheckCircle size={16} /> },
+          { title: "Pending Payees", icon: <Clock size={16} /> },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Transactions",
+    icon: <FileText size={18} />,
+    subMenu: [
+      {
+        title: "Rolled Payees",
+        subMenu: [
+          { title: "Failed Transactions", icon: <XCircle size={16} /> },
+          { title: "Successful Transactions", icon: <CheckCircle size={16} /> },
+          { title: "Hold Transactions", icon: <Clock size={16} /> },
+        ],
+      },
+      {
+        title: "E-statements",
+        subMenu: [
+          { title: "Filter Transactions", icon: <ListChecks size={16} /> },
+          { title: "Download Transactions", icon: <Download size={16} /> },
+          { title: "Transactions Summary", icon: <FileText size={16} /> },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Settings",
+    icon: <Settings size={18} />,
+    subMenu: [
+      { title: "Change Password", icon: <Key size={16} /> },
+      { title: "View Approvers", icon: <Users size={16} /> },
+      { title: "View Managers", icon: <Users size={16} /> },
+      { title: "View Creates", icon: <Users size={16} /> },
+    ],
+  },
+];
 
-  const filterSectionsByRole = (top) => {
-    if (top.key !== "cash") return top.sections;
-    return top.sections.filter(
-      (sec) => !sec.roles || sec.roles.includes(role) || role === "operator"
-    );
-  };
+// 🔹 Role-based access
+const roleAccess = {
+  creator: ["Create"],
+  manager: ["Manage"],
+  approver: ["Approve"],
+  everyone: ["Accounts", "Cash", "Transactions", "Settings"],
+};
 
-  const onClickFinalItem = (tLabel, sLabel, iLabel) => {
-    setSelectedPath([tLabel, sLabel, iLabel]);
-  };
+// 🔹 Recursive Menu Component
+const MenuItem = ({ item, role }) => {
+  const [open, setOpen] = useState(false);
 
-  // ✅ Render 3rd layer (hover only)
-  const renderThirdPanel = (sec, tLabel) => (
-    <div className="third-panel-horizontal">
-      {sec.items.map((it) => (
-        <div
-          key={it.key}
-          className="third-item-h"
-          onClick={() => onClickFinalItem(tLabel, sec.label, it.label)}
-        >
-          <span className="me-1">{it.icon}</span>
-          {it.label}
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderSidebar = () => (
-    <>
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <img className="logo" src={ScLogo} alt="logo" />
-        {!collapsed && <span className="brand-name text-light">Straight2Bank</span>}
-      </div>
-
-      {MENU.map((top) => {
-        const sections = filterSectionsByRole(top);
-        return (
-          <div key={top.key} className="top-block border-bottom">
-            {/* ✅ Sidebar expand/collapse on click */}
-            <button
-              className={`top-item ${openTop === top.key ? "active" : ""}`}
-              onClick={() => setOpenTop(openTop === top.key ? null : top.key)}
-            >
-              <span className="me-2">{top.icon}</span>
-              {!collapsed && top.label}
-              <span className="ms-auto">
-                {openTop === top.key ? <FaChevronDown /> : <FaChevronRight />}
-              </span>
-            </button>
-
-            {/* ✅ 2nd layer shows only if expanded */}
-            {openTop === top.key && (
-              <div className="second-list-horizontal">
-                {sections.map((sec) => (
-                  <div
-                    key={sec.key}
-                    className="second-item-h"
-                    onMouseEnter={() => setHoverSection(sec.key)}
-                    onMouseLeave={() => setHoverSection(null)}
-                  >
-                    {sec.label}
-                    {/* ✅ 3rd layer by hover */}
-                    {hoverSection === sec.key && renderThirdPanel(sec, top.label)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </>
-  );
+  // Hide restricted menus
+  if (
+    role !== "admin" &&
+    !roleAccess.everyone.includes(item.title) &&
+    !roleAccess[role]?.includes(item.title)
+  ) {
+    return null;
+  }
 
   return (
-    <div className="d-flex dashboard-container">
-      <div className={`bar text-white p-3 ${collapsed ? "collapsed" : ""}`}>
-        {renderSidebar()}
+    <div>
+      <div
+        className={`flex items-center gap-2 p-2 cursor-pointer ${sidebarStyles.text} ${sidebarStyles.hover}`}
+        onClick={() => setOpen(!open)}
+      >
+        {item.icon}
+        <span>{item.title}</span>
       </div>
 
-      <div className="flex-grow-1 d-flex flex-column">
-        <nav className="px-3 d-flex justify-content-between align-items-center topbar">
-          <div className="userprofile text-light">
-            <img className="logo2" src={user} alt="user" /> SCB0334
-          </div>
-          <img className="logo1" src={Logout} alt="logout" />
-        </nav>
-        <div className="flex-grow-1 p-4 bg-light">
-          {/* ✅ main content */}
-          {selectedPath.length === 0 ? (
-            <h5 className="text-muted">Welcome to Straight2Bank Dashboard</h5>
-          ) : (
-            <div>
-              <div className="breadcrumbx">{selectedPath.join(" › ")}</div>
-              <h4>{selectedPath[selectedPath.length - 1]}</h4>
-            </div>
-          )}
+      {open && item.subMenu && (
+        <div className="ml-4 border-l border-gray-500">
+          {item.subMenu.map((sub, i) => (
+            <MenuItem key={i} item={sub} role={role} />
+          ))}
         </div>
+      )}
+    </div>
+  );
+};
+
+// 🔹 Main Sidebar Component
+const Sidebar = ({ role }) => {
+  return (
+    <div className={`w-64 h-screen ${sidebarStyles.bg} shadow-lg`}>
+      <h2 className="text-white text-lg font-bold p-4 border-b border-gray-700">
+        Dashboard
+      </h2>
+      <div className="p-2">
+        {menuData.map((item, i) => (
+          <MenuItem key={i} item={item} role={role} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
+
+
+
+import React from "react";
+import Sidebar from "./Sidebar"; // import the sidebar we built
+
+function App() {
+  // Change role here to see dynamic access (creator / manager / approver / admin)
+  const role = "creator";
+
+  return (
+    <div className="flex">
+      {/* Sidebar */}
+      <Sidebar role={role} />
+
+      {/* Main Content */}
+      <div className="flex-1 p-6 bg-gray-100">
+        <h1 className="text-2xl font-bold">Welcome, {role}</h1>
+        <p className="mt-4">
+          This is your dashboard. The sidebar is fully dynamic and role-based.
+        </p>
       </div>
     </div>
   );
 }
 
-export default Dashboard;
+export default App;
 
-/* Sidebar */
-.bar {
-  width: 80px;
-  background: #004c45; /* ✅ SCB dark green */
-  transition: width 0.3s ease;
+
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #002b5c; /* Bank dark blue */
+  color: white;
+  box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
 }
-.bar:not(.collapsed) {
-  width: 260px; /* ✅ expand on click */
+
+.sidebar-header {
+  padding: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid #004080;
 }
-.top-item {
-  background: transparent;
-  border: none;
-  color: #fff;
-  width: 100%;
-  text-align: left;
-  padding: 10px;
-  font-size: 14px;
+
+.menu-item {
   display: flex;
   align-items: center;
+  padding: 10px 16px;
   cursor: pointer;
-}
-.top-block {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* ✅ line divider */
-}
-.top-item.active {
-  background: #006f61; /* ✅ lighter green */
+  transition: background 0.3s;
 }
 
-/* 2nd layer */
-.second-list-horizontal {
-  background: #00594d;
-  padding: 8px;
-}
-.second-item-h {
-  color: #fff;
-  padding: 6px;
-  cursor: pointer;
-  position: relative;
-}
-.second-item-h:hover {
-  background: #007f70;
+.menu-item:hover {
+  background-color: #004080; /* lighter hover blue */
 }
 
-/* 3rd layer hover panel */
-.third-panel-horizontal {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  background: #007f70;
-  padding: 6px;
-  min-width: 200px;
-  z-index: 10;
+.submenu {
+  margin-left: 16px;
+  border-left: 1px solid #335c99;
 }
-.third-item-h {
-  padding: 6px;
-  color: white;
-  cursor: pointer;
-}
-.third-item-h:hover {
-  background: #00a489;
-}
+
 
