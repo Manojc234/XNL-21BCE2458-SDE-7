@@ -6,6 +6,7 @@ import ScLogo from "../assets/ScLogo.jpg";
 import Logout from "../assets/Logout.png";
 import user from "../assets/user.jpg";
 
+import { motion } from "framer-motion"; // ✅ Motion import
 import { MdAccountBalance, MdOutlineManageAccounts } from "react-icons/md";
 import {
   FaMoneyCheckAlt, FaChevronRight, FaChevronDown, FaLock, FaUserShield,
@@ -13,19 +14,11 @@ import {
   FaDownload, FaListUl, FaCheck, FaTimes, FaClipboardList, FaCheckSquare
 } from "react-icons/fa";
 
-/**
- * role: "creator" | "manager" | "approver" | "operator"
- * (operator can see everything; creator/manager/approver restricted under Cash)
- */
 function Dashboard({ role = "operator" }) {
-  // which top-level menu is expanded
   const [openTop, setOpenTop] = useState("accounts");
-  // which second-level section is hovered (to show the floating third panel)
   const [hoverSection, setHoverSection] = useState({ top: null, section: null });
-  // breadcrumb of the selected final item
   const [selectedPath, setSelectedPath] = useState([]);
 
-  // ---- MENU MODEL (keep icons close to labels for clarity) ----
   const MENU = [
     {
       key: "accounts",
@@ -60,7 +53,7 @@ function Dashboard({ role = "operator" }) {
         {
           key: "create",
           label: "Create",
-          roles: ["creator"], // only creators
+          roles: ["creator"],
           items: [
             { key: "payroll", label: "Payroll", icon: <FaCheckSquare /> },
             { key: "rolledPayees", label: "Rolled Payees", icon: <FaUserTie /> },
@@ -71,7 +64,7 @@ function Dashboard({ role = "operator" }) {
         {
           key: "manage",
           label: "Manage",
-          roles: ["manager"], // only managers
+          roles: ["manager"],
           items: [
             { key: "makeApprovers", label: "Make Approvers", icon: <FaUserShield /> },
             { key: "viewRolled", label: "View Rolled Payees", icon: <FaUserTie /> },
@@ -80,7 +73,7 @@ function Dashboard({ role = "operator" }) {
         {
           key: "approve",
           label: "Approve",
-          roles: ["approver"], // only approvers
+          roles: ["approver"],
           items: [
             { key: "approved", label: "Approved Payees", icon: <FaCheck /> },
             { key: "pending", label: "Pending Payees", icon: <FaClipboardList /> },
@@ -132,7 +125,6 @@ function Dashboard({ role = "operator" }) {
     },
   ];
 
-  // filter cash sections by role; all other top-levels open to everyone
   const filterSectionsByRole = (top) => {
     if (top.key !== "cash") return top.sections;
     return top.sections.filter(
@@ -144,13 +136,18 @@ function Dashboard({ role = "operator" }) {
     setSelectedPath([tLabel, sLabel, iLabel]);
   };
 
-  // ---- RENDERERS ----
   const renderThirdPanel = (topKey, sec, tLabel) => {
     const isOpen = hoverSection.top === topKey && hoverSection.section === sec.key;
     if (!isOpen) return null;
     return (
-      <div className="third-panel">
-        <div className="third-title">{sec.label}</div>
+      <motion.div
+        className="third-panel shadow-sm border"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="third-title border-bottom">{sec.label}</div>
         {sec.items.map((it) => (
           <div
             key={it.key}
@@ -161,7 +158,7 @@ function Dashboard({ role = "operator" }) {
             {it.label}
           </div>
         ))}
-      </div>
+      </motion.div>
     );
   };
 
@@ -173,34 +170,39 @@ function Dashboard({ role = "operator" }) {
       {MENU.map((top) => {
         const sections = filterSectionsByRole(top);
         return (
-          <div key={top.key} className="top-block">
-            {/* LAYER 1 (click to expand) */}
+          <div key={top.key} className="top-block border-bottom">
             <button
               className={`top-item ${openTop === top.key ? "active" : ""}`}
               onClick={() => setOpenTop(openTop === top.key ? null : top.key)}
             >
               <span className="me-2">{top.icon}</span>
               {top.label}
-              <span className="ms-auto">{openTop === top.key ? <FaChevronDown /> : <FaChevronRight />}</span>
+              <span className="ms-auto">
+                {openTop === top.key ? <FaChevronDown /> : <FaChevronRight />}
+              </span>
             </button>
 
-            {/* LAYER 2 (static inside sidebar) */}
             {openTop === top.key && (
-              <div className="second-list">
+              <motion.div
+                className="second-list border-start"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25 }}
+              >
                 {sections.map((sec) => (
                   <div
-                    className="second-item"
+                    className="second-item border-bottom"
                     key={sec.key}
                     onMouseEnter={() => setHoverSection({ top: top.key, section: sec.key })}
                     onMouseLeave={() => setHoverSection({ top: null, section: null })}
                   >
                     <span>{sec.label}</span>
                     <FaChevronRight className="chev" />
-                    {/* LAYER 3 (hover-floating panel) */}
                     {renderThirdPanel(top.key, sec, top.label)}
                   </div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         );
@@ -214,31 +216,31 @@ function Dashboard({ role = "operator" }) {
         <div className="container-fluid">
           <div className="row g-4 mb-4">
             <div className="col-md-4">
-              <div className="card gradient-card shadow-sm text-white">
+              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Account Balance</h5>
                   <h3>₹ 2,00,45,000</h3>
                   <button className="b btn btn-light btn-sm mt-2">View Balance</button>
                 </div>
-              </div>
+              </motion.div>
             </div>
             <div className="col-md-4">
-              <div className="card gradient-card-2 shadow-sm text-white">
+              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card-2 shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Approval Status</h5>
                   <h3>5 Pending</h3>
                   <button className="b btn btn-light btn-sm mt-2">Approve</button>
                 </div>
-              </div>
+              </motion.div>
             </div>
             <div className="col-md-4">
-              <div className="card gradient-card-3 shadow-sm text-white">
+              <motion.div whileHover={{ scale: 1.05 }} className="card gradient-card-3 shadow-sm text-white">
                 <div className="card-body">
                   <h5 className="card-title">Transactions Today</h5>
                   <h3>23</h3>
                   <button className="b btn btn-light btn-sm mt-2">Transactions</button>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -246,12 +248,12 @@ function Dashboard({ role = "operator" }) {
     }
     return (
       <div className="p-4">
-        <div className="breadcrumbx">
-          {selectedPath.join("  ›  ")}
-        </div>
+        <div className="breadcrumbx">{selectedPath.join("  ›  ")}</div>
         <div className="mt-3">
           <h4>{selectedPath[selectedPath.length - 1]}</h4>
-          <p className="text-muted">This is placeholder content for <strong>{selectedPath.join(" / ")}</strong>.</p>
+          <p className="text-muted">
+            This is placeholder content for <strong>{selectedPath.join(" / ")}</strong>.
+          </p>
         </div>
       </div>
     );
@@ -259,12 +261,8 @@ function Dashboard({ role = "operator" }) {
 
   return (
     <div className="d-flex dashboard-container">
-      {/* SIDEBAR */}
-      <div className="bar text-white p-3">
-        {renderSidebar()}
-      </div>
+      <div className="bar text-white p-3">{renderSidebar()}</div>
 
-      {/* RIGHT SIDE */}
       <div className="flex-grow-1 d-flex flex-column">
         <nav className="px-3 d-flex justify-content-between align-items-center">
           <div className="userprofile text-light">
@@ -272,9 +270,7 @@ function Dashboard({ role = "operator" }) {
           </div>
           <img className="logo1" src={Logout} alt="logout" />
         </nav>
-        <div className="flex-grow-1 p-4 bg-light">
-          {renderMain()}
-        </div>
+        <div className="flex-grow-1 p-4 bg-light">{renderMain()}</div>
       </div>
     </div>
   );
@@ -284,98 +280,126 @@ export default Dashboard;
 
 
 
-/* Layout */
-.dashboard-container { height: 100vh; }
-
-/* Sidebar base */
-.bar {
-  width: 230px;
-  min-height: 100vh;
-  background-color: #023b97dc; /* exact SCB blue from your photo */
-  position: relative;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.15);
+.dashboard-container {
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Branding */
-.logo { height:60px; width:60px; margin:12px 0 10px 18px; border-radius:50%; border:2px solid #fff; }
-.brand-name { position:relative; top:-5px; left:18px; display:block; color:#fff; font-weight:700; }
+.bar {
+  width: 260px;
+  background: linear-gradient(180deg, #002b5c, #004080);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-/* Top-level items (Layer 1) */
-.top-block { margin-bottom: 6px; }
+.logo {
+  width: 45px;
+  margin-bottom: 10px;
+}
+
+.brand-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  display: block;
+}
+
 .top-item {
   width: 100%;
-  color: #fff;
   background: transparent;
-  border: 0;
-  text-align: left;
-  padding: 12px 14px;
-  border-radius: 6px;
-  display: flex; align-items:center; gap:8px;
+  border: none;
+  padding: 10px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
   cursor: pointer;
-  transition: background .2s ease, padding-left .2s ease;
+  transition: background 0.2s;
 }
-.top-item:hover { background-color:#04215f; padding-left:18px; }
-.top-item.active { background-color:#04215f; }
 
-/* Second layer – static inside the bar */
-.second-list { padding: 4px 0 6px 8px; }
-.second-item {
-  position: relative;
-  background: rgba(255,255,255,0.06);
-  color:#fff;
-  margin: 6px 8px 6px 14px;
-  padding: 10px 28px 10px 12px;
+.top-item:hover,
+.top-item.active {
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
-  font-size: 0.95rem;
-  cursor:pointer;
 }
-.second-item:hover { background-color:#295caddc; }
-.second-item .chev { position:absolute; right:8px; top:50%; transform:translateY(-50%); }
 
-/* Third layer – floating white panel on hover */
+.second-list {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.second-item {
+  padding: 8px;
+  color: #ddd;
+  cursor: pointer;
+  position: relative;
+}
+
+.second-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
 .third-panel {
   position: absolute;
   left: 100%;
   top: 0;
-  min-width: 240px;
-  background: #ffffff;
-  color: #222;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+  background: #fff;
+  color: #333;
+  padding: 10px;
+  min-width: 180px;
   border-radius: 6px;
-  z-index: 200;
+  z-index: 1000;
 }
+
 .third-title {
-  font-weight: 600;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
-  color:#555;
+  font-weight: bold;
+  font-size: 0.9rem;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
 }
+
 .third-item {
-  padding: 10px 12px;
-  display: flex; align-items:center;
-  gap:10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.third-item:hover {
+  background: #f5f5f5;
+}
+
+.breadcrumbx {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  border-radius: 12px;
+}
+
+.gradient-card-2 {
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  border-radius: 12px;
+}
+
+.gradient-card-3 {
+  background: linear-gradient(135deg, #28a745, #85dcb8);
+  border-radius: 12px;
+}
+
+.logo1 {
+  width: 30px;
   cursor: pointer;
 }
-.third-item:hover { background-color:#f5f7fb; }
 
-/* Top bar */
-.px-3 { background-color:#023b97dc; height:70px; color:#fff; box-shadow:0 1px 6px rgba(0,0,0,0.08); }
-.logo2 { height:32px; width:32px; border-radius:50%; border:2px solid #fff; }
-.logo1 { height:28px; width:28px; cursor:pointer; }
-
-/* Cards */
-.card { border-radius:12px; border:none; }
-.card-body { background:#023b97dc; border-radius:12px; color:#fff; transition:background .2s ease; }
-.card-body:hover { background:#04215f; }
-
-/* Buttons */
-.b,.Q{ background-color:#f1f5ff; border:none; color:#000; padding:6px 14px; border-radius:6px; }
-.b:hover,.Q:hover{ background-color:#295caddc; color:#fff; }
-
-/* Table (kept from your earlier styles if needed) */
-.modern-service-table { width:100%; border-collapse:separate; border-spacing:0 10px; }
-.modern-service-table thead { background-color:#023b97dc; color:#fff; }
-.modern-service-table thead th { padding:12px; text-align:left; }
-.modern-service-table tbody tr { background-color:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.05); border-radius:8px; }
-
-.breadcrumbx{ font-weight:600; color:#023b97dc; }
+.logo2 {
+  width: 35px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
