@@ -146,3 +146,26 @@ export default Sidebar;
 .nav-icon:hover {
   transform: scale(1.1);
 }
+/* 🔹 Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;   /* 🔥 Full width */
+  height: 90px;  /* Bigger height */
+  background: linear-gradient(90deg, #0d47a1, #1565c0); /* SCB-style gradient */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;  /* icons to right */
+  padding: 0 30px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+
+/* 🔹 Push sidebar below navbar */
+.sidebar {
+  margin-top: 90px;  /* Same as navbar height */
+  background: #1565c0;
+  min-height: 100vh;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+}
