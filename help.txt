@@ -15,14 +15,14 @@ function Sidebar({ role }) {
   const [restrictMsg, setRestrictMsg] = useState("");
 
   // 🔒 Access control
-  const checkAccess = (menuKey) => {
+  const checkAccess = (menuKey,subKey) => {
     // role-based full menu restrictions
-    if (menuKey === "Create" && role !== "creator") return false;
-    if (menuKey === "Manage" && role !== "manager") return false;
-    if (menuKey === "Approver" && role !== "approver") return false;
+    if ((menuKey === "Create" || menuKey === "Payroll" || menuKey === "Rolled Payees"|| menuKey === "Drafts"|| menuKey === "Quick Currency Calculator") && role !== "creator") return false;
+    if ((menuKey === "Manage" ||menuKey === "Make Approvers"|| menuKey === "View Rolled Payees") && role !== "manager") return false;
+    if ((menuKey === "Approver" || menuKey === "Approved Payees"|| menuKey === "Pending Payees") && role !== "approver") return false;
 
     // specific item restrictions
-    if (menuKey === "Add Account" && (role === "approver" || role==="manager")) return false;
+    if ((menuKey === "Add Account" || menuKey==="Change Account" || menuKey==="Edit Account" || menuKey==="Edit Employee Accounts" ) && (role === "approver" || role==="manager")) return false;
     if ((menuKey === "View Approvers" || menuKey === "View Creators" || menuKey==="View Managers") && (role === "creator" || role === "approver")) return false;
     if (menuKey === "Change Account" && role === "manager") return false;
 
@@ -30,8 +30,8 @@ function Sidebar({ role }) {
   };
 
   // Handle clicks with accessibility restriction
-  const handleClick = (menuKey) => {
-    if (!checkAccess(menuKey)) {
+  const handleClick = (menuKey,subKey,thirdKey) => {
+    if (!checkAccess(menuKey,subKey,thirdKey)) {
       setRestrictMsg(`🚫 You are restricted from accessing "${menuKey}"!`);
       setRestrictOpen(true);
       return;
@@ -174,3 +174,412 @@ function Sidebar({ role }) {
 export default Sidebar;
 
 
+import {
+    MdAccountBalance,MdOutlineManageAccounts,MdAttachMoney,MdOutlineSwapHoriz,MdSettings,MdPerson,MdAdd,MdEdit,MdGroup,MdCreate,MdViewList,MdCheckCircle,MdPending,
+    MdError,MdDownload,MdFilterList,MdSummarize, MdPassword,MdSupervisorAccount,
+  } from "react-icons/md";
+  import{
+    Key,
+    Users,
+    UserCog,
+    UserPlus
+  } from 'lucide-react';
+  
+  export const SidebarData = {
+    Accounts: {
+      icon: <MdAccountBalance />,
+      subMenu: {
+        "View Account": {
+          icon: <MdOutlineManageAccounts />,
+          subMenu: {
+            "Account Details": <MdPerson />,
+            "Service Request": <MdGroup />,
+            Employees: <MdGroup />,
+          },
+        },
+        "Add Account": {
+          icon: <MdAdd />,
+          subMenu: {
+            "Change Account":<MdOutlineManageAccounts /> ,
+            "Edit Account": <MdEdit />,
+            "Edit Employee Accounts": <MdEdit />,
+          },
+        },
+      },
+    },
+    Cash: {
+      icon: <MdAttachMoney />,
+      subMenu: {
+        Create: {
+          icon: <MdCreate />,
+          subMenu: {
+            Payroll: <MdCreate />,
+            "Rolled Payees": <MdGroup />,
+            Drafts: <MdCreate />,
+            "Quick Currency Calculator": <MdCreate />,
+          },
+        },
+        Manage: {
+          icon: <MdViewList />,
+          subMenu: {
+            "Make Approvers": <MdGroup />,
+            "View Rolled Payees": <MdGroup />,
+          },
+        },
+        Approver: {
+          icon: <MdCheckCircle />,
+          subMenu: {
+            "Approved Payees": <MdCheckCircle />,
+            "Pending Payees": <MdPending />,
+          },
+        },
+      },
+    },
+    Transactions: {
+      icon: <MdOutlineSwapHoriz />,
+      subMenu: {
+        "Payees Rolled": {
+          icon: <MdGroup />,
+          subMenu: {
+            "Failed Transactions": <MdError />,
+            "Successful Transactions": <MdCheckCircle />,
+            "Hold Transactions": <MdPending />,
+          },
+        },
+        "E-Statements": {
+          icon: <MdDownload />,
+          subMenu: {
+            "Filter Transactions": <MdFilterList />,
+            "Download Transactions": <MdDownload />,
+            "Transactions Summary": <MdSummarize />,
+          },
+        },
+      },
+    },
+    Settings: {
+      icon: <MdSettings />,
+      subMenu: {
+        "Change Password": {icon:<Key/>},
+        "View Approvers":  {icon:<Users/>},
+        "View Managers":  {icon:<UserCog/>},
+        "View Creators":  {icon:<UserPlus/>},
+      },
+    },
+  };
+  
+  
+.app {
+  display: flex;
+  height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.sidebar {
+  display: flex;
+  background: #0d47a1;
+  border-right: 1px solid #ddd;
+  height: 100%;
+  position: fixed;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  width:100px;
+  border-right: 1px solid #eee;
+  padding: 10px;
+ 
+}
+
+.main-col {
+  background: #0d47a1;
+  color:#fff;
+  
+}
+
+.sub-col {
+  background: #0d47a1;
+  color:#fff;
+}
+
+.menu-item.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+ 
+}
+
+.menu-item:hover {
+  background: #083579;
+  
+}
+
+.menu-item.active {
+  background: #083579;
+  font-weight: 600;
+}
+
+.menu-item.leaf {
+  font-size: 14px;
+}
+
+.menu-item.vertical .icon {
+  font-size: 18px;
+  color: #fff;
+}
+.menu-item.vertical .label{
+  font-size: 14px;
+
+}
+
+.icon.big {
+  font-size: 22px;  /* Bigger for main menus */
+}
+.sidebar .main-col .menu-item {
+ 
+  display: flex;
+  flex-direction: column;   /* icon on top, text below */
+  align-items: center;
+  justify-content: center;
+  padding: 15px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #dcdcdc;  /* divider line */
+  transition: background 0.3s;
+  
+}
+
+.sidebar .main-col .menu-item:last-child {
+  border-bottom: none;  /* no divider after last item */
+}
+
+.sidebar .main-col .menu-item.active {
+ /* highlight */
+  font-weight: bold;
+  border-left: 3px solid #004aad; /* bank blue accent */
+}
+
+.sidebar .main-col .menu-item .icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.sidebar .sub-col .menu-item,
+.sidebar .hover-col .menu-item {
+  display: flex;
+  flex-direction: row;   /* icon beside text */
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+  
+}
+
+.sidebar .sub-col .menu-item:hover,
+.sidebar .hover-col .menu-item:hover {
+  background: #f5f5f5;
+}
+
+.sidebar .sub-col .menu-item .icon,
+.sidebar .hover-col .menu-item .icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.menu-item-2.vertical {
+  display: flex;
+  align-items: center;
+  padding:8px 12px;
+  gap: 8px;
+  cursor:pointer;
+  width:200px;
+ 
+}
+
+.menu-item-2:hover {
+  background: #083579;
+ 
+}
+
+.menu-item-2.vertical .icon {
+  font-size: 18px;
+  color: #fff;
+}
+.menu-item-2.vertical .label{
+  font-size: 14px;
+
+}
+.submenu-box{
+  position:absolute;
+  left: 320px;
+  top:0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow:0 4px 8px rgba(0,0,0,0.1);
+  padding:8px;
+  min-width: 180px;
+  z-index: 1000;
+}
+.submenu-box::before{
+  content:"";
+  position: absolute;
+  left:-15px;
+  top:20px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent #fff transparent transparent;
+  filter:drop-shadow(-1px 1px 1px rgba(0,0,0,0.1));
+
+}
+.menu-item-3.vertical {
+  display: flex;
+  align-items: center;
+  padding:8px 12px;
+  gap: 8px;
+  cursor:pointer;
+  width:200px;
+  color:#0d47a1;
+ 
+}
+
+.menu-item-3:hover{
+  font-size: 15px;
+  width:calc(100% -28px);
+}
+.menu-item-3 .vertical .icon:hover{
+  color:#fff;
+}
+
+.menu-item-3.vertical .icon {
+  font-size: 18px;
+  color: #0d47a1;
+}
+.menu-item-3.vertical .label{
+  font-size: 14px;
+
+}
+.sidebar{
+  margin-top: 90px;
+}
+
+
+/* 🔹 Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;   /* 🔥 Full width */
+  height: 90px;  /* Bigger height */
+  background: linear-gradient(90deg, #0d47a1, #1565c0); /* SCB-style gradient */
+  display: flex;
+  align-items: center; /* icons to right */
+  padding: 0 30px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+.nav-left{
+  height: 50px;
+  width:50px;
+  justify-content: flex-start;
+  cursor: pointer;
+
+}
+.right{
+  margin-left: 1050px;
+  cursor: pointer;
+  
+  
+}
+
+
+/* 🔹 Push sidebar below navbar */
+.sidebar {
+  margin-top: 90px;  /* Same as navbar height */
+  background: #1565c0;
+  min-height: 100vh;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+}
+
+.main-content{
+  margin-top: 200px;
+  padding:20px;
+}
+.brand-name{
+  color: #ffffffef;
+  cursor: pointer;
+}
+
+/* ===== Centered Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* above navbar (1000) and menus */
+}
+
+.modal-card {
+  background: #ffffff;
+  width: min(92vw, 420px);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  padding: 20px 22px;
+  text-align: center;
+}
+
+.modal-title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d47a1;
+}
+
+.modal-text {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.modal-btn {
+  background: #0d47a1;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-btn:hover {
+  filter: brightness(1.05);
+}
+
+
+
+import React from "react";
+import Sidebar from "./Components/Sidebar";
+import './App.css';
+
+function App() {
+  const role = "approver"; // try: creator | manager | approver
+
+  return (
+    <div className="app">
+      <Sidebar role={role} />
+      <div class="content">
+        
+      </div>
+    </div>
+  );
+}
+
+export default App;
