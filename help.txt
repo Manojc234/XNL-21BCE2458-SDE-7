@@ -1,32 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarData } from "./SidebarData";
-import '../Styles/custom.css';
+import "../Styles/custom.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MdLogout, MdPerson } from "react-icons/md";
-import ScLogo from "../assets/ScLogo.jpg";
+import { MdLogout } from "react-icons/md";
 
 function Sidebar({ role }) {
-  const [activeMenu, setActiveMenu] = useState(null);      // For column 2
-  const [hoverSubMenu, setHoverSubMenu] = useState(null);  // For column 3
-  const [lockSubMenu, setLockSubMenu] = useState(false);   // Keeps 3rd menu open
-  const [boxTop,setBoxTop]=useState(0);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [hoverSubMenu, setHoverSubMenu] = useState(null);
+  const [boxTop, setBoxTop] = useState(0);
 
-  // Accessibility check
+  // NEW: modal state
+  const [restrictOpen, setRestrictOpen] = useState(false);
+  const [restrictMsg, setRestrictMsg] = useState("");
+
+  // 🔒 Access control
   const checkAccess = (menuKey) => {
+    // role-based full menu restrictions
     if (menuKey === "Create" && role !== "creator") return false;
     if (menuKey === "Manage" && role !== "manager") return false;
     if (menuKey === "Approver" && role !== "approver") return false;
+
+    // specific item restrictions
+    if (menuKey === "Add Account" && role === "approver") return false;
+    if ((menuKey === "View Approvers" || menuKey === "View Creators") && (role === "creator" || role === "approver")) return false;
+    if (menuKey === "Change Account" && role === "manager") return false;
+
     return true;
   };
 
   // Handle clicks with accessibility restriction
   const handleClick = (menuKey) => {
     if (!checkAccess(menuKey)) {
-      toast.error("🚫 You are restricted from accessing this feature!", {
-        position: "top-right",
-        autoClose: 2000,
-      });
+      setRestrictMsg(`🚫 You are restricted from accessing "${menuKey}"!`);
+      setRestrictOpen(true);
       return;
     }
     toast.success(`✅ Accessing ${menuKey}`, {
@@ -35,17 +42,37 @@ function Sidebar({ role }) {
     });
   };
 
+  // Close modal with ESC
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setRestrictOpen(false);
+    };
+    if (restrictOpen) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [restrictOpen]);
+
   return (
     <div className="app">
-      {/* 🔹 Navbar at top */}
+      {/* 🔹 Navbar */}
       <div className="navbar">
         <div className="flex items-center gap-2 px-4 py-3">
-          <img  class="nav-left"  src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Standard_Chartered_Logo_%282021%2C_Logo_only%29.svg" alt="none"/> 
+          <img
+            className="nav-left"
+            src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Standard_Chartered_Logo_%282021%2C_Logo_only%29.svg"
+            alt="SC Logo"
+          />
         </div>
-        <div class="brand-name"><h3>Standard<br/>Chartered</h3></div>
-        
-        <div class="right">
-            <MdLogout  size={30} color="white"/> 
+
+        <div className="brand-name">
+          <h3>
+            Standard
+            <br />
+            Chartered
+          </h3>
+        </div>
+
+        <div className="right">
+          <MdLogout size={30} color="white" />
         </div>
       </div>
 
@@ -58,17 +85,13 @@ function Sidebar({ role }) {
               key={menuKey}
               className={`menu-item vertical ${activeMenu === menuKey ? "active" : ""}`}
               onClick={() => {
-                if(activeMenu===menuKey){
+                if (activeMenu === menuKey) {
                   setActiveMenu(null);
                   setHoverSubMenu(null);
-                  setLockSubMenu(false);
-                }else
-                {
+                } else {
                   setActiveMenu(menuKey);
                   setHoverSubMenu(null);
-                  setLockSubMenu(false);
                 }
-
               }}
             >
               <span className="icon big">{menuVal.icon}</span>
@@ -80,26 +103,20 @@ function Sidebar({ role }) {
         {/* Column 2 - SubMenu */}
         {activeMenu && (
           <div className="col-2 sub-col">
-            {Object.entries(SidebarData[activeMenu].subMenu || {}).map(
-              ([subKey, subVal]) => (
-                <div
-                  key={subKey}
-                  className={`menu-item-2 vertical ${hoverSubMenu === subKey ? "active" : ""}`}
-                  onMouseEnter={(e) => {
-                    setHoverSubMenu(subKey);
-                    setBoxTop(e.currentTarget.offsetTop);
-                    
-                  }}
-                  onMouseLeave={()=>{
-                    setLockSubMenu(null);
-                  }}
-                  onClick={() => handleClick(subKey)}
-                >
-                  <span className="icon">{subVal.icon}</span>
-                  <span>{subKey}</span>
-                </div>
-              )
-            )}
+            {Object.entries(SidebarData[activeMenu].subMenu || {}).map(([subKey, subVal]) => (
+              <div
+                key={subKey}
+                className={`menu-item-2 vertical ${hoverSubMenu === subKey ? "active" : ""}`}
+                onMouseEnter={(e) => {
+                  setHoverSubMenu(subKey);
+                  setBoxTop(e.currentTarget.offsetTop);
+                }}
+                onClick={() => handleClick(subKey)}
+              >
+                <span className="icon">{subVal.icon}</span>
+                <span>{subKey}</span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -108,386 +125,117 @@ function Sidebar({ role }) {
           hoverSubMenu &&
           SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu && (
             <div
-              className="submenu-box" style={{top:boxTop}}
-              onMouseEnter={() => {}}
-              onMouseLeave={() => {
-                setHoverSubMenu(null);
-              }}
+              className="submenu-box"
+              style={{ top: boxTop }}
+              onMouseLeave={() => setHoverSubMenu(null)}
             >
-              {Object.entries(
-                SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
-              ).map(([thirdKey, thirdVal]) => (
-                <div 
-                  key={thirdKey} 
-                  className="menu-item-3 vertical leaf"
-                  onClick={() => handleClick(thirdKey)}
-                >
-                  <span className="icon">{thirdVal}</span>
-                  <span>{thirdKey}</span>
-                </div>
-              ))}
+              {Object.entries(SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu).map(
+                ([thirdKey, thirdVal]) => (
+                  <div
+                    key={thirdKey}
+                    className="menu-item-3 vertical leaf"
+                    onClick={() => handleClick(thirdKey)}
+                  >
+                    <span className="icon">{thirdVal}</span>
+                    <span>{thirdKey}</span>
+                  </div>
+                )
+              )}
             </div>
           )}
       </div>
+
+      {/* Restriction Modal */}
+      {restrictOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="restrict-title"
+          onClick={(e) => {
+            if (e.target.classList.contains("modal-overlay")) setRestrictOpen(false);
+          }}
+        >
+          <div className="modal-card" role="document">
+            <h3 id="restrict-title" className="modal-title">Access Restricted</h3>
+            <p className="modal-text">{restrictMsg}</p>
+            <div className="modal-actions">
+              <button className="modal-btn" onClick={() => setRestrictOpen(false)}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default Sidebar;
 
-import {
-    MdAccountBalance,MdOutlineManageAccounts,MdAttachMoney,MdOutlineSwapHoriz,MdSettings,MdPerson,MdAdd,MdEdit,MdGroup,MdCreate,MdViewList,MdCheckCircle,MdPending,
-    MdError,MdDownload,MdFilterList,MdSummarize, MdPassword,MdSupervisorAccount,
-  } from "react-icons/md";
-  import{
-    Key,
-    Users,
-    UserCog,
-    UserPlus
-  } from 'lucide-react';
-  
-  export const SidebarData = {
-    Accounts: {
-      icon: <MdAccountBalance />,
-      subMenu: {
-        "View Account": {
-          icon: <MdOutlineManageAccounts />,
-          subMenu: {
-            "Account Details": <MdPerson />,
-            "Service Request": <MdGroup />,
-            Employees: <MdGroup />,
-          },
-        },
-        "Change Account": {
-          icon: <MdOutlineManageAccounts />,
-          subMenu: {
-            "Add Account": <MdAdd />,
-            "Edit Account": <MdEdit />,
-            "Edit Employee Accounts": <MdEdit />,
-          },
-        },
-      },
-    },
-    Cash: {
-      icon: <MdAttachMoney />,
-      subMenu: {
-        Create: {
-          icon: <MdCreate />,
-          subMenu: {
-            Payroll: <MdCreate />,
-            "Rolled Payees": <MdGroup />,
-            Drafts: <MdCreate />,
-            "Quick Currency Calculator": <MdCreate />,
-          },
-        },
-        Manage: {
-          icon: <MdViewList />,
-          subMenu: {
-            "Make Approvers": <MdGroup />,
-            "View Rolled Payees": <MdGroup />,
-          },
-        },
-        Approver: {
-          icon: <MdCheckCircle />,
-          subMenu: {
-            "Approved Payees": <MdCheckCircle />,
-            "Pending Payees": <MdPending />,
-          },
-        },
-      },
-    },
-    Transactions: {
-      icon: <MdOutlineSwapHoriz />,
-      subMenu: {
-        "Rolled Payees": {
-          icon: <MdGroup />,
-          subMenu: {
-            "Failed Transactions": <MdError />,
-            "Successful Transactions": <MdCheckCircle />,
-            "Hold Transactions": <MdPending />,
-          },
-        },
-        "E-Statements": {
-          icon: <MdDownload />,
-          subMenu: {
-            "Filter Transactions": <MdFilterList />,
-            "Download Transactions": <MdDownload />,
-            "Transactions Summary": <MdSummarize />,
-          },
-        },
-      },
-    },
-    Settings: {
-      icon: <MdSettings />,
-      subMenu: {
-        "Change Password": {icon:<Key/>},
-        "View Approvers":  {icon:<Users/>},
-        "View Managers":  {icon:<UserCog/>},
-        "View Creates":  {icon:<UserPlus/>},
-      },
-    },
-  };
-  
 
-.app {
-  display: flex;
-  height: 100vh;
-  font-family: "Segoe UI", sans-serif;
-}
 
-.sidebar {
-  display: flex;
-  background: #0d47a1;
-  border-right: 1px solid #ddd;
-  height: 100%;
+/* ===== Centered Modal ===== */
+.modal-overlay {
   position: fixed;
-}
-
-.col {
+  inset: 0;
+  background: rgba(0,0,0,0.45);
   display: flex;
-  flex-direction: column;
-  width:100px;
-  border-right: 1px solid #eee;
-  padding: 10px;
- 
-}
-
-.main-col {
-  background: #0d47a1;
-  color:#fff;
-  
-}
-
-.sub-col {
-  background: #0d47a1;
-  color:#fff;
-}
-
-.menu-item.vertical {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
- 
+  z-index: 2000; /* above navbar (1000) and menus */
 }
 
-.menu-item:hover {
-  background: #083579;
-  
+.modal-card {
+  background: #ffffff;
+  width: min(92vw, 420px);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  padding: 20px 22px;
+  text-align: center;
 }
 
-.menu-item.active {
-  background: #083579;
-  font-weight: 600;
-}
-
-.menu-item.leaf {
-  font-size: 14px;
-}
-
-.menu-item.vertical .icon {
-  font-size: 18px;
-  color: #fff;
-}
-.menu-item.vertical .label{
-  font-size: 14px;
-
-}
-
-.icon.big {
-  font-size: 22px;  /* Bigger for main menus */
-}
-.sidebar .main-col .menu-item {
- 
-  display: flex;
-  flex-direction: column;   /* icon on top, text below */
-  align-items: center;
-  justify-content: center;
-  padding: 15px 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #dcdcdc;  /* divider line */
-  transition: background 0.3s;
-  
-}
-
-.sidebar .main-col .menu-item:last-child {
-  border-bottom: none;  /* no divider after last item */
-}
-
-.sidebar .main-col .menu-item.active {
- /* highlight */
-  font-weight: bold;
-  border-left: 3px solid #004aad; /* bank blue accent */
-}
-
-.sidebar .main-col .menu-item .icon {
-  font-size: 22px;
-  margin-bottom: 6px;
-}
-.sidebar .sub-col .menu-item,
-.sidebar .hover-col .menu-item {
-  display: flex;
-  flex-direction: row;   /* icon beside text */
-  align-items: center;
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.3s;
-  
-}
-
-.sidebar .sub-col .menu-item:hover,
-.sidebar .hover-col .menu-item:hover {
-  background: #f5f5f5;
-}
-
-.sidebar .sub-col .menu-item .icon,
-.sidebar .hover-col .menu-item .icon {
-  font-size: 18px;
-  margin-right: 8px;
-}
-
-.menu-item-2.vertical {
-  display: flex;
-  align-items: center;
-  padding:8px 12px;
-  gap: 8px;
-  cursor:pointer;
-  width:200px;
- 
-}
-
-.menu-item-2:hover {
-  background: #083579;
- 
-}
-
-.menu-item-2.vertical .icon {
-  font-size: 18px;
-  color: #fff;
-}
-.menu-item-2.vertical .label{
-  font-size: 14px;
-
-}
-.submenu-box{
-  position:absolute;
-  left: 320px;
-  top:0;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow:0 4px 8px rgba(0,0,0,0.1);
-  padding:8px;
-  min-width: 180px;
-  z-index: 1000;
-}
-.submenu-box::before{
-  content:"";
-  position: absolute;
-  left:-15px;
-  top:20px;
-  border-width: 8px;
-  border-style: solid;
-  border-color: transparent #fff transparent transparent;
-  filter:drop-shadow(-1px 1px 1px rgba(0,0,0,0.1));
-
-}
-.menu-item-3.vertical {
-  display: flex;
-  align-items: center;
-  padding:8px 12px;
-  gap: 8px;
-  cursor:pointer;
-  width:200px;
-  color:#0d47a1;
- 
-}
-
-.menu-item-3:hover{
-  font-size: 15px;
-  width:calc(100% -28px);
-}
-.menu-item-3 .vertical .icon:hover{
-  color:#fff;
-}
-
-.menu-item-3.vertical .icon {
-  font-size: 18px;
+.modal-title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
   color: #0d47a1;
 }
-.menu-item-3.vertical .label{
-  font-size: 14px;
 
+.modal-text {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #333;
 }
-.sidebar{
-  margin-top: 90px;
-}
 
-
-/* 🔹 Navbar */
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;   /* 🔥 Full width */
-  height: 90px;  /* Bigger height */
-  background: linear-gradient(90deg, #0d47a1, #1565c0); /* SCB-style gradient */
+.modal-actions {
   display: flex;
-  align-items: center; /* icons to right */
-  padding: 0 30px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-  z-index: 1000;
-}
-.nav-left{
-  height: 50px;
-  width:50px;
-  justify-content: flex-start;
-
-}
-.right{
-  margin-left: 1050px;
-  
-  
+  justify-content: center;
 }
 
-
-/* 🔹 Push sidebar below navbar */
-.sidebar {
-  margin-top: 90px;  /* Same as navbar height */
-  background: #1565c0;
-  min-height: 100vh;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+.modal-btn {
+  background: #0d47a1;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.main-content{
-  margin-top: 200px;
-  padding:20px;
+.modal-btn:hover {
+  filter: brightness(1.05);
 }
-.brand-name{
+
+/* (Optional) push logout to the far right without hard-coded px */
+.navbar {
+  display: flex;
+  align-items: center;
+}
+.brand-name {
   color: #ffffffef;
+  margin-left: 8px;
 }
-
-
-
-
-
-import React from "react";
-import Sidebar from "./Components/Sidebar";
-import './App.css';
-
-function App() {
-  const role = "creator"; // try: creator | manager | approver
-
-  return (
-    <div className="app">
-      <Sidebar role={role} />
-      <div class="content">
-        
-      </div>
-    </div>
-  );
+.right {
+  margin-left: auto; /* replaces fixed margin-left */
 }
-
-export default App;
