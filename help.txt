@@ -39,11 +39,15 @@ function Sidebar({ role }) {
     <div className="app">
       {/* 🔹 Navbar at top */}
       <div className="navbar">
-        <div>
-          <img  class="nav-left" src={ScLogo} alt="none"/>
+        <div className="flex items-center gap-2 px-4 py-3">
+          <img  class="nav-left" src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Standard_Chartered_Logo_%282021%2C_Logo_only%29.svg" alt="none"/>
+          
+          
         </div>
+        
         <div className="navbar-right">
           <MdLogout size={30} color="white" className="nav-icon2"/>
+          
         </div>
       </div>
 
@@ -457,12 +461,20 @@ import {
   
 }
 .nav-left{
-  height: 60px;
+  height: 50px;
   width:120px;
   border-radius: 10%;
-  margin-right: 1070px;
-
+  border: 0;
+  margin-right: 1035px;
+  cursor: pointer;
 }
+.brand-name{
+  margin-top: -15px;
+  margin-left: 20px;
+  color:#fff;
+}
+
+
 
 
 import React from "react";
