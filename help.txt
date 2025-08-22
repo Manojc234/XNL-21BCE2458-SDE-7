@@ -1,124 +1,41 @@
- switch (thirdKey) {
-      case "Change Account":
-        navigate("/change-account");
-        break;
-      case "Service Request":
-        navigate("/service-request");
-        break;
-      case "Edit Account":
-        navigate("/edit-account");
-        break;
-      case "Edit Employee Accounts":
-        navigate("/edit-employee");
-        break;
-      case "Account Details":
-        navigate("/view-account");
-        break;
-      case "Employees":
-        navigate("/view-employees");
-        break;
-      default:
-        break;
+ // NEW: modal state
+  const [restrictOpen, setRestrictOpen] = useState(false);
+  const [restrictMsg, setRestrictMsg] = useState("");
+
+  // 🔒 Access control
+  const checkAccess = (menuKey,subKey) => {
+    // role-based full menu restrictions
+    if ((menuKey === "Create" || menuKey === "Payroll" || menuKey === "Rolled Payees"|| menuKey === "Drafts"|| menuKey === "Quick Currency Calculator") && role !== "creator") return false;
+    if ((menuKey === "Manage" ||menuKey === "Make Approvers"|| menuKey === "View Rolled Payees") && role !== "manager") return false;
+    if ((menuKey === "Approver" || menuKey === "Approved Payees"|| menuKey === "Pending Payees") && role !== "approver") return false;
+
+    // specific item restrictions
+    if ((menuKey === "Add Account" || menuKey==="Change Account" || menuKey==="Edit Account" || menuKey==="Edit Employee Accounts" ) && (role === "approver" || role==="manager")) return false;
+    if ((menuKey === "View Approvers" || menuKey === "View Creators" || menuKey==="View Managers") && (role === "creator" || role === "approver")) return false;
+    if (menuKey === "Change Account" && role === "manager") return false;
+
+    return true;
+  };
+
+
+// Handle clicks with accessibility restriction
+  const handleClick = (menuKey,subKey,thirdKey) => {
+    if (!checkAccess(menuKey,subKey,thirdKey)) {
+      setRestrictMsg(`🚫 You are restricted from accessing "${menuKey}"!`);
+      setRestrictOpen(true);
+      return;
     }
-useEffect(() => {
+    toast.success(`✅ Accessing ${menuKey}`, {
+      position: "top-right",
+      autoClose: 1500,
+    });
+  };
+
+  // Close modal with ESC
+  useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") setRestrictOpen(false);
     };
     if (restrictOpen) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [restrictOpen]);
-
-
-import React, { useState } from "react";
-
-export default function ChangeAccount() {
-  const [formData, setFormData] = useState({
-    accountNumber: "",
-    ifscCode: "",
-    cvv: "",
-    mobile: "",
-  });
-
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Change Account Request Submitted!");
-  };
-
-  return (
-    <div className="main-content">
-      <h2 className="text-xl font-bold mb-4">Change Account</h2>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-        <input
-          name="accountNumber"
-          placeholder="Account Number"
-          value={formData.accountNumber}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          name="ifscCode"
-          placeholder="IFSC Code"
-          value={formData.ifscCode}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          name="cvv"
-          type="password"
-          placeholder="CVV"
-          value={formData.cvv}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          name="mobile"
-          placeholder="Mobile Number"
-          value={formData.mobile}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Submit
-        </button>
-      </form>
-    </div>
-  );
-}
-
-
-
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./Components/Sidebar";
-import ChangeAccount from "./Pages/ChangeAccount";
-import ServiceRequest from "./Pages/ServiceRequest";
-import EditAccount from "./Pages/EditAccount";
-import EditEmployee from "./Pages/EditEmployee";
-import ViewAccount from "./Pages/ViewAccount";
-import ViewEmployees from "./Pages/ViewEmployees";
-import "./App.css";
-
-function App() {
-  const role = "approver"; // try creator | manager | approver
-
-  return (
-    <Router>
-      <Sidebar role={role} />
-      <div className="content">
-        <Routes>
-          <Route path="/change-account" element={<ChangeAccount />} />
-          <Route path="/service-request" element={<ServiceRequest />} />
-          <Route path="/edit-account" element={<EditAccount />} />
-          <Route path="/edit-employee" element={<EditEmployee />} />
-          <Route path="/view-account" element={<ViewAccount />} />
-          <Route path="/view-employees" element={<ViewEmployees />} />
-        </Routes>
-      </div>
-    </Router>
-  );
-}
-
-export default App;
