@@ -2020,3 +2020,37 @@ export default function ViewEmployees() {
   padding: 15px;
   color: #777;
 }
+
+
+import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
+
+// Reusable ProtectedRoute
+const ProtectedRoute = ({ role, allowedRoles, children }) => {
+  const [restricted, setRestricted] = useState(false);
+
+  useEffect(() => {
+    if (!allowedRoles.includes(role)) {
+      setRestricted(true);
+    }
+  }, [role, allowedRoles]);
+
+  if (restricted) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-card">
+          <h3 className="modal-title">Access Restricted</h3>
+          <p className="modal-text">🚫 You are restricted from accessing this page!</p>
+          <div className="modal-actions">
+            <a className="modal-btn" href="/">Close</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;
+
