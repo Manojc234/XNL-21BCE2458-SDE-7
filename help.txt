@@ -1,167 +1,371 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Signup from "./Signup";
+import { Routes, Route, Navigate,Router, useNavigate } from "react-router-dom";
+
+import ChangeAccount from "./pages/ChangeAccount";
+import ServiceRequest from "./pages/ServiceRequest";
+import EditAccount from "./pages/EditAccount";
+import EditEmployee from "./pages/EditEmployeeAccounts";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
 
 
-function LoginPage({ onLogin,onNavigateToSignup  }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (!username || !password) {
-      setMessage("Please enter username and password.");
-      return;
-    }
-
-    let role = "creator";
-    if (username === "approver@gmail.com") role = "manager";
-
-    if (password === "1234") {
-      onLogin(role);
-      navigate("/"); // go to dashboard
-    } else {
-      setMessage("Invalid credentials");
-    }
-  };
-
+function App() {
+  const role="creator";
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        position: "relative",
-        backgroundImage: "linear-gradient(120deg, #0050a8 0%, #00b140 100%)",
-        animation: "bgMove 12s ease-in-out infinite alternate",
-        transition: "background 0.5s",
-      }}
-    >
-      <style>{`
-        @keyframes bgMove {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-      `}</style>
-
-      {/* Top bars */}
-      <div
-        style={{
-          height: "12px",
-          background: "linear-gradient(90deg, #0050a8 0%, #0096ff 100%)",
-          boxShadow: "0 2px 12px #0050a8cc",
-        }}
-      ></div>
-      <div
-        style={{
-          height: "12px",
-          background: "linear-gradient(90deg, #00d65b 0%, #00b140 100%)",
-          boxShadow: "0 2px 12px #00d65bcc",
-        }}
-      ></div>
-
-      <div className="container py-5">
-        {/* Logo */}
-        <div className="d-flex justify-content-start mt-4">
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Standard_Chartered_%282021%29.svg"
-            alt="SCB Logo"
-            style={{
-              height: "48px",
-              background: "#fff",
-              borderRadius: "12px",
-              boxShadow: "0 0 16px 0 #0072ce44, 0 0 8px 0 #00b14044",
-              padding: "6px 18px",
-              marginBottom: 12,
-            }}
-          />
-        </div>
-
-        {/* Card */}
-        <div
-          className="row justify-content-center align-items-center"
-          style={{ minHeight: "60vh" }}
-        >
-          <div className="col-md-6">
-            <div
-              className="card border-0 login-card-exciting"
-              style={{
-                borderRadius: 20,
-                boxShadow: "0 8px 40px 0 #0072ce22, 0 2px 8px 0 #00b14022",
-                transition: "box-shadow 0.3s",
-              }}
-            >
-              <div className="card-body p-5">
-                <h2 className="text-center mb-2" style={{ fontWeight: 600 }}>
-                  Login
-                </h2>
-                <div className="text-center text-muted mb-4">
-                  Welcome back, please sign in
-                </div>
-
-                <form onSubmit={handleLogin}>
-                  <div className="mb-3">
-                    <label className="form-label">Username</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="form-label">Password</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      placeholder="Enter password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100 mb-3"
-                    style={{ borderRadius: "8px", fontWeight: 500 }}
+      <Router>    
+        <Routes>
+            <Route path="/" element={<Layout role={role} />}>
+              <Route
+                path="/change-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/service-request"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ServiceRequest />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-employee"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditEmployee />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
                   >
-                    Login
-                  </button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="btn btn-link p-0"
-                      onClick={handleClick=>{
-                        navigate("/signup");
-                      }}
-                    >
-                      Create an account
-                    </button>
-                  </div>
-                  {message && (
-                    <div className="alert alert-info mt-3">{message}</div>
-                  )}
-                </form>
-              </div>
-            </div>
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+        </Routes>
+      </Router>
+     
+ 
+  );
+}
+export default App;
+import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 
-            <style>{`
-              .login-card-exciting:hover {
-                box-shadow: 0 16px 60px 0 #0072ce44, 0 4px 16px 0 #00b14044;
-              }
-            `}</style>
+// Reusable ProtectedRoute
+const ProtectedRoute = ({ role, allowedRoles, children }) => {
+  const [restricted, setRestricted] = useState(false);
 
-            <div
-              className="text-center mt-4 text-muted"
-              style={{ fontSize: "1rem" }}
-            >
-              Standard Chartered Bank © 2025 | Secure Banking Solutions
-            </div>
+  useEffect(() => {
+    if (!allowedRoles.includes(role)) {
+      setRestricted(true);
+    }
+  }, [role, allowedRoles]);
+
+  if (restricted) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-card">
+          <h3 className="modal-title">Access Restricted</h3>
+          <p className="modal-text">🚫 You are restricted from accessing this page!</p>
+          <div className="modal-actions">
+            <a className="modal-btn" href="/">Close</a>
           </div>
         </div>
       </div>
+    );
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;
+
+      {/* Main content */}
+
+import React, { useState, useEffect } from "react";
+import { SidebarData } from "./SidebarData";
+import "../Styles/custom.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { MdLogout } from "react-icons/md";
+import { useNavigate, Link } from "react-router-dom";
+
+function Sidebar({role,setSidebarWidth}) {
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [hoverSubMenu, setHoverSubMenu] = useState(null);
+  const [boxTop, setBoxTop] = useState(0);
+
+  // Modal state
+  const [restrictOpen, setRestrictOpen] = useState(false);
+  const [restrictMsg, setRestrictMsg] = useState("");
+
+  const navigate = useNavigate();
+
+  // Role-based access
+  const checkAccess = (menuKey, subKey, thirdKey) => {
+    if (
+      (menuKey === "Create" ||
+        menuKey === "Payroll" ||
+        menuKey === "Rolled Payees" ||
+        menuKey === "Drafts" ||
+        menuKey === "Quick Currency Calculator") &&
+      role !== "creator"
+    )
+      return false;
+
+    if (
+      (menuKey === "Manage" ||
+        menuKey === "Make Approvers" ||
+        menuKey === "View Rolled Payees") &&
+      role !== "manager"
+    )
+      return false;
+
+    if (
+      (menuKey === "Approver" ||
+        menuKey === "Approved Payees" ||
+        menuKey === "Pending Payees") &&
+      role !== "approver"
+    )
+      return false;
+
+    if (
+      (menuKey === "Add Account" ||
+        menuKey === "Change Account" ||
+        menuKey === "Edit Account" ||
+        menuKey === "Edit Employee Accounts") &&
+      (role === "approver" || role === "manager")
+    )
+      return false;
+
+    if (
+      (menuKey === "View Approvers" ||
+        menuKey === "View Creators" ||
+        menuKey === "View Managers") &&
+      (role === "creator" || role === "approver")
+    )
+      return false;
+
+    if (menuKey === "Change Account" && role === "manager") return false;
+
+    return true;
+  };
+
+  const handleClick = (menuKey, subKey, thirdKey) => {
+    if (!checkAccess(menuKey, subKey, thirdKey)) {
+      setRestrictMsg(
+        `🚫 You are restricted from accessing "${thirdKey || subKey || menuKey}"!`
+      );
+      setRestrictOpen(true);
+      return;
+    }
+
+    toast.success(`✅ Accessing ${thirdKey || subKey || menuKey}`, {
+      position: "top-right",
+      autoClose: 1500,
+    });
+
+    switch (thirdKey||subKey) {
+      case "Change Account":
+        navigate("/change-account");
+        break;
+      case "Service Request":
+        navigate("/service-request");
+        break;
+      case "Edit Account":
+        navigate("/edit-account");
+        break;
+      case "Edit Employee Accounts":
+        navigate("/edit-employee");
+        break;
+      case "Account Details":
+        navigate("/view-account");
+        break;
+      case "Employees":
+        navigate("/view-employees");
+        break;
+      case "Change Password":   
+        navigate("/change-password");
+        break;
+      default:
+        break;
+    }
+
+    setActiveMenu(null);
+    setHoverSubMenu(null);
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setRestrictOpen(false);
+    };
+    if (restrictOpen) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [restrictOpen]);
+  useEffect(() => {
+    let width = 80; // Menu1
+    if (activeMenu && SidebarData[activeMenu]?.subMenu) {
+      width += 160; // Menu2
+      if (hoverSubMenu && SidebarData[activeMenu].subMenu[hoverSubMenu]?.subMenu) {
+        width += 160; // Menu3
+      }
+    }
+    setSidebarWidth(width);
+  }, [activeMenu, hoverSubMenu, setSidebarWidth]);
+
+  return (
+    <div className={`sidebar ${
+    activeMenu && SidebarData[activeMenu]?.subMenu
+      ? "expanded"
+      : "collapsed"
+  }`}>
+      {/* Navbar */}
+      <div className="navbar">
+        <Link to="/" className="nav-left flex items-center gap-2 px-4 py-3 ">
+          <img
+            className="brand-logo cursor-pointer"
+            src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Standard_Chartered_Logo_%282021%2C_Logo_only%29.svg"
+            alt="SC Logo"
+          />
+          <span className="brand-name">
+            <h3>
+              Standard <br /> Chartered
+            </h3>
+          </span>
+        </Link>
+        <div className="navbar-right">
+          <MdLogout
+            size={30}
+            color="white"
+            className="nav-icon cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* Main Menu */}
+      <div className="col main-col">
+        {Object.entries(SidebarData).map(([menuKey, menuVal]) => (
+          <div
+            key={menuKey}
+            className={`menu-item vertical ${
+              activeMenu === menuKey ? "active" : ""
+            }`}
+            onClick={() => {
+              if (!checkAccess(menuKey)) {
+                setRestrictMsg(
+                  `🚫 You are restricted from accessing "${menuKey}"!`
+                );
+                setRestrictOpen(true);
+                return;
+              }
+              setActiveMenu(activeMenu === menuKey ? null : menuKey);
+            }}
+          >
+            <span className="icon big">{menuVal.icon}</span>
+            <span>{menuKey}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Sub Menu */}
+      {activeMenu && SidebarData[activeMenu]?.subMenu && (
+        <div className="col-2 sub-col">
+          {Object.entries(SidebarData[activeMenu].subMenu).map(
+            ([subKey, subVal]) => (
+              <div
+                key={subKey}
+                className={`menu-item-2 vertical ${
+                  hoverSubMenu === subKey ? "active" : ""
+                }`}
+                onMouseEnter={(e) => {
+                  setHoverSubMenu(subKey);
+                  setBoxTop(e.currentTarget.offsetTop);
+                }}
+                onClick={() => handleClick(activeMenu, subKey)}
+              >
+                <span className="icon">{subVal.icon}</span>
+                <span>{subKey}</span>
+              </div>
+            )
+          )}
+        </div>
+      )}
+
+      {/* Third Level Menu */}
+      {activeMenu &&
+        hoverSubMenu &&
+        SidebarData[activeMenu]?.subMenu?.[hoverSubMenu]?.subMenu && (
+          <div className="submenu-box" style={{ top: boxTop }}>
+            {Object.entries(
+              SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
+            ).map(([thirdKey, thirdVal]) => (
+              <div
+                key={thirdKey}
+                className="menu-item-3 vertical leaf"
+                onClick={() => handleClick(activeMenu, hoverSubMenu, thirdKey)}
+              >
+                <span className="icon">{thirdVal}</span>
+                <span>{thirdKey}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+      {/* Restriction Modal */}
+      {restrictOpen && (
+        <div className="modal-overlay" onClick={() => setRestrictOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Access Restricted</h3>
+            <p className="modal-text">{restrictMsg}</p>
+            <div className="modal-actions">
+              <button
+                className="modal-btn"
+                onClick={() => setRestrictOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default LoginPage;
+export default Sidebar;
