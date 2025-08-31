@@ -1,58 +1,12 @@
-layout.css
-/* Container for sidebar + content */
-.layout-container {
-    width: 100%;
-    height: 100vh;
-    
-  }
-  
-  /* Sidebar stays fixed width but can expand/collapse */
-  .sidebar {
-    flex-shrink: 0;              /* don’t let it overlap content */
-    height: 100vh;
-    transition: width 0.3s ease; /* smooth expand/collapse */
-    z-index: 2;                  /* keep menus above content */
-  }
-  
-  /* Main content takes the rest of the space */
-  .layout-content {
-    flex: 1;              /* fill remaining width */
-    overflow-y: auto;
-    padding: 20px;
-    transition: all 0.3s ease;
-    background: #f9f9f9;          /* optional */
-    z-index: 1;  
-    margin-left: 300px;   
-    margin-top: 100px;             /* content below menus */
-  }
-
-payroll.css
-body,
-.header,
-h1, h2, h3, h4, h5, h6,
-.navbar,
-.btn {
-  font-family: 'Open Sans', Arial, Helvetica, sans-serif !important;
-}
-.app-layout {
-  display: flex;         /* sidebar + content side by side */
-  height: 100vh;         /* full height layout */
-}
-
-.content {
-  flex: 1;
-  padding: 20px;
-  margin-top: 70px;   /* ✅ adjust height to your navbar */
-  overflow-y: auto;   /* scrollable if content grows */
-}
-
 import React, { useState } from 'react';
 import { Save, Send, FileText} from 'lucide-react';
 import InstructionDetails from './InstructionDetails';
 import PaymentDetailsTable from './PaymentDetailsTable';
 import DraftManagement from './DraftManagement';
 import { saveDraftToStorage } from '../utils/draftUtils';
-import "../Styles/Payroll.css"
+import "bootstrap/dist/css/bootstrap.min.css";
+import styles from "../Styles/Payroll.module.css";
+
 
 // page component
 const PaymentForm = () => {
@@ -297,7 +251,9 @@ const handleDraft = () => {
         onBackToCreate={() => setShowDrafts(false)}
       />
     ) : (
-  
+      
+      <div className={'${styles.payrollContainer} bootstrap-scope'}>
+      <div className={styles.content}>
       <div className="container-fluid px-4">
         <div className="mb-4 mt-3">
           <div className="d-flex justify-content-between align-items-center">
@@ -356,8 +312,143 @@ const handleDraft = () => {
           </button>
         </div>
       </div>
+      </ div>
+      </div>
     )}
   </div>
 );
 };
 export default PaymentForm;
+
+import React, { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import Sidebar from "../Components/Sidebar";
+import "../Styles/layout.css";
+
+const Layout = ({role}) => {
+
+  // Track sidebar width dynamically
+  const [sidebarWidth, setSidebarWidth] = useState(80); // default = menu1 width
+
+  return (
+    <div className="layout-container">
+      {/* Sidebar */}
+      <Sidebar role={role} setSidebarWidth={setSidebarWidth} />
+
+      {/* Main content */}
+      <div
+        className="layout-content"
+        style={{
+          marginLeft: `${sidebarWidth+40}px`,
+          transition: "margin-left 0.3s ease",
+          flex: 1,
+          padding: "20px",
+        }}
+      >
+        <Outlet />
+      </div>
+    </div>
+  );
+};
+
+export default Layout;
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+
+import ChangeAccount from "./pages/ChangeAccount";
+import ServiceRequest from "./pages/ServiceRequest";
+import EditAccount from "./pages/EditAccount";
+import EditEmployee from "./pages/EditEmployeeAccounts";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+
+
+function App() {
+  const role="creator";
+  return (
+      <BrowserRouter>    
+        <Routes>
+            <Route path="/" element={<Layout role={role} />}>
+              <Route
+                path="/change-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/service-request"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ServiceRequest />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-employee"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditEmployee />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              
+
+            </Route>
+        </Routes>
+      </BrowserRouter>
+     
+ 
+  );
+}
+export default App;
