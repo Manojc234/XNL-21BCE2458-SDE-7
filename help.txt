@@ -1,3 +1,230 @@
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+
+import ChangeAccount from "./pages/ChangeAccount";
+import ServiceRequest from "./pages/ServiceRequest";
+import EditAccount from "./pages/EditAccount";
+import EditEmployee from "./pages/EditEmployeeAccounts";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+import DraftManagement from "./Components/DraftManagement";
+import Dashboard from "./Components/DashboardLayout";
+import HeaderRowApprover from "./Components/SubmitPayroll/HeaderRowApprover";
+import HeaderRow from "./Components/HeaderRow";
+import ProgressTracker from "./Components/ProgressTracker";
+import FilterImplementation from "./Components/FilterImplementation";
+import SubmitApproval from "./Components/SubmitPayroll/SubmitApproval";
+
+
+function App() {
+  const role="approver";
+  return (
+      <BrowserRouter>    
+        <Routes>
+            <Route path="/" element={<Layout role={role} />}>
+              <Route
+                path="/change-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/service-request"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ServiceRequest />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-employee"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditEmployee />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/drafts"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <DraftManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/approvals"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["approver"]}>
+                <Dashboard role={role}>
+                {role === "approver1" || "approver2" ? <HeaderRowApprover /> : <HeaderRow />}
+                <ProgressTracker role={role} />
+                {role === "batching" ? (
+                <FilterImplementation />
+                ) : (
+                <SubmitApproval />
+                )}
+                </Dashboard>
+              </ProtectedRoute>}
+              />
+            </Route>
+        </Routes>
+      </BrowserRouter>
+     
+ 
+  );
+}
+export default App;
+import React from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Navbar, Container, Nav } from "react-bootstrap";
+import { BellFill } from "react-bootstrap-icons";
+import scLogo from "../assets/sc-lock-up-english-grey-rgb.png"
+
+function Dashboard({ children, role }) {
+  const menuItems = {
+    batching: ["Dashboard", "Accept Payroll"],
+    approver1: ["Dashboard", "Pending Approvals"],
+    approver2: ["Dashboard", "Pending Approvals"],
+    approver3: ["Dashboard", "Pending Approvals"],
+    release: ["Dashboard", "Release to Bank", "History"]
+  };
+
+  const items = menuItems[role] || ["Dashboard"];
+
+  const activeMap = {
+    batching: "Accept Payroll",
+    approver1: "Pending Approvals",
+    approver2: "Pending Approvals",
+    approver3: "Pending Approvals",
+    release: "Release to Bank"
+  };
+  const activeItem = activeMap[role] || "Dashboard";
+
+  return (
+    <div className="d-flex" style={{ minHeight: "100vh" }}>
+      {/* Sidebar */}
+      <div
+        style={{
+          width: "220px",
+          background: "linear-gradient(180deg, #0d6efd 0%, #084298 100%)",
+          color: "white",
+          paddingTop: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "2px 0px 6px rgba(0,0,0,0.1)"
+        }}
+      >
+        <Nav className="flex-column px-2">
+          {items.map((item, idx) => (
+            <Nav.Link
+              key={idx}
+              href="#"
+              className={`rounded px-3 py-2 mb-1 fw-semibold ${
+                item === activeItem
+                  ? "bg-white text-primary shadow-sm"
+                  : "text-white"
+              }`}
+              style={{ transition: "0.2s" }}
+              onMouseEnter={(e) => {
+                if (item !== activeItem) e.target.style.background = "#0b5ed7";
+              }}
+              onMouseLeave={(e) => {
+                if (item !== activeItem) e.target.style.background = "transparent";
+              }}
+            >
+              {item}
+            </Nav.Link>
+          ))}
+        </Nav>
+      </div>
+
+      {/* Right side */}
+      <div className="flex-grow-1">
+        <Navbar bg="white" className="shadow-sm py-2">
+          <Container fluid>
+            <div className="d-flex align-items-center">
+              <img
+                src={scLogo}
+                alt="Logo"
+                style={{ height: "45px", marginRight: "16px" }}
+              />
+            </div>
+            <div className="d-flex align-items-center">
+              <BellFill
+                size={20}
+                className="me-3 text-secondary"
+                style={{ cursor: "pointer" }}
+              />
+              <span className="fw-bold text-primary">Ayush Mangy</span>
+            </div>
+          </Container>
+        </Navbar>
+
+        <div className="p-4 bg-light" style={{ minHeight: "calc(100vh - 56px)" }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;
+
 
 import React, { useState, useEffect } from "react";
 import { SidebarData } from "./SidebarData";
@@ -54,6 +281,7 @@ function Sidebar({role,setSidebarWidth}) {
       (role === "approver" || role === "manager")
     )
       return false;
+   
 
     if (
       (menuKey === "View Approvers" ||
@@ -106,6 +334,12 @@ function Sidebar({role,setSidebarWidth}) {
         break;
       case "Payroll":   
         navigate("/payee-roll");
+        break;
+      case "Drafts":   
+        navigate("/drafts");
+        break;
+      case "Approved Payees":   
+        navigate("/approvals");
         break;
       default:
         break;
@@ -253,392 +487,148 @@ function Sidebar({role,setSidebarWidth}) {
 }
 
 export default Sidebar;
+import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Button, Table, Form, Card } from "react-bootstrap";
 
-.app {
-  display: flex;
-  height: 100vh;
-  font-family: "Segoe UI", sans-serif;
-}
-
-.sidbar {
-  display: flex;
-  background: #0d47a1;
-  border-right: 1px solid #ddd;
-  height: 100%;
-  position: fixed;
-  margin-top: 70px;
-}
-
-.col {
-  display: flex;
-  flex-direction: column;
-  width:100px;
-  border-right: 1px solid #eee;
-  padding: 10px;
- 
-}
-
-.main-col {
-  background: #0d47a1;
-  color:#fff;
+function BatchTable({batches}) {
   
+  const [selected, setSelected] = useState([]);
+  React.useEffect(() => {
+  setSelected((prevSelected) => prevSelected.filter(id => batches.some(b => b.id === id)));
+}, [batches]);
+
+  const handleSelected = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleAll = () => {
+    if (selected.length === batches.length) {
+      setSelected([]);
+    } else {
+      setSelected(batches.map((b) => b.id));
+    }
+  };
+
+  const handleAccept = () => {
+    alert(`Accepted batches: ${selected.join(", ")}`);
+  };
+
+  const handleReject = () => {
+    alert(`Rejected batches: ${selected.join(", ")}`);
+  };
+
+  return (
+    <Card className="border-0 rounded-4">
+      <Card.Body>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="fw-bold m-0">Batch Approval</h4>
+        </div>
+
+        <Table hover responsive borderless className="align-middle">
+          <thead className="bg-light">
+            <tr>
+              <th style={{ width: "50px" }}>
+                <Form.Check
+                  type="checkbox"
+                  checked={selected.length === batches.length}
+                  onChange={handleAll}
+                />
+              </th>
+              <th className="fw-semibold">Batch Reference</th>
+              <th className="fw-semibold">Batch Name</th>
+              <th className="fw-semibold">Created By</th>
+              <th className="fw-semibold text-center">Payments</th>
+              <th className="fw-semibold text-end">Total Amount</th>
+              <th className="fw-semibold text-center">Currency</th>
+              <th className="fw-semibold">Execution Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {batches.map((batch) => (
+              <tr
+                key={batch.id}
+                className={selected.includes(batch.id) ? "table-active" : ""}
+                style={{ cursor: "pointer" }}
+                onClick={() => handleSelected(batch.id)}
+              >
+                <td>
+                  <Form.Check
+                    type="checkbox"
+                    checked={selected.includes(batch.id)}
+                    onChange={() => handleSelected(batch.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </td>
+                <td className="fw-medium">{batch.batchId}</td>
+                <td>{batch.batchName}</td>
+                <td>{batch.createdBy}</td>
+                <td className="text-center">{batch.numPayments}</td>
+                <td className="text-end text-success fw-semibold">
+                {batch.currency === "INR" ? "₹" : "$"}{batch.amount.toLocaleString()}
+                </td>
+                <td className="text-center">{batch.currency}</td>
+                <td>{batch.executionDate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+
+        <div className="d-flex gap-2 mt-3 justify-content-end">
+          <Button
+            variant="outline-success"
+            onClick={handleAccept}
+            disabled={!selected.length}
+          >
+            ✅ Accept
+          </Button>
+          <Button
+            variant="outline-danger"
+            onClick={handleReject}
+            disabled={!selected.length}
+          >
+            ❌ Reject
+          </Button>
+        </div>
+      </Card.Body>
+    </Card>
+  );
 }
 
-.sub-col {
-  background: #0d47a1;
-  color:#fff;
-}
-
-.menu-item.vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
- 
-}
-
-.menu-item:hover {
-  background: #083579;
-  
-}
-
-.menu-item.active {
-  background: #083579;
-  font-weight: 600;
-}
-
-.menu-item.leaf {
-  font-size: 14px;
-}
-
-.menu-item.vertical .icon {
-  font-size: 18px;
-  color: #fff;
-}
-.menu-item.vertical .label{
-  font-size: 14px;
-
-}
-
-.icon.big {
-  font-size: 22px;  /* Bigger for main menus */
-}
-.sidbar .main-col .menu-item {
- 
-  display: flex;
-  flex-direction: column;   /* icon on top, text below */
-  align-items: center;
-  justify-content: center;
-  padding: 15px 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #dcdcdc;  /* divider line */
-  transition: background 0.3s;
-  
-}
-
-.sidbar .main-col .menu-item:last-child {
-  border-bottom: none;  /* no divider after last item */
-}
-
-.sidbar .main-col .menu-item.active {
- /* highlight */
-  font-weight: bold;
-  border-left: 3px solid #004aad; /* bank blue accent */
-}
-
-.sidbar .main-col .menu-item .icon {
-  font-size: 22px;
-  margin-bottom: 6px;
-}
-.sidbar .sub-col .menu-item,
-.sidbar .hover-col .menu-item {
-  display: flex;
-  flex-direction: row;   /* icon beside text */
-  align-items: center;
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.3s;
-  
-}
-
-.sidbar .sub-col .menu-item:hover,
-.sidbar .hover-col .menu-item:hover {
-  background: #f5f5f5;
-}
-
-.sidbar .sub-col .menu-item .icon,
-.sidbar .hover-col .menu-item .icon {
-  font-size: 18px;
-  margin-right: 8px;
-}
-
-.menu-item-2.vertical {
-  display: flex;
-  align-items: center;
-  padding:8px 12px;
-  gap: 8px;
-  cursor:pointer;
-  width:200px;
- 
-}
-
-.menu-item-2:hover {
-  background: #083579;
- 
-}
-
-.menu-item-2.vertical .icon {
-  font-size: 18px;
-  color: #fff;
-}
-.menu-item-2.vertical .label{
-  font-size: 14px;
-
-}
-.submenu-box{
-  position:absolute;
-  left: 320px;
-  top:0;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow:0 4px 8px rgba(0,0,0,0.1);
-  padding:8px;
-  min-width: 180px;
-  z-index: 1000;
-}
-.submenu-box::before{
-  content:"";
-  position: absolute;
-  left:-15px;
-  top:20px;
-  border-width: 8px;
-  border-style: solid;
-  border-color: transparent #fff transparent transparent;
-  filter:drop-shadow(-1px 1px 1px rgba(0,0,0,0.1));
-
-}
-.menu-item-3.vertical {
-  display: flex;
-  align-items: center;
-  padding:8px 12px;
-  gap: 8px;
-  cursor:pointer;
-  width:200px;
-  color:#0d47a1;
- 
-}
-
-.menu-item-3:hover{
-  font-size: 15px;
-  width:calc(100% -28px);
-}
-.menu-item-3 .vertical .icon:hover{
-  color:#fff;
-}
-
-.menu-item-3.vertical .icon {
-  font-size: 18px;
-  color: #0d47a1;
-}
-.menu-item-3.vertical .label{
-  font-size: 14px;
-
-}
-.sidbar{
-  margin-top: 90px;
-}
+export default BatchTable;
 
 
-/* 🔹 Navbar */
-.nvbar {
-  position: fixed;
-  top:0;
-  left:0;
-  right:0;
-  width: 100vw; 
-  height: 90px;  /* Bigger height */
-  background: linear-gradient(90deg, #0d47a1, #1565c0); /* SCB-style gradient */
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* icons to right */
-  padding: 0 30px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-  z-index: 1000;
-  box-sizing: border-box;
-}
-.nv-left{
-  
-  display: flex;
-  align-items: center;
-  gap:15px;
-  cursor: pointer;
+import React, { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import Sidebar from "../Components/Sidebar";
+import "../Styles/layout.css";
 
-}
-.brand-logo{
-  height: 60px;
-  width:50px;
-}
-.brand-name{
-  font-size: 22px;
-  font-weight: 400;
-  color:white;
-}
-.nvbar-right{
-  display: flex;
-  align-items: center;  
-  
-}
-.nv-icon{
-  cursor: pointer;
-  transition:transform 0.2s ease;
-}
-.nv-icon:hover{
-  transform:scale(1.1);
-}
+const Layout = ({role}) => {
 
-/* 🔹 Push sidebar below navbar */
-.sidbar {
-  margin-top: 90px;  /* Same as navbar height */
-  background: #1565c0;
-  min-height: 100vh;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
-}
+  // Track sidebar width dynamically
+  const [sidebarWidth, setSidebarWidth] = useState(80); // default = menu1 width
 
-.main-content{
-  margin-left: 200px;
-  padding:70px;
+  return (
+    <div className="layout-container">
+      {/* Sidebar */}
+      <Sidebar role={role} setSidebarWidth={setSidebarWidth} />
 
-}
-.brand-name{
-  color: #ffffffef;
-  cursor: pointer;
-}
+      {/* Main content */}
+      <div
+        className="layout-content"
+        style={{
+          marginLeft: `${sidebarWidth+40}px`,
+          transition: "margin-left 0.3s ease",
+          flex: 1,
+          padding: "20px",
+        }}
+      >
+        <Outlet />
+      </div>
+    </div>
+  );
+};
 
-/* ===== Centered Modal ===== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000; /* above navbar (1000) and menus */
-}
-
-.modal-card {
-  background: #ffffff;
-  width: min(92vw, 420px);
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-  padding: 20px 22px;
-  text-align: center;
-}
-
-.modal-title {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #0d47a1;
-}
-
-.modal-text {
-  margin: 0 0 16px 0;
-  font-size: 15px;
-  color: #333;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: center;
-}
-
-.modal-btn {
-  background: #0d47a1;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.modal-btn:hover {
-  filter: brightness(1.05);
-}
-/* Remove underline from brand-name link */
-.nv-left, 
-.nv-left a, 
-.brand-name, 
-.brand-name a {
-  text-decoration: none !important;
-  color: white;
-}
-
-.brand-name h3 {
-  margin: 0; /* remove extra spacing */
-  line-height: 1.2;
-  font-weight: 700;
-}
-/* Sidebar: occupies space in flex, not overlap */
-/* Sidebar: sits in flex row */
-.sidbar {
-  height: calc(100vh - 90px); /* below navbar */
-  margin-top: 90px;
-  background: #0d47a1;
-  transition: width 0.3s ease;
-  overflow: visible;   /* allow hover menus to show */
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  overflow: visible;        /* higher than content */
-}
-
-
-/* Default width: only main-col */
-.sidbar.collapsed {
-  width: 100px;
-}
-
-/* Expanded width: main-col + sub-col */
-.sidbar.expanded {
-  width: 300px; /* adjust based on your sub menu width */
-}
-
-/* Main content auto-adjusts */
-.layout-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  transition: margin-left 0.3s ease;
-  background: #f9f9f9;
-  min-height: 100vh;/* lower than sidebar/menus */
-}
-
-.submenu-box {
-  position: absolute;
-  top: 0;
-  left: 100%;           /* appear to the right of submenu */
-  width: 220px;
-  background: #fff;
-  color: white;
-  transition: all 0.3s ease;
-  z-index: 20;          /* keep above main content */
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-}
-.layout {
-  display: flex;
-  flex-direction: row;
-  height: 100vh;
-}
-.layout.sidbar-collapsed .layout-content {
-  margin-left: 80px;
-}
-
-/* When sidebar is expanded */
-.layout.sidbar-expanded .layout-content {
-  margin-left: 250px;
-}
+export default Layout;
