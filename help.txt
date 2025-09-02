@@ -1,31 +1,39 @@
-
 import React, { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../Components/Sidebar";
 import "../Styles/layout.css";
 
-import{UserPlus,UserCheck,FileText,Users,UserPlus2,CheckCircle,Send,Repeat,FileEdit,Settings} from 'lucide-react';
-const menuItems=[
-  {name:"Add Account",icon:<UserPlus size={20}/>,path:"/add-account"},
-  {name:"Edit Account",icon:<UserCheck size={20}/>,path:"/edit-account"},
-  {name:"Account Details",icon:<FileText size={20}/>,path:"/view-account"},
-  {name:"Employees",icon:<Users size={20}/>,path:"/view-employees"},
-  {name:"Create Payee",icon:<UserPlus2 size={20}/>,path:"/payee-roll"},
-  {name:"Approve Payee",icon:<CheckCircle size={20}/>,path:"/approvals"},
-  {name:"Submit Payee",icon:<Send size={20}/>,path:"/submits"},
-  {name:"Transactions",icon:<Repeat size={20}/>,path:"/transacions"},
-  {name:"Drafts",icon:<FileEdit size={20}/>,path:"/drafts"},
-  {name:"Settings",icon:<Settings size={20}/>,path:"/change-password"},
+import {
+  UserPlus,
+  UserCheck,
+  FileText,
+  Users,
+  UserPlus2,
+  CheckCircle,
+  Send,
+  Repeat,
+  FileEdit,
+  Settings,
+} from "lucide-react";
 
-]
+const menuItems = [
+  { name: "Add Account", icon: <UserPlus size={20} />, path: "/add-account" },
+  { name: "Edit Account", icon: <UserCheck size={20} />, path: "/edit-account" },
+  { name: "Account Details", icon: <FileText size={20} />, path: "/view-account" },
+  { name: "Employees", icon: <Users size={20} />, path: "/view-employees" },
+  { name: "Create Payee", icon: <UserPlus2 size={20} />, path: "/payee-roll" },
+  { name: "Approve Payee", icon: <CheckCircle size={20} />, path: "/approvals" },
+  { name: "Submit Payee", icon: <Send size={20} />, path: "/submits" },
+  { name: "Transactions", icon: <Repeat size={20} />, path: "/transacions" },
+  { name: "Drafts", icon: <FileEdit size={20} />, path: "/drafts" },
+  { name: "Settings", icon: <Settings size={20} />, path: "/change-password" },
+];
 
-const Layout = ({role}) => {
-
-  // Track sidebar width dynamically
+const Layout = ({ role }) => {
   const [sidebarWidth, setSidebarWidth] = useState(80); // default = menu1 width
-  const navigate=useNavigate();
-  const location=useLocation();
-  const showCenterMenu=location.pathname==="/";
+  const navigate = useNavigate();
+  const location = useLocation();
+  const showCenterMenu = location.pathname === "/";
 
   return (
     <div className="layout-container">
@@ -36,31 +44,101 @@ const Layout = ({role}) => {
       <div
         className="layout-content"
         style={{
-          marginLeft: `${sidebarWidth+40}px`,
+          marginLeft: `${sidebarWidth + 40}px`,
           transition: "margin-left 0.3s ease",
           flex: 1,
           padding: "20px",
         }}
       >
-        {showCenterMenu?(
-          <div className="flex items-center justify-center h-full">
-            <div className="grid grid-cols-3 gap-8">
-              {menuItems.map((item,idx)=>(
-                <div key={idx} onClick={()=>navigate(item.path)}
-                className="cursor-pointer bg-[#0d47a1] hover:bg-[#083579] text-white rounded-2xl shadow-lg flex items-center 
-                justify-center p-6 text-lg font-semibold transition-all duration-300">
-                  {item.name}
+        {showCenterMenu ? (
+          <div className="menu-center">
+            <div className="menu-grid">
+              {menuItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => navigate(item.path)}
+                  className="menu-card"
+                >
+                  <span className="menu-icon">{item.icon}</span>
+                  <span className="menu-text">{item.name}</span>
                 </div>
               ))}
-
             </div>
           </div>
-  ):(
-    <Outlet />
-        )}   
-      </div>  
+        ) : (
+          <Outlet />
+        )}
+      </div>
     </div>
   );
 };
 
 export default Layout;
+
+
+
+/* ===== Menu Center Layout ===== */
+.menu-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* ===== Grid for Menu Items ===== */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 30px;
+  width: 100%;
+  max-width: 1000px; /* keeps it centered, not stretched */
+}
+
+/* ===== Individual Menu Card ===== */
+.menu-card {
+  background-color: #0d47a1;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.menu-card:hover {
+  background-color: #083579;
+  transform: translateY(-3px);
+}
+
+/* ===== Icon inside menu ===== */
+.menu-icon {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+/* ===== Text inside menu ===== */
+.menu-text {
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ===== Responsive grid ===== */
+@media (max-width: 900px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-grid {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
+}
