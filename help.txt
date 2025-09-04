@@ -101,7 +101,6 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
 package com.scb.Payment.Initiation.controller;
 
 import com.scb.Payment.Initiation.entity.Users;
@@ -110,12 +109,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+@RestController
+@RequestMapping("/api/auth")
 public class UserController {
 
-    @RestController
-    @RequestMapping("/api/auth")
-    public class AuthController {
+
+
 
         @Autowired
         private UserService userService;
@@ -149,8 +148,143 @@ public class UserController {
     }
 
 
-}
 
+package com.scb.Payment.Initiation.entity;
+import jakarta.persistence.*;
+@Entity
+@Table(name = "roles")
+public class Roles {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer roleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,unique = true)
+    private RoleType roleName;
+
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
+    }
+
+    public RoleType getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(RoleType roleName) {
+        this.roleName = roleName;
+    }
+}
+package com.scb.Payment.Initiation.entity;
+
+public enum RoleType {
+    CREATOR,
+    APPROVER,
+    MANAGER
+
+}
+package com.scb.Payment.Initiation.entity;
+import jakarta.persistence.*;
+import java.util.Set;
+
+@Entity
+@Table(name = "users")
+public class Users {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String userId;  // e.g., "cr123", "ar456", "mr789"
+
+    private String password;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_role_mapping",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Roles> roles;
+
+    private String securityQuestion;
+    private String securityAnswer;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Roles> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Roles> roles) {
+        this.roles = roles;
+    }
+
+    public String getSecurityQuestion() {
+        return securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion) {
+        this.securityQuestion = securityQuestion;
+    }
+
+    public String getSecurityAnswer() {
+        return securityAnswer;
+    }
+
+    public void setSecurityAnswer(String securityAnswer) {
+        this.securityAnswer = securityAnswer;
+    }
+// getters & setters
+}
+package com.scb.Payment.Initiation.repository;
+
+import com.scb.Payment.Initiation.entity.Users;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<Users, Long> {
+    Optional<Users> findByUserId(String userId);
+}
+package com.scb.Payment.Initiation.repository;
+
+import com.scb.Payment.Initiation.entity.RoleType;
+import com.scb.Payment.Initiation.entity.Roles;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface RolesRepository extends JpaRepository<Roles,Integer> {
+    Optional<Roles> FindByRoleName(RoleType roleName);
+
+}
 package com.scb.Payment.Initiation.Security;
 
 
@@ -168,7 +302,7 @@ public class AccessControl {
         {
             throw new RoleNotFoundException("Role Not Defined");
         }
-        if(user.getRoles().getName()!=requiredRole)
+        if(user.getRoles().stream().noneMatch(r->r.getRoleName()==requiredRole))
         {
             throw new UnauthorizedActionException("Access Denied! Required Role: "+requiredRole);
         }
@@ -179,6 +313,8 @@ public class AccessControl {
 package com.scb.Payment.Initiation.Security;
 
 
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.entity.Roles;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -214,13 +350,15 @@ public class JwtUtil {
                 .parseClaimsJws(token).getBody();
     }
 
-    public static String generateToken(UserDetails userDetails) {
+    public String generateToken(Users user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", userDetails.getAuthorities());
-        return createToken(claims, userDetails.getUsername());
+        claims.put("roles", user.getRoles().stream()
+                .map(Roles::getRoleName)
+                .toList());
+        return createToken(claims, user.getUserId());
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    private String  createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -230,7 +368,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUserId(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
@@ -242,8 +380,7 @@ public class JwtUtil {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-}
-package com.scb.Payment.Initiation.Security;
+}package com.scb.Payment.Initiation.Security;
 
 import com.scb.Payment.Initiation.entity.Users;
 import com.scb.Payment.Initiation.repository.UserRepository;
@@ -274,8 +411,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                         .collect(Collectors.toSet())
         );
     }
-}
-package com.scb.Payment.Initiation.service;
+}package com.scb.Payment.Initiation.service;
 
 
 import com.scb.Payment.Initiation.Security.JwtUtil;
@@ -294,6 +430,8 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder; // BCrypt
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public Users signup(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -309,16 +447,14 @@ public class UserService {
         }
 
         // Generate JWT based on userId & roles
-        return JwtUtil.generateToken((UserDetails) user);
+        return jwtUtil.generateToken(user);
     }
 
     public boolean verifySecurityAnswer(String userId, String answer) {
         Users user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return user.getSecurityQuestion()
-                .stream()
-                .anyMatch(q -> passwordEncoder.matches(answer, q.getSecurityAnswer()));
+        return passwordEncoder.matches(answer,user.getSecurityAnswer());
     }
 
     public void resetPassword(String userId, String newPassword) {
@@ -328,4 +464,5 @@ public class UserService {
         userRepository.save(user);
     }
 }
+
 
