@@ -1,106 +1,106 @@
-@Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+package com.scb.Payment.Initiation.entity;
+import jakarta.persistence.*;
+import java.util.Set;
 
-    private final JwtUtil jwtUtil;
+@Entity
+@Table(name = "users")
+public class Users {
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String userId;  // e.g., "cr123", "ar456", "mr789"
+
+    private String password;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_role_mapping",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Roles> roles;
+
+    private String securityQuestion;
+    private String securityAnswer;
+
+    public Long getId() {
+        return id;
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
-
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String jwt = authHeader.substring(7);
-
-            try {
-                String userId = jwtUtil.extractUserId(jwt);
-                List<String> roles = jwtUtil.extractClaim(jwt, claims -> claims.get("roles", List.class));
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userId,
-                                null,
-                                roles.stream().map(r -> (GrantedAuthority) () -> "ROLE_" + r).toList()
-                        );
-
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (Exception e) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
-                return;
-            }
-        }
-
-        filterChain.doFilter(request, response);
+    public void setId(Long id) {
+        this.id = id;
     }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Roles> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Roles> roles) {
+        this.roles = roles;
+    }
+
+    public String getSecurityQuestion() {
+        return securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion) {
+        this.securityQuestion = securityQuestion;
+    }
+
+    public String getSecurityAnswer() {
+        return securityAnswer;
+    }
+
+    public void setSecurityAnswer(String securityAnswer) {
+        this.securityAnswer = securityAnswer;
+    }
+// getters & setters
 }
 
-@Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+package com.scb.Payment.Initiation.entity;
+import jakarta.persistence.*;
+@Entity
+@Table(name = "roles")
+public class Roles {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer roleId;
 
-    private final UserRepository userRepository;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,unique = true)
+    private RoleType roleName;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public Integer getRoleId() {
+        return roleId;
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUserId(),
-                user.getPassword(),
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName().name()))
-                        .collect(Collectors.toSet())
-        );
-    }
-}
-
-@Service
-public class UserService {
-
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    public Users signup(Users user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
     }
 
-    public String login(String userId, String password) {
-        Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-        return jwtUtil.generateToken(user);
+    public RoleType getRoleName() {
+        return roleName;
     }
 
-    public boolean verifySecurityAnswer(String userId, String answer) {
-        Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getSecurityAnswer().equalsIgnoreCase(answer);
-    }
-
-    public void resetPassword(String userId, String newPassword) {
-        Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+    public void setRoleName(RoleType roleName) {
+        this.roleName = roleName;
     }
 }
