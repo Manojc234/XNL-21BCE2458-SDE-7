@@ -1,24 +1,13 @@
-package com.scb.Payment.Initiation.Config;
-
-
-import com.scb.Payment.Initiation.Security.JwtUtil;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-import io.jsonwebtoken.Claims;
-
-import java.io.IOException;
-import java.util.List;
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,19 +19,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = authHeader.substring(7);
 
             try {
-                Claims claims = JwtUtil.validateToken(jwt);
-                String username = claims.getSubject();
-                List<String> roles = claims.get("roles", List.class);
+                String userId = jwtUtil.extractUserId(jwt);
+                Users user = userService.findByUserId(userId);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                roles.stream().map(r -> (GrantedAuthority) () -> "ROLE_" + r).toList()
-                        );
+                if (jwtUtil.validateToken(jwt, user.getUserId())) {
+                    List<GrantedAuthority> authorities = user.getRoles().stream()
+                            .map(role -> (GrantedAuthority) () -> "ROLE_" + role.getRoleName().name())
+                            .toList();
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(user.getUserId(), null, authorities);
+
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
 
             } catch (Exception e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
@@ -54,373 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 }
 
-package com.scb.Payment.Initiation.Config;
-
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-@Configuration
-public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // signup, login, forgot password allowed
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
-}
-package com.scb.Payment.Initiation.controller;
-
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-@RestController
-@RequestMapping("/api/auth")
-public class UserController {
-
-
-
-
-        @Autowired
-        private UserService userService;
-
-        @PostMapping("/signup")
-        public ResponseEntity<Users> signup(@RequestBody Users user) {
-            return ResponseEntity.ok(userService.signup(user));
-        }
-
-        @PostMapping("/login")
-        public ResponseEntity<String> login(@RequestParam String userId,
-                                            @RequestParam String password) {
-            return ResponseEntity.ok(userService.login(userId, password));
-        }
-
-        @PostMapping("/forgot/verify")
-        public ResponseEntity<String> verifyAnswer(@RequestParam String userId,
-                                                   @RequestParam String answer) {
-            if (userService.verifySecurityAnswer(userId, answer)) {
-                return ResponseEntity.ok("Answer correct. You can reset password.");
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Incorrect answer.");
-        }
-
-        @PostMapping("/forgot/reset")
-        public ResponseEntity<String> resetPassword(@RequestParam String userId,
-                                                    @RequestParam String newPassword) {
-            userService.resetPassword(userId, newPassword);
-            return ResponseEntity.ok("Password reset successfully.");
-        }
-    }
-
-
-
-package com.scb.Payment.Initiation.entity;
-import jakarta.persistence.*;
-@Entity
-@Table(name = "roles")
-public class Roles {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer roleId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false,unique = true)
-    private RoleType roleName;
-
-    public Integer getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
-    }
-
-    public RoleType getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(RoleType roleName) {
-        this.roleName = roleName;
-    }
-}
-package com.scb.Payment.Initiation.entity;
-
-public enum RoleType {
-    CREATOR,
-    APPROVER,
-    MANAGER
-
-}
-package com.scb.Payment.Initiation.entity;
-import jakarta.persistence.*;
-import java.util.Set;
-
-@Entity
-@Table(name = "users")
-public class Users {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String userId;  // e.g., "cr123", "ar456", "mr789"
-
-    private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_role_mapping",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Roles> roles;
-
-    private String securityQuestion;
-    private String securityAnswer;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Set<Roles> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Roles> roles) {
-        this.roles = roles;
-    }
-
-    public String getSecurityQuestion() {
-        return securityQuestion;
-    }
-
-    public void setSecurityQuestion(String securityQuestion) {
-        this.securityQuestion = securityQuestion;
-    }
-
-    public String getSecurityAnswer() {
-        return securityAnswer;
-    }
-
-    public void setSecurityAnswer(String securityAnswer) {
-        this.securityAnswer = securityAnswer;
-    }
-// getters & setters
-}
-package com.scb.Payment.Initiation.repository;
-
-import com.scb.Payment.Initiation.entity.Users;
-import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
-
-public interface UserRepository extends JpaRepository<Users, Long> {
-    Optional<Users> findByUserId(String userId);
-}
-package com.scb.Payment.Initiation.repository;
-
-import com.scb.Payment.Initiation.entity.RoleType;
-import com.scb.Payment.Initiation.entity.Roles;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-
-@Repository
-public interface RolesRepository extends JpaRepository<Roles,Integer> {
-    Optional<Roles> FindByRoleName(RoleType roleName);
-
-}
-package com.scb.Payment.Initiation.Security;
-
-
-import com.scb.Payment.Initiation.entity.RoleType;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.exception.RoleNotFoundException;
-import com.scb.Payment.Initiation.exception.UnauthorizedActionException;
-import org.springframework.stereotype.Component;
-
-@Component
-public class AccessControl {
-    public void checkRole(Users user, RoleType requiredRole)
-    {
-        if(user.getRoles()==null)
-        {
-            throw new RoleNotFoundException("Role Not Defined");
-        }
-        if(user.getRoles().stream().noneMatch(r->r.getRoleName()==requiredRole))
-        {
-            throw new UnauthorizedActionException("Access Denied! Required Role: "+requiredRole);
-        }
-    }
-
-
-}
-package com.scb.Payment.Initiation.Security;
-
-
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.entity.Roles;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-@Component
-public class JwtUtil {
-
-    private final String SECRET_KEY = "mysecretmysecretmysecretmysecret"; // use >=32 chars
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
-
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    }
-
-    public String extractUserId(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
-                .parseClaimsJws(token).getBody();
-    }
-
-    public String generateToken(Users user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", user.getRoles().stream()
-                .map(Roles::getRoleName)
-                .toList());
-        return createToken(claims, user.getUserId());
-    }
-
-    private String  createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUserId(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-}package com.scb.Payment.Initiation.Security;
-
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.repository.UserRepository;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.*;
-import org.springframework.stereotype.Service;
-import java.util.stream.Collectors;
-
-@Service
-public class UserDetailsServiceImpl implements UserDetailsService {
-
-    private final UserRepository userRepository;
-
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUserId(),
-                user.getPassword(),
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getRoleType().name()))
-                        .collect(Collectors.toSet())
-        );
-    }
-}package com.scb.Payment.Initiation.service;
-
-
-import com.scb.Payment.Initiation.Security.JwtUtil;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -429,12 +52,19 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // BCrypt
+    private PasswordEncoder passwordEncoder;
+
     @Autowired
     private JwtUtil jwtUtil;
 
     public Users signup(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // ✅ also encode the security answer
+        if (user.getSecurityAnswer() != null) {
+            user.setSecurityAnswer(passwordEncoder.encode(user.getSecurityAnswer()));
+        }
+
         return userRepository.save(user);
     }
 
@@ -446,7 +76,6 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Generate JWT based on userId & roles
         return jwtUtil.generateToken(user);
     }
 
@@ -454,7 +83,7 @@ public class UserService {
         Users user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return passwordEncoder.matches(answer,user.getSecurityAnswer());
+        return passwordEncoder.matches(answer, user.getSecurityAnswer());
     }
 
     public void resetPassword(String userId, String newPassword) {
@@ -463,6 +92,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+    public Users findByUserId(String userId) {
+        return userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 }
-
-
