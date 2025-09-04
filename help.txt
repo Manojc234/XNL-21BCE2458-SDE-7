@@ -2,17 +2,17 @@
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
-        this.userService = userService;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -20,19 +20,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 String userId = jwtUtil.extractUserId(jwt);
-                Users user = userService.findByUserId(userId);
+                List<String> roles = jwtUtil.extractClaim(jwt, claims -> claims.get("roles", List.class));
 
-                if (jwtUtil.validateToken(jwt, user.getUserId())) {
-                    List<GrantedAuthority> authorities = user.getRoles().stream()
-                            .map(role -> (GrantedAuthority) () -> "ROLE_" + role.getRoleName().name())
-                            .toList();
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                roles.stream().map(r -> (GrantedAuthority) () -> "ROLE_" + r).toList()
+                        );
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(user.getUserId(), null, authorities);
-
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
@@ -44,27 +42,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 }
 
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public UserDetailsServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUserId(),
+                user.getPassword(),
+                user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName().name()))
+                        .collect(Collectors.toSet())
+        );
+    }
+}
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private JwtUtil jwtUtil;
 
     public Users signup(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // ✅ also encode the security answer
-        if (user.getSecurityAnswer() != null) {
-            user.setSecurityAnswer(passwordEncoder.encode(user.getSecurityAnswer()));
-        }
-
         return userRepository.save(user);
     }
 
@@ -75,15 +88,13 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
-
         return jwtUtil.generateToken(user);
     }
 
     public boolean verifySecurityAnswer(String userId, String answer) {
         Users user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return passwordEncoder.matches(answer, user.getSecurityAnswer());
+        return user.getSecurityAnswer().equalsIgnoreCase(answer);
     }
 
     public void resetPassword(String userId, String newPassword) {
@@ -91,10 +102,5 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-    }
-
-    public Users findByUserId(String userId) {
-        return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
