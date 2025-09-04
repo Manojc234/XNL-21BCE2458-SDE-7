@@ -1,144 +1,312 @@
-import React, { useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import Sidebar from "../Components/Sidebar";
-import "../Styles/layout.css";
+import jakarta.persistence.*;
+import java.util.Set;
 
-import {
-  UserPlus,
-  UserCheck,
-  FileText,
-  Users,
-  UserPlus2,
-  CheckCircle,
-  Send,
-  Repeat,
-  FileEdit,
-  Settings,
-} from "lucide-react";
+@Entity
+@Table(name = "users")
+public class Users {
 
-const menuItems = [
-  { name: "Add Account", icon: <UserPlus size={20} />, path: "/add-account" },
-  { name: "Edit Account", icon: <UserCheck size={20} />, path: "/edit-account" },
-  { name: "Account Details", icon: <FileText size={20} />, path: "/view-account" },
-  { name: "Employees", icon: <Users size={20} />, path: "/view-employees" },
-  { name: "Create Payee", icon: <UserPlus2 size={20} />, path: "/payee-roll" },
-  { name: "Approve Payee", icon: <CheckCircle size={20} />, path: "/approvals" },
-  { name: "Submit Payee", icon: <Send size={20} />, path: "/submits" },
-  { name: "Transactions", icon: <Repeat size={20} />, path: "/transacions" },
-  { name: "Drafts", icon: <FileEdit size={20} />, path: "/drafts" },
-  { name: "Settings", icon: <Settings size={20} />, path: "/change-password" },
-];
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-const Layout = ({ role }) => {
-  const [sidebarWidth, setSidebarWidth] = useState(80); // default = menu1 width
-  const navigate = useNavigate();
-  const location = useLocation();
-  const showCenterMenu = location.pathname === "/";
+    private String userId;  // e.g., "cr123", "ar456", "mr789"
 
-  return (
-    <div className="layout-container">
-      {/* Sidebar */}
-      <Sidebar role={role} setSidebarWidth={setSidebarWidth} />
+    private String password;
 
-      {/* Main content */}
-      <div
-        className="layout-content"
-        style={{
-          marginLeft: `${sidebarWidth + 40}px`,
-          transition: "margin-left 0.3s ease",
-          flex: 1,
-          padding: "20px",
-        }}
-      >
-        {showCenterMenu ? (
-          <div className="menu-center">
-            <div className="menu-grid">
-              {menuItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => navigate(item.path)}
-                  className="menu-card"
-                >
-                  <span className="menu-icon">{item.icon}</span>
-                  <span className="menu-text">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <Outlet />
-        )}
-      </div>
-    </div>
-  );
-};
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_role_mapping",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<UserRoles> roles;
 
-export default Layout;
+    private String securityQuestion;
+    private String securityAnswer;
 
-
-
-/* ===== Menu Center Layout ===== */
-.menu-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+    // getters & setters
 }
 
-/* ===== Grid for Menu Items ===== */
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns */
-  gap: 30px;
-  width: 100%;
-  max-width: 1000px; /* keeps it centered, not stretched */
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<Users, Long> {
+    Optional<Users> findByUserId(String userId);
 }
 
-/* ===== Individual Menu Card ===== */
-.menu-card {
-  background-color: #0d47a1;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  padding: 20px;
-  cursor: pointer;
 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 
-  transition: background-color 0.3s ease, transform 0.2s ease;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Component
+public class JwtUtil {
+
+    private final String SECRET_KEY = "mysecretmysecretmysecretmysecret"; // use >=32 chars
+    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
+
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
+
+    public String extractUserId(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
+                .parseClaimsJws(token).getBody();
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities());
+        return createToken(claims, userDetails.getUsername());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUserId(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
 }
 
-.menu-card:hover {
-  background-color: #083579;
-  transform: translateY(-3px);
+
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
+
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public UserDetailsServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUserId(),
+                user.getPassword(),
+                user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getRoleType().name()))
+                        .collect(Collectors.toSet())
+        );
+    }
 }
 
-/* ===== Icon inside menu ===== */
-.menu-icon {
-  margin-bottom: 10px;
-  font-size: 20px;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // BCrypt
+
+    public Users signup(Users user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    public String login(String userId, String password) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        // Generate JWT based on userId & roles
+        return JwtUtil.generateToken(user);
+    }
+
+    public boolean verifySecurityAnswer(String userId, String answer) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return user.getSecurityQuestions()
+                .stream()
+                .anyMatch(q -> passwordEncoder.matches(answer, q.getAnswer()));
+    }
+
+    public void resetPassword(String userId, String newPassword) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
 
-/* ===== Text inside menu ===== */
-.menu-text {
-  font-size: 14px;
-  text-align: center;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<Users> signup(@RequestBody Users user) {
+        return ResponseEntity.ok(userService.signup(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String userId,
+                                        @RequestParam String password) {
+        return ResponseEntity.ok(userService.login(userId, password));
+    }
+
+    @PostMapping("/forgot/verify")
+    public ResponseEntity<String> verifyAnswer(@RequestParam String userId,
+                                               @RequestParam String answer) {
+        if (userService.verifySecurityAnswer(userId, answer)) {
+            return ResponseEntity.ok("Answer correct. You can reset password.");
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Incorrect answer.");
+    }
+
+    @PostMapping("/forgot/reset")
+    public ResponseEntity<String> resetPassword(@RequestParam String userId,
+                                                @RequestParam String newPassword) {
+        userService.resetPassword(userId, newPassword);
+        return ResponseEntity.ok("Password reset successfully.");
+    }
 }
 
-/* ===== Responsive grid ===== */
-@media (max-width: 900px) {
-  .menu-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
-  }
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.Claims;
+
+import java.io.IOException;
+import java.util.List;
+
+@Component
+public class JwtFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+
+            try {
+                Claims claims = JwtUtil.validateToken(jwt);
+                String username = claims.getSubject();
+                List<String> roles = claims.get("roles", List.class);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                roles.stream().map(r -> (GrantedAuthority) () -> "ROLE_" + r).toList()
+                        );
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
+                return;
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }
 
-@media (max-width: 600px) {
-  .menu-grid {
-    grid-template-columns: 1fr; /* 1 column on mobile */
-  }
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+public class SecurityConfig {
+
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/**").permitAll() // signup, login, forgot password allowed
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 }
