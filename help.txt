@@ -1,18 +1,20 @@
 {
-  "transaction_id": 101,
-  "account_no": "1234567890",
+  
+}{
+  "transactionId": 1,
+  "accountNo": "1234567890",
   "amount": 2500.75,
-  "batch_id": "BATCH20250906",
+  "batchId": "BATCH20250906",
   "beneficiary": "John Doe",
-  "company_name": "ABC Pvt Ltd",
+  "companyName": "ABC Pvt Ltd",
   "currency": "INR",
-  "debit_account": "9876543210",
-  "payee_bank": "State Bank of India",
-  "payee_bank_address": "123 MG Road, Bangalore",
-  "payee_bank_branch": "MG Road Branch",
-  "payee_name": "John Doe",
-  "payment_method": "NEFT",
-  "reference_no": "REF20250906",
+  "debitAccount": "9876543210",
+  "payeeBank": "State Bank of India",
+  "payeeBankAddress": "123 MG Road, Bangalore",
+  "payeeBankBranch": "MG Road Branch",
+  "payeeName": "John Doe",
+  "paymentMethod": "NEFT",
+  "referenceNo": "REF20250906",
   "status": "SUCCESS",
-  "value_date": "2025-09-06"
+  "valueDate": "2025-09-06"
 }
