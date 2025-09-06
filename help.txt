@@ -1,106 +1,18 @@
-package com.scb.Payment.Initiation.entity;
-import jakarta.persistence.*;
-import java.util.Set;
-
-@Entity
-@Table(name = "users")
-public class Users {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String userId;  // e.g., "cr123", "ar456", "mr789"
-
-    private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_role_mapping",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Roles> roles;
-
-    private String securityQuestion;
-    private String securityAnswer;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Set<Roles> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Roles> roles) {
-        this.roles = roles;
-    }
-
-    public String getSecurityQuestion() {
-        return securityQuestion;
-    }
-
-    public void setSecurityQuestion(String securityQuestion) {
-        this.securityQuestion = securityQuestion;
-    }
-
-    public String getSecurityAnswer() {
-        return securityAnswer;
-    }
-
-    public void setSecurityAnswer(String securityAnswer) {
-        this.securityAnswer = securityAnswer;
-    }
-// getters & setters
-}
-
-package com.scb.Payment.Initiation.entity;
-import jakarta.persistence.*;
-@Entity
-@Table(name = "roles")
-public class Roles {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer roleId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false,unique = true)
-    private RoleType roleName;
-
-    public Integer getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Integer roleId) {
-        this.roleId = roleId;
-    }
-
-    public RoleType getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(RoleType roleName) {
-        this.roleName = roleName;
-    }
+{
+  "transaction_id": 101,
+  "account_no": "1234567890",
+  "amount": 2500.75,
+  "batch_id": "BATCH20250906",
+  "beneficiary": "John Doe",
+  "company_name": "ABC Pvt Ltd",
+  "currency": "INR",
+  "debit_account": "9876543210",
+  "payee_bank": "State Bank of India",
+  "payee_bank_address": "123 MG Road, Bangalore",
+  "payee_bank_branch": "MG Road Branch",
+  "payee_name": "John Doe",
+  "payment_method": "NEFT",
+  "reference_no": "REF20250906",
+  "status": "SUCCESS",
+  "value_date": "2025-09-06"
 }
