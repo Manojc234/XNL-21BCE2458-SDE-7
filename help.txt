@@ -1,20 +1,276 @@
-{
-  
-}{
-  "transactionId": 1,
-  "accountNo": "1234567890",
-  "amount": 2500.75,
-  "batchId": "BATCH20250906",
-  "beneficiary": "John Doe",
-  "companyName": "ABC Pvt Ltd",
-  "currency": "INR",
-  "debitAccount": "9876543210",
-  "payeeBank": "State Bank of India",
-  "payeeBankAddress": "123 MG Road, Bangalore",
-  "payeeBankBranch": "MG Road Branch",
-  "payeeName": "John Doe",
-  "paymentMethod": "NEFT",
-  "referenceNo": "REF20250906",
-  "status": "SUCCESS",
-  "valueDate": "2025-09-06"
+
+import React, { useState } from "react";
+import axios from "axios";
+import "../Styles/ChangePassword.css";
+
+
+export default function ChangePassword() {
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ New password and confirm password do not match.");
+      return;
+    }
+
+    const requestData = {
+      oldPassword: password,
+      newPassword: newPassword,
+    };
+
+    // API call (for now just simulate)
+    axios
+      .post("http://localhost:8080/api/change-password", requestData)
+      .then(() => {
+        setMessage("✅ Password changed successfully!");
+        setPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      })
+      .catch(() => {
+        setMessage("❌ Failed to change password. Try again.");
+      });
+  };
+
+  return (
+    <div className="change-password-container">
+      <h3 class="cp">Change Password</h3>
+      <form className="change-password-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Current Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>New Password</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Confirm New Password</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className="submit-btn">
+          Update Password
+        </button>
+      </form>
+
+      {message && <p className="status-msg">{message}</p>}
+    </div>
+  );
+}
+
+import React from "react";
+import "../Styles/AccountDetails.css";
+
+export default function AccountDetails() {
+
+//const account;
+  return (
+    <div className="account-card">
+      <h3>Account Details</h3>
+      <p><strong>Account No:</strong></p>
+      <p><strong>IFSC:</strong></p>
+      <p><strong>Bank:</strong></p>
+      <p><strong>Branch:</strong> </p>
+      <p><strong>Currency:</strong></p>
+      <p><strong>Country:</strong></p>
+    </div>
+  );
+}
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "../Styles/ViewEmployees.css";
+
+export default function ViewEmployees() {
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    // Fetch employees from backend
+    axios
+      .get("url") // 👈 your backend API
+      .then((res) => {
+        setEmployees(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching employees:", err);
+      });
+  }, []);
+
+  // Filter employees by ID, Name, or Email
+  const filteredEmployees = employees.filter(
+    (emp) =>
+      emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
+      emp.name.toLowerCase().includes(search.toLowerCase()) ||
+      emp.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="employee-table-container">
+      <h3 class="e">Employees</h3>
+
+      <input
+        type="text"
+        placeholder="Search by ID, Name or Email"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="search-input"
+      />
+
+      <div className="table-card">
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Country</th>
+              <th>Currency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
+                <tr key={emp.empId}>
+                  <td>{emp.empId}</td>
+                  <td>{emp.name}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.country}</td>
+                  <td>{emp.currency}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="no-data">
+                  ❌ No employees found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+http://localhost:8080/ViewAccount/employees/search?key=1
+http://localhost:8080/ViewAccount/accounts
+http://localhost:8080/users/change-password  
+package com.scb.Payment.Initiation.controller;
+
+
+import com.scb.Payment.Initiation.Security.AccessControl;
+import com.scb.Payment.Initiation.entity.CompanyAccounts;
+import com.scb.Payment.Initiation.entity.Employee;
+import com.scb.Payment.Initiation.entity.RoleType;
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.service.ViewAccountService;
+import jakarta.persistence.Access;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/ViewAccount")
+public class ViewAccountController {
+    private final ViewAccountService service;
+    @Autowired
+    private AccessControl accessControl;
+
+    public ViewAccountController(ViewAccountService service)
+    {
+        this.service=service;
+    }
+
+    @GetMapping("/accounts")
+    public CompanyAccounts getAccount(@PathVariable Long id)
+    {
+
+        return service.getAccountById(id);
+
+    }
+    @GetMapping("employees/search")
+    public Optional<Employee> searchEmployees(@RequestParam Integer key)
+    {
+
+        return service.searchEmployees(key);
+    }
+
+
+}
+package com.scb.Payment.Initiation.controller;
+
+import com.scb.Payment.Initiation.service.ChangePasswordService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/users")
+public class ChangePasswordController {
+    private final ChangePasswordService changePasswordService;
+
+    public ChangePasswordController(ChangePasswordService changePasswordService) {
+        this.changePasswordService = changePasswordService;
+    }
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            @RequestBody Map<String,String> request)
+    {
+        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+        String loggedInUserId=null;
+        if(authentication!=null)
+        {
+            Object principal=authentication.getPrincipal();
+            if(principal instanceof UserDetails)
+            {
+                loggedInUserId=((UserDetails)principal).getUsername();
+            } else if (principal instanceof String) {
+                loggedInUserId=(String)principal;
+
+            }
+        }
+        if(loggedInUserId==null)
+        {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Unauthorized: user not found in jwt");
+        }
+        String oldPassword=request.get("oldPassword");
+        String newPassword=request.get("newPassword");
+
+        String message=changePasswordService.changePassword(loggedInUserId,oldPassword,newPassword);
+        return ResponseEntity.ok(message);
+    }
 }
