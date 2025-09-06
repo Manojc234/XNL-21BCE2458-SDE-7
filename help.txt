@@ -674,3 +674,84 @@ export default function ViewEmployees() {
   );
 }
 this is my code
+import React, { useEffect, useState } from "react";
+import API from "../axiosInstance";
+import "../Styles/ViewEmployees.css";
+
+export default function ViewEmployees() {
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    API.get("/ViewAccount/employees/search?key=0")
+      .then((res) => {
+        if (res.data && res.data.empId) {
+          // ✅ If backend returns single Employee
+          setEmployees([res.data]);
+        } else {
+          // ✅ If backend returns null / empty
+          setEmployees([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching employees:", err);
+        setEmployees([]);
+      });
+  }, []);
+
+  // ✅ Filter only non-null employees
+  const filteredEmployees = employees.filter(
+    (emp) =>
+      emp &&
+      (emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
+        emp.name.toLowerCase().includes(search.toLowerCase()) ||
+        emp.email.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="employee-table-container">
+      <h3 className="e">Employees</h3>
+
+      <input
+        type="text"
+        placeholder="Search by ID, Name or Email"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="search-input"
+      />
+
+      <div className="table-card">
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Country</th>
+              <th>Currency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
+                <tr key={emp.empId}>
+                  <td>{emp.empId}</td>
+                  <td>{emp.name}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.country}</td>
+                  <td>{emp.currency}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="no-data">
+                  ❌ No employees found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
