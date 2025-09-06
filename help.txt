@@ -484,3 +484,116 @@ export default function ViewEmployees() {
     </div>
   );
 }
+
+Nice 👌 you’re using the new Spring Security DSL (with lambdas). Since you want Option 2 (inside SecurityConfig), here’s exactly where to put your CORS config:
+
+
+---
+
+✅ Updated SecurityConfig.java
+
+package com.scb.Payment.Initiation.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ enable CORS
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/signup",
+                                "/api/auth/login",
+                                "/api/auth/forget/verify",
+                                "/api/auth/forget/**"
+                        ).permitAll()
+                        .requestMatchers("/ViewAccount/**", "/users/change-password").permitAll() // 👈 for testing only
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // ✅ CORS configuration bean
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
+
+
+---
+
+🔑 What changed
+
+1. Added:
+
+.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+inside your securityFilterChain.
+
+
+2. Added:
+
+@Bean
+public CorsConfigurationSource corsConfigurationSource() { ... }
+
+which allows your React frontend (http://localhost:3000) to call the backend.
+
+
+
+
+---
+
+👉 After this, CORS will be fixed ✅.
+⚠️ But you may still get 403 Forbidden if JWT is missing/invalid. For now, I marked /ViewAccount/** and /users/change-password as .permitAll() so you can test without login. Later, you can remove that and rely on JWT.
+
+
+---
+
+Do you want me to also show how to switch back to JWT-only access once your teammate finishes login, so you don’t leave /ViewAccount endpoints wide open?
+
