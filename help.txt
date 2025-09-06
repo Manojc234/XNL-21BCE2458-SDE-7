@@ -1,4 +1,89 @@
+import React, { useState } from "react";
+import API from "../axiosInstance";
+import "../Styles/ViewEmployees.css";
 
+export default function ViewEmployees() {
+  const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSearch = () => {
+    if (!search.trim()) {
+      setError("Please enter a search key");
+      setEmployees([]);
+      return;
+    }
+
+    setError("");
+    API.get(`/ViewAccount/employees/search?key=${search}`)
+      .then((res) => {
+        if (res.data && res.data.empId) {
+          setEmployees([res.data]); // backend gives one employee
+        } else {
+          setEmployees([]); // no employee found
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching employees:", err);
+        setError("❌ Failed to fetch employees");
+        setEmployees([]);
+      });
+  };
+
+  return (
+    <div className="employee-table-container">
+      <h3 className="e">Employees</h3>
+
+      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+        <input
+          type="text"
+          placeholder="Search by Employee Key"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
+        <button onClick={handleSearch} className="search-btn">
+          Search
+        </button>
+      </div>
+
+      {error && <p className="status-msg">{error}</p>}
+
+      <div className="table-card">
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Country</th>
+              <th>Currency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.length > 0 ? (
+              employees.map((emp) => (
+                <tr key={emp.empId}>
+                  <td>{emp.empId}</td>
+                  <td>{emp.name}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.country}</td>
+                  <td>{emp.currency}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="no-data">
+                  ❌ No employees found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 import React, { useState } from "react";
 import axios from "axios";
 import "../Styles/ChangePassword.css";
