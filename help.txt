@@ -1,77 +1,274 @@
-import React, { useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import Sidebar from "../Components/Sidebar";
-import "../Styles/layout.css";
 
-import {
-  UserPlus,
-  UserCheck,
-  FileText,
-  Users,
-  UserPlus2,
-  CheckCircle,
-  Send,
-  Repeat,
-  FileEdit,
-  Settings,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { SidebarData } from "./SidebarData";
+import "../Styles/custom.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { MdLogout } from "react-icons/md";
+import { useNavigate, Link } from "react-router-dom";
 
-const menuItems = [
-  { name: "Add Account", icon: <UserPlus size={20} />, path: "/add-account" },
-  { name: "Edit Account", icon: <UserCheck size={20} />, path: "/edit-account" },
-  { name: "Account Details", icon: <FileText size={20} />, path: "/view-account" },
-  { name: "Employees", icon: <Users size={20} />, path: "/view-employees" },
-  { name: "Create Payee", icon: <UserPlus2 size={20} />, path: "/payee-roll" },
-  { name: "Approve Payee", icon: <CheckCircle size={20} />, path: "/approvals" },
-  { name: "Submit Payee", icon: <Send size={20} />, path: "/submits" },
-  { name: "Transactions", icon: <Repeat size={20} />, path: "/transacions" },
-  { name: "Drafts", icon: <FileEdit size={20} />, path: "/drafts" },
-  { name: "Settings", icon: <Settings size={20} />, path: "/change-password" },
-];
+function Sidebar({role,setSidebarWidth}) {
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [hoverSubMenu, setHoverSubMenu] = useState(null);
+  const [boxTop, setBoxTop] = useState(0);
 
-const Layout = ({ role }) => {
-  const [sidebarWidth, setSidebarWidth] = useState(80); 
+
+  const [restrictOpen, setRestrictOpen] = useState(false);
+  const [restrictMsg, setRestrictMsg] = useState("");
+
   const navigate = useNavigate();
-  const location = useLocation();
-  const showCenterMenu = location.pathname === "/";
+
+
+  const checkAccess = (menuKey, subKey, thirdKey) => {
+    if (
+      (menuKey === "Create" ||
+        menuKey === "Payroll" ||
+        menuKey === "Rolled Payees" ||
+        menuKey === "Drafts" ||
+        menuKey === "Quick Currency Calculator") &&
+      role !== "creator"
+    )
+      return false;
+
+    if (
+      (menuKey === "Manage" ||
+        menuKey === "Make Approvers" ||
+        menuKey === "View Rolled Payees") &&
+      role !== "manager"
+    )
+      return false;
+
+    if (
+      (menuKey === "Approver" ||
+        menuKey === "Approved Payees" ||
+        menuKey === "Pending Payees") &&
+      role !== "approver"
+    )
+      return false;
+
+    if (
+      (menuKey === "Add Account" ||
+        menuKey === "Change Account" ||
+        menuKey === "Edit Account" ||
+        menuKey === "Edit Employee Accounts") &&
+      (role === "approver" || role === "manager")
+    )
+      return false;
+   
+
+    if (
+      (menuKey === "View Approvers" ||
+        menuKey === "View Creators" ||
+        menuKey === "View Managers") &&
+      (role === "creator" || role === "approver")
+    )
+      return false;
+
+    if (menuKey === "Change Account" && role === "manager") return false;
+
+    return true;
+  };
+
+  const handleClick = (menuKey, subKey, thirdKey) => {
+    if (!checkAccess(menuKey, subKey, thirdKey)) {
+      setRestrictMsg(
+        ` You are restricted from accessing "${thirdKey || subKey || menuKey}"!`
+      );
+      setRestrictOpen(true);
+      return;
+    }
+
+    toast.success(` Accessing ${thirdKey || subKey || menuKey}`, {
+      position: "top-right",
+      autoClose: 1500,
+    });
+
+    switch (thirdKey||subKey) {
+      case "Add Account":
+        navigate("/add-account");
+        break;
+      case "Service Request":
+        navigate("/service-request");
+        break;
+      case "Edit Account":
+        navigate("/edit-account");
+        break;
+      case "Edit Employee Accounts":
+        navigate("/edit-employee");
+        break;
+      case "Account Details":
+        navigate("/view-account");
+        break;
+      case "Employees":
+        navigate("/view-employees");
+        break;
+      case "Change Password":   
+        navigate("/change-password");
+        break;
+      case "Payroll":   
+        navigate("/payee-roll");
+        break;
+      case "Drafts":   
+        navigate("/drafts");
+        break;
+      case "Pending Approvals":   
+        navigate("/approvals");
+        break;
+      case "Submit Batches":   
+        navigate("/submits");
+        break;
+      case "Rolled Payees":
+        navigate("/payees");
+        break;
+      case "Successfull Transactions":
+        navigate("/transactions");
+        break;
+      case "Download Statements":
+        navigate("/statements");
+        break;
+      default:
+        break;
+    }
+
+    setActiveMenu(null);
+    setHoverSubMenu(null);
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setRestrictOpen(false);
+    };
+    if (restrictOpen) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [restrictOpen]);
+  useEffect(() => {
+    let width = 80; // Menu1
+    if (activeMenu && SidebarData[activeMenu]?.subMenu) {
+      width += 160; // Menu2
+      if (hoverSubMenu && SidebarData[activeMenu].subMenu[hoverSubMenu]?.subMenu) {
+        width += 160; // Menu3
+      }
+    }
+    setSidebarWidth(width);
+  }, [activeMenu, hoverSubMenu, setSidebarWidth]);
 
   return (
-    <div className="layout-container">
+    <div className={`sidbar ${
+    activeMenu && SidebarData[activeMenu]?.subMenu
+      ? "expanded"
+      : "collapsed"
+  }`}>
       
-      <Sidebar role={role} setSidebarWidth={setSidebarWidth} />
+      <div className="nvbar">
+        <Link to="/" className="nv-left flex items-center gap-2 px-4 py-3 ">
+          <img
+            className="brand-logo cursor-pointer"
+            src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Standard_Chartered_Logo_%282021%2C_Logo_only%29.svg"
+            alt="SC Logo"
+          />
+          <span className="brand-name">
+            <h3>
+              Standard <br /> Chartered
+            </h3>
+          </span>
+        </Link>
+        <div className="nvbar-right">
+          <MdLogout
+            size={30}
+            color="white"
+            className="nv-icon cursor-pointer"
+          />
+        </div>
+      </div>
 
-     
-      <div
-        className="layout-content"
-        style={{
-          marginLeft: `${sidebarWidth + 40}px`,
-          transition: "margin-left 0.3s ease",
-          flex: 1,
-          padding: "20px",
-        }}
-      >
-        {showCenterMenu ? (
-          <div className="menu-center">
-            <div className="menu-grid">
-              {menuItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => navigate(item.path)}
-                  className="menu-card"
-                >
-                  <span className="menu-icon">{item.icon}</span>
-                  <span className="menu-text">{item.name}</span>
-                </div>
-              ))}
+      
+      <div className="col main-col">
+        {Object.entries(SidebarData).map(([menuKey, menuVal]) => (
+          <div
+            key={menuKey}
+            className={`menu-item vertical ${
+              activeMenu === menuKey ? "active" : ""
+            }`}
+            onClick={() => {
+              if (!checkAccess(menuKey)) {
+                setRestrictMsg(
+                  `You are restricted from accessing "${menuKey}"!`
+                );
+                setRestrictOpen(true);
+                return;
+              }
+              setActiveMenu(activeMenu === menuKey ? null : menuKey);
+            }}
+          >
+            <span className="icon big">{menuVal.icon}</span>
+            <span>{menuKey}</span>
+          </div>
+        ))}
+      </div>
+
+      
+      {activeMenu && SidebarData[activeMenu]?.subMenu && (
+        <div className="col-2 sub-col">
+          {Object.entries(SidebarData[activeMenu].subMenu).map(
+            ([subKey, subVal]) => (
+              <div
+                key={subKey}
+                className={`menu-item-2 vertical ${
+                  hoverSubMenu === subKey ? "active" : ""
+                }`}
+                onMouseEnter={(e) => {
+                  setHoverSubMenu(subKey);
+                  setBoxTop(e.currentTarget.offsetTop);
+                }}
+                onClick={() => handleClick(activeMenu, subKey)}
+              >
+                <span className="icon">{subVal.icon}</span>
+                <span>{subKey}</span>
+              </div>
+            )
+          )}
+        </div>
+      )}
+
+      
+      {activeMenu &&
+        hoverSubMenu &&
+        SidebarData[activeMenu]?.subMenu?.[hoverSubMenu]?.subMenu && (
+          <div className="submenu-box" style={{ top: boxTop }}>
+            {Object.entries(
+              SidebarData[activeMenu].subMenu[hoverSubMenu].subMenu
+            ).map(([thirdKey, thirdVal]) => (
+              <div
+                key={thirdKey}
+                className="menu-item-3 vertical leaf"
+                onClick={() => handleClick(activeMenu, hoverSubMenu, thirdKey)}
+              >
+                <span className="icon">{thirdVal}</span>
+                <span>{thirdKey}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+      
+      {restrictOpen && (
+        <div className="modal-overlay" onClick={() => setRestrictOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Access Restricted</h3>
+            <p className="modal-text">{restrictMsg}</p>
+            <div className="modal-actions">
+              <button
+                className="modal-btn"
+                onClick={() => setRestrictOpen(false)}
+              >
+                Close
+              </button>
             </div>
           </div>
-        ) : (
-          <Outlet />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-};
+}
 
-export default Layout;
-
+export default Sidebar;
