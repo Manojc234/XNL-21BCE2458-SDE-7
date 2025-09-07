@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
-import API from "../api"; // import your axios instance
+import API from "../api"; 
 import "../Styles/EditAccount.css";
 
 export default function EditAccount() {
   const [form, setForm] = useState({
     ifsc: "",
-    accountNumber: "",
-    bankName: "",
+    accountNo: "",
+    bank: "",
     branch: "",
   });
 
   const [loading, setLoading] = useState(true);
 
-  // Fetch account details on mount
   useEffect(() => {
     async function fetchAccount() {
       try {
         const res = await API.get("/api/company_accounts/get");
         const data = res.data;
 
+        // map backend field names correctly
         setForm({
           ifsc: data.ifsc ?? "",
-          accountNumber: data.accountNumber ?? "",
-          bankName: data.bankName ?? "",
+          accountNo: data.accountNo ?? "",
+          bank: data.bank ?? "",
           branch: data.branch ?? "",
         });
       } catch (err) {
@@ -44,8 +44,8 @@ export default function EditAccount() {
     try {
       await API.put("/api/company_accounts/update", {
         ifsc: form.ifsc,
-        accountNumber: form.accountNumber,
-        bankName: form.bankName,
+        accountNo: form.accountNo,
+        bank: form.bank,
         branch: form.branch,
       });
 
@@ -84,8 +84,8 @@ export default function EditAccount() {
             <label>Account Number</label>
             <input
               type="text"
-              name="accountNumber"
-              value={form.accountNumber}
+              name="accountNo"
+              value={form.accountNo}
               onChange={handleChange}
             />
           </div>
@@ -93,8 +93,8 @@ export default function EditAccount() {
             <label>Bank Name</label>
             <input
               type="text"
-              name="bankName"
-              value={form.bankName}
+              name="bank"
+              value={form.bank}
               onChange={handleChange}
             />
           </div>
