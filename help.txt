@@ -1,119 +1,277 @@
-import React, { useState, useEffect } from "react";
-import API from "../api"; 
-import "../Styles/EditAccount.css";
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import ChangeAccount from "./pages/ChangeAccount";
+import EditAccount from "./pages/EditAccount";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+import DraftManagement from "./Components/DraftManagement";
+import ApprovePayee from "./pages/ApprovePayee";
+import Manager from "./pages/Manager";
+import RolledPayees from "./pages/RolledPayees";
+import Transactions from "./pages/Transactions";
+import Statements from "./pages/Statements";
 
-export default function EditAccount() {
-  const [form, setForm] = useState({
-    ifsc: "",
-    accountNo: "",
-    bank: "",
-    branch: "",
-  });
 
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchAccount() {
-      try {
-        const res = await API.get("/api/company_accounts/get");
-        const data = res.data;
-
-        // map backend field names correctly
-        setForm({
-          ifsc: data.ifsc ?? "",
-          accountNo: data.accountNo ?? "",
-          bank: data.bank ?? "",
-          branch: data.branch ?? "",
-        });
-      } catch (err) {
-        console.error("Error fetching account:", err);
-        alert("Failed to fetch account ❌");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAccount();
-  }, []);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await API.put("/api/company_accounts/update", {
-        ifsc: form.ifsc,
-        accountNo: form.accountNo,
-        bank: form.bank,
-        branch: form.branch,
-      });
-
-      alert("Account updated successfully ✅");
-    } catch (err) {
-      console.error("Error updating account:", err);
-      alert("Update failed ❌: " + (err.response?.data || err.message));
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="form-wrapper">
-        <div className="card">
-          <p>Loading account details...</p>
-        </div>
-      </div>
-    );
-  }
-
+function App() {
+  const role="creator";
   return (
-    <div className="form-wrapper">
-      <div className="card">
-        <h3 className="ea">Edit Bank Account</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>IFSC Code</label>
-            <input
-              type="text"
-              name="ifsc"
-              value={form.ifsc}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Account Number</label>
-            <input
-              type="text"
-              name="accountNo"
-              value={form.accountNo}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Bank Name</label>
-            <input
-              type="text"
-              name="bank"
-              value={form.bank}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Branch</label>
-            <input
-              type="text"
-              name="branch"
-              value={form.branch}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        <div className="button-container">
-          <button className="bt" onClick={handleSubmit}>
-            Update Account
-          </button>
-        </div>
-      </div>
-    </div>
+      <BrowserRouter>  
+        <Routes>
+            <Route path="/" element={<Layout role={role} />}>
+              <Route
+                path="/add-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/drafts"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <DraftManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/approvals"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["approver"]}>
+                <ApprovePayee role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/submits"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["manager"]}>
+                <Manager role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/payees"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <RolledPayees role={role}/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/transactions"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Transactions/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/statements"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Statements/>
+              </ProtectedRoute>
+                }
+              />
+            </Route>
+        </Routes>
+        
+      </BrowserRouter>
+     
+ 
   );
 }
+export default App;
+
+import React from 'react';
+import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./LoginPage.css";
+
+function LoginPage() {
+    const navigate = useNavigate();
+
+    return (
+        <div className="container-fluid min-vh-100 d-flex flex-column p-0">
+            <div className="row header-bar">
+                <div className="col-6 header-left"></div>
+                <div className="col-6 header-right"></div>
+            </div>
+
+            <div className="row justify-content-center mt-3">
+                <div className="col-auto">
+                    <img src="" className="login-logo" alt="Logo" />
+                </div>
+            </div>
+            <div className="row justify-content-center mt-2">
+                <div className="col-12 text-center fw-bold login-title">Welcome to Standard Chartered internal payment system</div>
+            </div>
+            <div className="row justify-content-center align-items-center flex-grow-1 login-container">
+                <div className="col-12 col-md-6 col-lg-4">
+                    <div className="card p-4 login-box">
+                        <h2 className="text-center">Login</h2>
+                        <form>
+                            <div className="mb-3 text-start">
+                                <label className="form-label">Emp ID</label>
+                                <input type="text" className="form-control" name="userid" />
+                            </div>
+                            <div className="mb-3 text-start">
+                                <label className="form-label">Password</label>
+                                <input type="password" className="form-control" name="password" />
+                            </div>
+                            <div className="d-flex justify-content-between mb-3">
+                                <button type="button" className="btn btn-link p-0">Forgot Pwd </button>
+                                <button type="button" className="btn btn-link p-0" onClick={() => navigate("/signup")}>Sign Up</button>
+                            </div>
+                            <div className="d-grid">
+                                <button type="submit" className="btn btn-primary">Login</button>
+                            </div>
+                        </form>
+                        <div className="text-center mt-3 login-footer">Here For Good</div>
+                    </div>
+                </div>
+            </div>
+            <footer className="bg-dark text-white text-center py-2 mt-auto w-100 page-footer">
+                Intellectual Property of Standard Chartered Global Business Services
+            </footer>
+        </div>
+    );
+}
+
+export default LoginPage;
+
+
+import React from 'react';
+import{ useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./SignUpPage.css";
+
+function SignUpPage(){
+  const navigate =useNavigate();
+  return(
+  
+    <div className="container-fluid min-vh-100 overflow-hidden d-flex flex-column p-0">
+      <div className="row header-bar">
+        <div className="col-6 header-left"></div>
+        <div className="col-6 header-right"></div>
+
+      </div>
+      <div className="row justify-content-center mt-3">
+        <div className="col-auto">
+          <img src=""className="login-logo"/> 
+        </div>
+      </div>
+      <div className="row justify-content-center mt-2">
+        <div className="col-12 text-center fw-bold">Standard Chartered Internal Payment InitationSystem</div>
+          
+        
+      </div>
+      <div className="row justify-content-center align-items-center flex-grow-1">
+        <div className="col-12 col-md-6 col-lg-4">
+          <div className="card p-4">
+            <h2 className="text-center">SignUp</h2>
+            <form>
+              <div className="mb-3 text-start">
+                <label className="form-label">Employee ID</label>
+                <input type="text" className="form-control" name="employee_id"/>
+              </div>
+              <div className="mb-3 text-start">
+                <label className="form-label">EmailID</label>
+                <input type="email" className="form-control" name="email"/>
+              </div>
+              <div className="mb-3 text-start">
+                <label className="form-label">Password</label>
+                <input type="password" className="form-control" name="password"/>
+              </div>
+              <div className="mb-3 text-start">
+                <label className="form-label">Re type Password</label>
+                <input type="password" className="form-control" name="retype_password"/>
+              </div>
+              <div className="mb-3 text-start">
+                <label className="form-label">Security Questions</label>
+                <select className="form-select" name="security_question">
+                  <option value="Mother's Surname">Mother's Surname</option>
+                  <option value="Pet's Name">Pet's Name</option>
+                </select>
+              </div>
+              <div className="mb-3 text-start">
+                <label className="form-label">Security Answer</label>
+                <input type="text" className="form-control" name="security_answer"/>
+              </div>
+              
+              <div className="d-flex justify-content-start mb-2">
+                <button type="button" className="btn btn-link p-0" onClick={()=>navigate("/login")}>Back to Login</button>
+              </div>
+              <div className="d-grid">
+                <button type="submit" className="btn btn-success">Sign Up</button>
+              </div>
+            </form>
+            <div className="text-center mt-3 login-footer">Here For Good</div>
+
+          </div>
+        </div>
+      </div>
+      <footer className="bg-dark text-white text-center py-2 mt-auto w-100">
+        Intellectual Property of Standard Chartered Global Business Services
+      </footer>
+    </div>
+    
+  );
+}
+
+export default SignUpPage;
+
