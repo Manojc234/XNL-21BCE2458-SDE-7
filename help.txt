@@ -1,127 +1,59 @@
-import React, { useState, useEffect } from "react";
-import "../Styles/EditAccount.css"; // reuse CSS
+package com.scb.Payment.Initiation.Config;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-export default function EditAccount() {
-  const [form, setForm] = useState({
-    ifsc: "",
-    accountNumber: "",
-    bankName: "",
-    branch: "",
-  });
+import java.util.List;
 
-  const [loading, setLoading] = useState(true);
-
-  // Fetch account details on mount
-  useEffect(() => {
-    async function fetchAccount() {
-      try {
-        const res = await fetch("http://localhost:8080/api/company_accounts/get");
-        if (!res.ok) throw new Error("Failed to fetch account");
-        const data = await res.json();
-
-        // only set the 4 fields
-        setForm({
-          ifsc: data.ifsc ?? "",
-          accountNumber: data.accountNumber ?? "",
-          bankName: data.bankName ?? "",
-          branch: data.branch ?? "",
-        });
-      } catch (err) {
-        console.error("Error fetching account:", err);
-      } finally {
-        setLoading(false);
-      }
+@Configuration
+public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtFilter;
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
     }
-
-    fetchAccount();
-  }, []);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/api/company_accounts/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ifsc: form.ifsc,
-          accountNumber: form.accountNumber,
-          bankName: form.bankName,
-          branch: form.branch,
-        }), // send only 4 fields
-      });
-
-      if (res.ok) {
-        alert("Account updated successfully ✅");
-      } else {
-        const msg = await res.text();
-        alert("Update failed ❌: " + msg);
-      }
-    } catch (err) {
-      console.error("Error updating account:", err);
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
-  };
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors->cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/signup","/api/auth/login","/api/auth/forget/verify","/api/auth/forget/reset","/api/company_accounts/balance","/api/company_accounts/get","/api/company_accounts/update").permitAll() // signup, login, forgot password allowed
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-  if (loading) {
-    return (
-      <div className="form-wrapper">
-        <div className="card">
-          <p>Loading account details...</p>
-        </div>
-      </div>
-    );
-  }
+        return http.build();
+    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
 
-  return (
-    <div className="form-wrapper">
-      <div className="card">
-        <h3 className="ea">Edit Bank Account</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>IFSC Code</label>
-            <input
-              type="text"
-              name="ifsc"
-              value={form.ifsc}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Account Number</label>
-            <input
-              type="text"
-              name="accountNumber"
-              value={form.accountNumber}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Bank Name</label>
-            <input
-              type="text"
-              name="bankName"
-              value={form.bankName}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>Branch</label>
-            <input
-              type="text"
-              name="branch"
-              value={form.branch}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        <div className="button-container">
-          <button className="bt" onClick={handleSubmit}>
-            Update Account
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
+
