@@ -1,5 +1,198 @@
-import React from "react";
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import ChangeAccount from "./pages/ChangeAccount";
+import EditAccount from "./pages/EditAccount";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+import DraftManagement from "./Components/DraftManagement";
+import ApprovePayee from "./pages/ApprovePayee";
+import Manager from "./pages/Manager";
+import RolledPayees from "./pages/RolledPayees";
+import Transactions from "./pages/Transactions";
+import Statements from "./pages/Statements";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import {jwtDecode} from "jwt-decode";
+
+
+function App() {
+  const token=localStorage.getItem("jwt");
+  let role=null;
+  if(token)
+  {
+    try{
+      const decoded=jwtDecode(token);
+      console.log(decoded);
+      if(decoded.roles&&decoded.roles.length>0)
+      {
+        role=decoded.roles[0].toLowerCase();
+        console.log(role);
+      }
+      //role=decoded.roles?decoded.roles[0]:null;
+    }
+    catch(e)
+    {
+      console.error("invalid token",e);
+    }
+  }
+  //const role="creator";
+  return (
+      <BrowserRouter>  
+        <Routes>
+          <Route path="/login" element={<LoginPage/>}/>
+          <Route path="/signup" element={<SignUpPage/>}/>
+
+            <Route path="/" element={<Layout role={role} />}>
+              <Route
+                path="/add-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/drafts"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <DraftManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/approvals"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["approver"]}>
+                <ApprovePayee role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/submits"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["manager"]}>
+                <Manager role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/payees"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <RolledPayees role={role}/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/transactions"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Transactions/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/statements"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Statements/>
+              </ProtectedRoute>
+                }
+              />
+            </Route>
+        </Routes>
+        
+      </BrowserRouter>
+     
+ 
+  );
+}
+export default App;
+import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+
+
+/*const ProtectedRoute = ({ role, allowedRoles, children }) => {
+  const [restricted, setRestricted] = useState(false);
+
+  useEffect(() => {
+    if (!allowedRoles.includes(role)) {
+      setRestricted(true);
+    }
+  }, [role, allowedRoles]);
+
+  if (restricted) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-card">
+          <h3 className="modal-title">Access Restricted</h3>
+          <p className="modal-text"> You are restricted from accessing this page!</p>
+          <div className="modal-actions">
+            <a className="modal-btn" href="/">Close</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;*/
+
 import { jwtDecode } from "jwt-decode";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -20,11 +213,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (!hasAccess) {
       return (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Access Restricted</h2>
-            <p>You are not authorized to access this page.</p>
+        <div className="modal-card">
+          <h3 className="modal-title">Access Restricted</h3>
+          <p className="modal-text"> You are restricted from accessing this page!</p>
+          <div className="modal-actions">
+            <a className="modal-btn" href="/">Close</a>
           </div>
         </div>
+      </div>
       );
       // OR redirect instead of modal:
       // return <Navigate to="/unauthorized" replace />;
@@ -38,3 +234,4 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 export default ProtectedRoute;
+
