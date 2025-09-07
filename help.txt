@@ -1,933 +1,111 @@
-import React, { useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ViewEmployees.css";
 
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
+import React, { useState, useEffect } from "react";
+import "../Styles/EditAccount.css"; // reuse CSS
 
-  const handleSearch = () => {
-    console.log("Search:",search);
-    if (!search.trim()) {
-      setError("Please enter a search key");
-      setEmployees([]);
-      return;
+export default function EditAccount({ accountId }) {
+  const [form, setForm] = useState({
+    ifsc: "",
+    accountNumber: "",
+    bankName: "",
+    branch: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  // Fetch account details when component loads
+  useEffect(() => {
+    async function fetchAccount() {
+      try {
+        const res = await fetch(`http://localhost:8080/api/accounts/${accountId}`);
+        const data = await res.json();
+
+        // Prefill form with backend response
+        setForm({
+          ifsc: data.ifsc || "",
+          accountNumber: data.accountNumber || "",
+          bankName: data.bankName || "",
+          branch: data.branch || "",
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching account:", err);
+        setLoading(false);
+      }
     }
 
-    setError("");
-    API.get(`/ViewAccount/employees/search?key=${search}`)
-      .then((res) => {
-        console.log("API response:",res.data)
-        if (res.data && res.data.empId) {
-          setEmployees([res.data]); // backend gives one employee
-        } else {
-          setEmployees([]); // no employee found
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-        setError(" Failed to fetch employees");
-        setEmployees([]);
-      });
+    fetchAccount();
+  }, [accountId]);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  return (
-    <div className="employee-table-container">
-      <h3 className="e">Employees</h3>
-
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-        <input
-          type="text"
-          placeholder="Search by Employee Key"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
-        <button onClick={handleSearch} className="search-btn">
-          Search
-        </button>
-      </div>
-
-      {error && <p className="status-msg">{error}</p>}
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>accNum</th>
-              <th>Ifsc</th>
-              <th>Salary</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length > 0 ? (
-              employees.map((emp) => (
-                <tr key={emp.employeeId}>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.accNum}</td>
-                  <td>{emp.ifsc_code}</td>
-                  <td>{emp.salary}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="no-data">
-                  No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-import React, { useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ViewEmployees.css";
-
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
-
-  const handleSearch = () => {
-    if (!search.trim()) {
-      setError("Please enter a search key");
-      setEmployees([]);
-      return;
-    }
-
-    setError("");
-    API.get(`/ViewAccount/employees/search?key=${search}`)
-      .then((res) => {
-        if (res.data && res.data.empId) {
-          setEmployees([res.data]); // backend gives one employee
-        } else {
-          setEmployees([]); // no employee found
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-        setError("❌ Failed to fetch employees");
-        setEmployees([]);
+  const handleSubmit = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/accounts/${accountId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
       });
+      if (res.ok) {
+        alert("Account updated successfully");
+      }
+    } catch (err) {
+      console.error("Error updating account:", err);
+    }
   };
 
-  return (
-    <div className="employee-table-container">
-      <h3 className="e">Employees</h3>
-
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-        <input
-          type="text"
-          placeholder="Search by Employee Key"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
-        <button onClick={handleSearch} className="search-btn">
-          Search
-        </button>
-      </div>
-
-      {error && <p className="status-msg">{error}</p>}
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Country</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length > 0 ? (
-              employees.map((emp) => (
-                <tr key={emp.empId}>
-                  <td>{emp.empId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.country}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  ❌ No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-import React, { useState } from "react";
-import axios from "axios";
-import "../Styles/ChangePassword.css";
-
-
-export default function ChangePassword() {
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setMessage("❌ New password and confirm password do not match.");
-      return;
-    }
-
-    const requestData = {
-      oldPassword: password,
-      newPassword: newPassword,
-    };
-
-    // API call (for now just simulate)
-    axios
-      .post("http://localhost:8080/api/change-password", requestData)
-      .then(() => {
-        setMessage("✅ Password changed successfully!");
-        setPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      })
-      .catch(() => {
-        setMessage("❌ Failed to change password. Try again.");
-      });
-  };
+  if (loading) {
+    return <div className="form-wrapper"><div className="card"><p>Loading account details...</p></div></div>;
+  }
 
   return (
-    <div className="change-password-container">
-      <h3 class="cp">Change Password</h3>
-      <form className="change-password-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Current Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+    <div className="form-wrapper">
+      <div className="card">
+        <h3 class="ea">Edit Bank Account</h3>
+        <div className="form-row">
+          <div className="form-group">
+            <label>IFSC Code</label>
+            <input
+              type="text"
+              name="ifsc"
+              value={form.ifsc}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Account Number</label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={form.accountNumber}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Bank Name</label>
+            <input
+              type="text"
+              name="bankName"
+              value={form.bankName}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Branch</label>
+            <input
+              type="text"
+              name="branch"
+              value={form.branch}
+              onChange={handleChange}
+            />
+          </div>
         </div>
-
-        <div className="form-group">
-          <label>New Password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-          />
+        <div className="button-container">
+          <button className="bt" onClick={handleSubmit}>
+            Update Account
+          </button>
         </div>
-
-        <div className="form-group">
-          <label>Confirm New Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit" className="submit-btn">
-          Update Password
-        </button>
-      </form>
-
-      {message && <p className="status-msg">{message}</p>}
-    </div>
-  );
-}
-
-import React from "react";
-import "../Styles/AccountDetails.css";
-
-export default function AccountDetails() {
-
-//const account;
-  return (
-    <div className="account-card">
-      <h3>Account Details</h3>
-      <p><strong>Account No:</strong></p>
-      <p><strong>IFSC:</strong></p>
-      <p><strong>Bank:</strong></p>
-      <p><strong>Branch:</strong> </p>
-      <p><strong>Currency:</strong></p>
-      <p><strong>Country:</strong></p>
-    </div>
-  );
-}
-
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import "../Styles/ViewEmployees.css";
-
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    // Fetch employees from backend
-    axios
-      .get("url") // 👈 your backend API
-      .then((res) => {
-        setEmployees(res.data);
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-      });
-  }, []);
-
-  // Filter employees by ID, Name, or Email
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
-      emp.name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="employee-table-container">
-      <h3 class="e">Employees</h3>
-
-      <input
-        type="text"
-        placeholder="Search by ID, Name or Email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="search-input"
-      />
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Country</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((emp) => (
-                <tr key={emp.empId}>
-                  <td>{emp.empId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.country}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  ❌ No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-http://localhost:8080/ViewAccount/employees/search?key=1
-http://localhost:8080/ViewAccount/accounts
-http://localhost:8080/users/change-password  
-package com.scb.Payment.Initiation.controller;
-
-
-import com.scb.Payment.Initiation.Security.AccessControl;
-import com.scb.Payment.Initiation.entity.CompanyAccounts;
-import com.scb.Payment.Initiation.entity.Employee;
-import com.scb.Payment.Initiation.entity.RoleType;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.service.ViewAccountService;
-import jakarta.persistence.Access;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
-
-@RestController
-@RequestMapping("/ViewAccount")
-public class ViewAccountController {
-    private final ViewAccountService service;
-    @Autowired
-    private AccessControl accessControl;
-
-    public ViewAccountController(ViewAccountService service)
-    {
-        this.service=service;
-    }
-
-    @GetMapping("/accounts")
-    public CompanyAccounts getAccount(@PathVariable Long id)
-    {
-
-        return service.getAccountById(id);
-
-    }
-    @GetMapping("employees/search")
-    public Optional<Employee> searchEmployees(@RequestParam Integer key)
-    {
-
-        return service.searchEmployees(key);
-    }
-
-
-}
-package com.scb.Payment.Initiation.controller;
-
-import com.scb.Payment.Initiation.service.ChangePasswordService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-
-@RestController
-@RequestMapping("/users")
-public class ChangePasswordController {
-    private final ChangePasswordService changePasswordService;
-
-    public ChangePasswordController(ChangePasswordService changePasswordService) {
-        this.changePasswordService = changePasswordService;
-    }
-    @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(
-            @RequestBody Map<String,String> request)
-    {
-        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
-        String loggedInUserId=null;
-        if(authentication!=null)
-        {
-            Object principal=authentication.getPrincipal();
-            if(principal instanceof UserDetails)
-            {
-                loggedInUserId=((UserDetails)principal).getUsername();
-            } else if (principal instanceof String) {
-                loggedInUserId=(String)principal;
-
-            }
-        }
-        if(loggedInUserId==null)
-        {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Unauthorized: user not found in jwt");
-        }
-        String oldPassword=request.get("oldPassword");
-        String newPassword=request.get("newPassword");
-
-        String message=changePasswordService.changePassword(loggedInUserId,oldPassword,newPassword);
-        return ResponseEntity.ok(message);
-    }
-}
-
-
-// src/axiosInstance.js
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:8080", // your backend base URL
-});
-
-// Add JWT token from localStorage (or context) to every request
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("jwt"); // 👈 teammate will store token here after login
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-export default API;
-
-
-import React, { useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ChangePassword.css";
-
-export default function ChangePassword() {
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setMessage("❌ New password and confirm password do not match.");
-      return;
-    }
-
-    API.post("/users/change-password", {
-      oldPassword: password,
-      newPassword: newPassword,
-    })
-      .then((res) => {
-        setMessage(`✅ ${res.data}`);
-        setPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      })
-      .catch((err) => {
-        console.error(err);
-        setMessage("❌ Failed to change password. Try again.");
-      });
-  };
-
-  return (
-    <div className="change-password-container">
-      <h3 className="cp">Change Password</h3>
-      <form className="change-password-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Current Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>New Password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Confirm New Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit" className="submit-btn">
-          Update Password
-        </button>
-      </form>
-
-      {message && <p className="status-msg">{message}</p>}
-    </div>
-  );
-}
-
-
-import React, { useEffect, useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/AccountDetails.css";
-
-export default function AccountDetails() {
-  const [account, setAccount] = useState(null);
-
-  useEffect(() => {
-    API.get("/ViewAccount/accounts")
-      .then((res) => setAccount(res.data))
-      .catch((err) => console.error("Error fetching account:", err));
-  }, []);
-
-  return (
-    <div className="account-card">
-      <h3>Account Details</h3>
-      {account ? (
-        <>
-          <p><strong>Account No:</strong> {account.accountNo}</p>
-          <p><strong>IFSC:</strong> {account.ifsc}</p>
-          <p><strong>Bank:</strong> {account.bank}</p>
-          <p><strong>Branch:</strong> {account.branch}</p>
-          <p><strong>Currency:</strong> {account.currency}</p>
-          <p><strong>Country:</strong> {account.country}</p>
-        </>
-      ) : (
-        <p>Loading account...</p>
-      )}
-    </div>
-  );
-}
-
-
-import React, { useEffect, useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ViewEmployees.css";
-
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    API.get("/ViewAccount/employees/search?key=0") // 👈 fetch all employees by default
-      .then((res) => {
-        // res.data might be a single object or list; normalize it
-        const data = Array.isArray(res.data) ? res.data : [res.data];
-        setEmployees(data);
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-      });
-  }, []);
-
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
-      emp.name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="employee-table-container">
-      <h3 className="e">Employees</h3>
-
-      <input
-        type="text"
-        placeholder="Search by ID, Name or Email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="search-input"
-      />
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Country</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((emp) => (
-                <tr key={emp.empId}>
-                  <td>{emp.empId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.country}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  ❌ No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-Nice 👌 you’re using the new Spring Security DSL (with lambdas). Since you want Option 2 (inside SecurityConfig), here’s exactly where to put your CORS config:
-
-
----
-
-✅ Updated SecurityConfig.java
-
-package com.scb.Payment.Initiation.config;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
-
-@Configuration
-public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ enable CORS
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/signup",
-                                "/api/auth/login",
-                                "/api/auth/forget/verify",
-                                "/api/auth/forget/**"
-                        ).permitAll()
-                        .requestMatchers("/ViewAccount/**", "/users/change-password").permitAll() // 👈 for testing only
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
-
-    // ✅ CORS configuration bean
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React frontend
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-}
-
-
----
-
-🔑 What changed
-
-1. Added:
-
-.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-inside your securityFilterChain.
-
-
-2. Added:
-
-@Bean
-public CorsConfigurationSource corsConfigurationSource() { ... }
-
-which allows your React frontend (http://localhost:3000) to call the backend.
-
-
-
-
----
-
-👉 After this, CORS will be fixed ✅.
-⚠️ But you may still get 403 Forbidden if JWT is missing/invalid. For now, I marked /ViewAccount/** and /users/change-password as .permitAll() so you can test without login. Later, you can remove that and rely on JWT.
-
-
----
-
-Do you want me to also show how to switch back to JWT-only access once your teammate finishes login, so you don’t leave /ViewAccount endpoints wide open?
-
-
-
-
-import React, { useEffect, useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ViewEmployees.css";
-
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    API.get("/ViewAccount/employees/search?key=0") 
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : [res.data];
-        setEmployees(data);
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-      });
-  }, []);
-
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
-      emp.name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="employee-table-container">
-      <h3 className="e">Employees</h3>
-
-      <input
-        type="text"
-        placeholder="Search by ID, Name or Email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="search-input"
-      />
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Country</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((emp) => (
-                <tr key={emp.empId}>
-                  <td>{emp.empId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.country}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-this is my code
-import React, { useEffect, useState } from "react";
-import API from "../axiosInstance";
-import "../Styles/ViewEmployees.css";
-
-export default function ViewEmployees() {
-  const [employees, setEmployees] = useState([]);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    API.get("/ViewAccount/employees/search?key=0")
-      .then((res) => {
-        if (res.data && res.data.empId) {
-          // ✅ If backend returns single Employee
-          setEmployees([res.data]);
-        } else {
-          // ✅ If backend returns null / empty
-          setEmployees([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching employees:", err);
-        setEmployees([]);
-      });
-  }, []);
-
-  // ✅ Filter only non-null employees
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp &&
-      (emp.empId.toString().toLowerCase().includes(search.toLowerCase()) ||
-        emp.name.toLowerCase().includes(search.toLowerCase()) ||
-        emp.email.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  return (
-    <div className="employee-table-container">
-      <h3 className="e">Employees</h3>
-
-      <input
-        type="text"
-        placeholder="Search by ID, Name or Email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="search-input"
-      />
-
-      <div className="table-card">
-        <table className="employee-table">
-          <thead>
-            <tr>
-              <th>Emp ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Country</th>
-              <th>Currency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((emp) => (
-                <tr key={emp.empId}>
-                  <td>{emp.empId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.email}</td>
-                  <td>{emp.country}</td>
-                  <td>{emp.currency}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  ❌ No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
       </div>
     </div>
   );
