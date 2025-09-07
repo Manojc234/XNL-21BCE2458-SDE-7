@@ -1,8 +1,6 @@
-
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance"; // 🔹 import your instance
 import "../Styles/ChangePassword.css";
-
 
 export default function ChangePassword() {
   const [password, setPassword] = useState("");
@@ -10,38 +8,43 @@ export default function ChangePassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      setMessage(" New password and confirm password do not match.");
+      setMessage("New password and confirm password do not match.");
       return;
     }
 
-    const requestData = {
-      oldPassword: password,
-      newPassword: newPassword,
-    };
-    // API call (for now just simulate)
-    axios
-      .post("http://localhost:8080/users/change-password", requestData
-      )
-      .then((res) => {
-        console.log(res.data);
-        setMessage(" Password changed successfully!");
-        setPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      })
-      .catch((err) => {
-        console.log(err.response?.data||err);
-        setMessage("Failed to change password. Try again.");
-      });
+    try {
+      const requestData = {
+        oldPassword: password,
+        newPassword: newPassword,
+      };
+
+      // 🔹 Use axiosInstance here
+      const res = await axiosInstance.post(
+        "/users/change-password",
+        requestData
+      );
+
+      console.log(res.data);
+      setMessage("Password changed successfully!");
+      setPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      console.error(err.response?.data || err);
+      setMessage(
+        err.response?.data?.message ||
+          "Failed to change password. Try again."
+      );
+    }
   };
 
   return (
     <div className="change-password-container">
-      <h3 class="cp">Change Password</h3>
+      <h3 className="cp">Change Password</h3>
       <form className="change-password-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Current Password</label>
