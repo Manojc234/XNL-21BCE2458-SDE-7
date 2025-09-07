@@ -57,3 +57,126 @@ public class SecurityConfig {
     }
 }
 
+import React, { useState, useEffect } from "react";
+import "../Styles/EditAccount.css";
+
+export default function EditAccount() {
+  const [form, setForm] = useState({
+    ifsc: "",
+    accountNumber: "",
+    bankName: "",
+    branch: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  // Fetch account details on mount
+  useEffect(() => {
+    async function fetchAccount() {
+      try {
+        const res = await fetch("http://localhost:8080/api/company_accounts/get");
+        if (!res.ok) throw new Error("Failed to fetch account");
+        const data = await res.json();
+
+        setForm({
+          ifsc: data.ifsc ?? "",
+          accountNumber: data.accountNumber ?? "",
+          bankName: data.bankName ?? "",
+          branch: data.branch ?? "",
+        });
+      } catch (err) {
+        console.error("Error fetching account:", err);
+        alert("❌ Could not load account details");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAccount();
+  }, []);
+
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/company_accounts/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form), // send only the 4 fields
+      });
+
+      if (res.ok) {
+        alert("✅ Account updated successfully");
+      } else {
+        const msg = await res.text();
+        alert("❌ Update failed: " + msg);
+      }
+    } catch (err) {
+      console.error("Error updating account:", err);
+      alert("❌ Network error while updating");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="form-wrapper">
+        <div className="card">
+          <p>Loading account details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="form-wrapper">
+      <div className="card">
+        <h3 className="ea">Edit Bank Account</h3>
+        <div className="form-row">
+          <div className="form-group">
+            <label>IFSC Code</label>
+            <input
+              type="text"
+              name="ifsc"
+              value={form.ifsc}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Account Number</label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={form.accountNumber}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Bank Name</label>
+            <input
+              type="text"
+              name="bankName"
+              value={form.bankName}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Branch</label>
+            <input
+              type="text"
+              name="branch"
+              value={form.branch}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+        <div className="button-container">
+          <button className="bt" onClick={handleSubmit}>
+            Update Account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
