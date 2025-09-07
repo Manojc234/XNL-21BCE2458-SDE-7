@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import "../Styles/EditAccount.css"; // reuse CSS
 
-export default function EditAccount({ accountId }) {
+export default function EditAccount() {
   const [form, setForm] = useState({
     ifsc: "",
     accountNumber: "",
@@ -12,43 +11,53 @@ export default function EditAccount({ accountId }) {
 
   const [loading, setLoading] = useState(true);
 
-  // Fetch account details when component loads
+  // Fetch account details on mount
   useEffect(() => {
     async function fetchAccount() {
       try {
-        const res = await fetch(`http://localhost:8080/api/accounts/${accountId}`);
+        const res = await fetch("http://localhost:8080/api/company_accounts/get");
+        if (!res.ok) throw new Error("Failed to fetch account");
         const data = await res.json();
 
-        // Prefill form with backend response
+        // only set the 4 fields
         setForm({
-          ifsc: data.ifsc || "",
-          accountNumber: data.accountNumber || "",
-          bankName: data.bankName || "",
-          branch: data.branch || "",
+          ifsc: data.ifsc ?? "",
+          accountNumber: data.accountNumber ?? "",
+          bankName: data.bankName ?? "",
+          branch: data.branch ?? "",
         });
-        setLoading(false);
       } catch (err) {
         console.error("Error fetching account:", err);
+      } finally {
         setLoading(false);
       }
     }
 
     fetchAccount();
-  }, [accountId]);
+  }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/accounts/${accountId}`, {
+      const res = await fetch("http://localhost:8080/api/company_accounts/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ifsc: form.ifsc,
+          accountNumber: form.accountNumber,
+          bankName: form.bankName,
+          branch: form.branch,
+        }), // send only 4 fields
       });
+
       if (res.ok) {
-        alert("Account updated successfully");
+        alert("Account updated successfully ✅");
+      } else {
+        const msg = await res.text();
+        alert("Update failed ❌: " + msg);
       }
     } catch (err) {
       console.error("Error updating account:", err);
@@ -56,13 +65,19 @@ export default function EditAccount({ accountId }) {
   };
 
   if (loading) {
-    return <div className="form-wrapper"><div className="card"><p>Loading account details...</p></div></div>;
+    return (
+      <div className="form-wrapper">
+        <div className="card">
+          <p>Loading account details...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="form-wrapper">
       <div className="card">
-        <h3 class="ea">Edit Bank Account</h3>
+        <h3 className="ea">Edit Bank Account</h3>
         <div className="form-row">
           <div className="form-group">
             <label>IFSC Code</label>
