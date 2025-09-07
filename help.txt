@@ -293,3 +293,253 @@ API.interceptors.request.use(
 );
 
 export default API;
+
+package com.scb.Payment.Initiation.service;
+
+import com.scb.Payment.Initiation.Security.JwtUtil;
+import com.scb.Payment.Initiation.entity.RoleType;
+import com.scb.Payment.Initiation.entity.Roles;
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.repository.RolesRepository;
+import com.scb.Payment.Initiation.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.Set;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    private RoleType determineRole(String userId)
+    {
+        if(userId.toLowerCase().startsWith("cr"))
+        {
+            return RoleType.CREATOR;
+        }
+        else if(userId.toLowerCase().startsWith("ar"))
+        {
+            return RoleType.APPROVER;
+        }
+        else if(userId.toLowerCase().startsWith("jr"))
+        {
+            return RoleType.JR_MANAGER;
+        }
+
+        else if(userId.toLowerCase().startsWith("sr"))
+        {
+            return RoleType.SR_MANAGER;
+        }
+
+        else if(userId.toLowerCase().startsWith("di"))
+        {
+            return RoleType.DIRECTOR;
+        }
+
+        else{
+            throw new IllegalArgumentException("Invalid userId"+userId);
+        }
+    }
+
+    public Users signup(Users user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        RoleType roleType=determineRole(user.getUserId());
+        Roles role= rolesRepository.findByRoleName(roleType)
+                .orElseGet(()->{
+                    Roles newRole=new Roles();
+                    newRole.setRoleName(roleType);
+
+                    return newRole;
+                });
+        user.getRoles().add(role);
+        return userRepository.save(user);
+    }
+
+    public String login(String userId, String password) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+        return jwtUtil.generateToken(user);
+    }
+
+    public boolean verifySecurityAnswer(String userId, String answer) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getSecurityAnswer().equalsIgnoreCase(answer);
+    }
+
+    public void resetPassword(String userId, String newPassword) {
+        Users user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+}
+
+package com.scb.Payment.Initiation.controller;
+
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+@RestController
+@RequestMapping("/api/auth")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<Users> signup(@RequestBody Users user) {
+        return ResponseEntity.ok(userService.signup(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String userId,
+                                        @RequestParam String password) {
+        return ResponseEntity.ok(userService.login(userId, password));
+    }
+
+    @PostMapping("/forget/verify")
+    public ResponseEntity<String> verifyAnswer(@RequestParam String userId,
+                                               @RequestParam String answer) {
+        if (userService.verifySecurityAnswer(userId, answer)) {
+            return ResponseEntity.ok("Answer correct. You can reset password.");
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Incorrect answer.");
+    }
+
+    @PostMapping("/forget/reset")
+    public ResponseEntity<String> resetPassword(@RequestParam String userId,
+                                                @RequestParam String newPassword) {
+        userService.resetPassword(userId, newPassword);
+        return ResponseEntity.ok("Password reset successfully.");
+    }
+}
+
+
+
+package com.scb.Payment.Initiation.entity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "users")
+public class Users {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String userId;  // e.g., "cr123", "ar456", "mr789"
+    private String password;
+    @ManyToMany (cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_role_mapping",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Roles> roles=new HashSet<>();
+
+    private String securityQuestion;
+    private String securityAnswer;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Set<Roles> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Roles> roles) {
+        this.roles = roles;
+    }
+
+    public String getSecurityQuestion() {
+        return securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion) {
+        this.securityQuestion = securityQuestion;
+    }
+
+    public String getSecurityAnswer() {
+        return securityAnswer;
+    }
+
+    public void setSecurityAnswer(String securityAnswer) {
+        this.securityAnswer = securityAnswer;
+    }
+// getters & setters
+}
+
+package com.scb.Payment.Initiation.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+@Entity
+@Table(name = "roles")
+public class Roles {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer roleId;
+
+    @Enumerated(EnumType.STRING)
+    private RoleType roleName;
+
+
+
+
+
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
+    }
+
+    public RoleType getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(RoleType roleName) {
+        this.roleName = roleName;
+    }
+}
