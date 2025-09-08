@@ -1,374 +1,154 @@
-package com.scb.Payment.Initiation.controller;
-
-
-
-import com.scb.Payment.Initiation.entity.Batch;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.repository.UserRepository;
-
-import com.scb.Payment.Initiation.service.ApproverService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-
-@RestController
-@RequestMapping("/api")
-public class ApproverController {
-
-    @Autowired
-    private ApproverService approverService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-
-
-    @GetMapping("/approver/batches")
-    public List<Batch> getPendingBatches() {
-        return approverService.getPendingBatches();
-    }
-
-    @PostMapping("/approver/decision")
-    public String approverDecision(@RequestParam List<Long> batchIds,
-                                   @RequestParam String approverId,
-                                   @RequestParam boolean approved) {
-        Users approver = userRepository.findByUserId(approverId)
-                .orElseThrow(() -> new RuntimeException("Approver not found"));
-
-        approverService.approverDecision(batchIds, approver, approved);
-        return approved ? "Batches approved by approver" : "Batches rejected by approver";
-    }
-
-
-    @GetMapping("/jr-manager/next-batch")
-    public Batch getNextBatchForJrManager() {
-        return approverService.getNextBatchForJrManager();
-    }
-    @PostMapping("/jr-manager/decision")
-    public String jrManagerDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String jrManagerId,
-                                    @RequestParam boolean approved,
-                                    @RequestParam(required = false) String comment,
-                                    @RequestParam String password
-                                    ) {
-        Users jrManager = userRepository.findByUserId(jrManagerId)
-                .orElseThrow(() -> new RuntimeException("Jr Manager not found"));
-
-        approverService.jrManagerDecision(batchIds, jrManager, approved,comment,password);
-        return approved ? "Batch approved by Jr Manager" : "Batch rejected by Jr Manager";
-    }
-
-
-    @GetMapping("/sr-manager/next-batch")
-    public Batch getNextBatchForSrManager() {
-        return approverService.getNextBatchForSrManager();
-    }
-
-    @PostMapping("/sr-manager/decision")
-    public String srManagerDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String srManagerId,
-                                    @RequestParam boolean approved,
-                                    @RequestParam(required = false) String comment,
-                                    @RequestParam String password) {
-        Users srManager = userRepository.findByUserId(srManagerId)
-                .orElseThrow(() -> new RuntimeException("Sr Manager not found"));
-
-        approverService.srManagerDecision(batchIds, srManager, approved,comment,password);
-        return approved ? "Batch approved by Sr Manager" : "Batch rejected by Sr Manager";
-    }
-
-    @GetMapping("/director/next-batch")
-    public Batch getNextBatchForDirector() {
-        return approverService.getNextBatchForDirector();
-    }
-
-    @PostMapping("/director/decision")
-    public String directorDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String directorId,
-                                    @RequestParam boolean approved,
-                                   @RequestParam(required = false) String comment,
-                                   @RequestParam String password) {
-        Users director = userRepository.findByUserId(directorId)
-                .orElseThrow(() -> new RuntimeException("Director not found"));
-
-        approverService.DirectorDecision(batchIds, director, approved,comment,password);
-        return approved ? "Batch approved by Director" : "Batch rejected by Director";
-    }
-}
-import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import ChangeAccount from "./pages/ChangeAccount";
-import EditAccount from "./pages/EditAccount";
-import AccountDetails from "./pages/AccountDetails";
-import ViewEmployees from "./pages/ViewEmployees";
-import Layout from "./pages/Layout";
-import ProtectedRoute from "./Components/ProtectedRoute";
-import ChangePassword from "./pages/ChangePassword";
-import PaymentForm from "./Components/PaymentForm";
-import DraftManagement from "./Components/DraftManagement";
-import ApprovePayee from "./pages/ApprovePayee";
-import Manager from "./pages/Manager";
-import RolledPayees from "./pages/RolledPayees";
-import Transactions from "./pages/Transactions";
-import Statements from "./pages/Statements";
-import LoginPage from "./pages/LoginPage";
-import SignUpPage from "./pages/SignUpPage";
-import {jwtDecode} from "jwt-decode";
-
-
-function App() {
-  const token=localStorage.getItem("jwt");
-  let role=null;
-  if(token)
-  {
-    try{
-      const decoded=jwtDecode(token);
-      console.log(decoded);
-      if(decoded.roles&&decoded.roles.length>0)
-      {
-        role=decoded.roles[0].toLowerCase();
-        console.log(role);
-      }
-      //role=decoded.roles?decoded.roles[0]:null;
-    }
-    catch(e)
-    {
-      console.error("invalid token",e);
-    }
-  }
-  //const role="creator";
-  return (
-      <BrowserRouter>  
-        <Routes>
-          <Route path="/login" element={<LoginPage/>}/>
-          <Route path="/signup" element={<SignUpPage/>}/>
-
-            <Route path="/" element={token?<Layout role={role} />:<Navigate to="/login" replace/>}>
-              <Route
-                path="/add-account"
-                element={
-                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
-                    <ChangeAccount />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/edit-account"
-                element={
-                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
-                    <EditAccount />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/view-account"
-                element={
-                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
-                    <AccountDetails />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/view-employees"
-                element={
-                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
-                    <ViewEmployees />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/change-password"
-                element={
-                  <ProtectedRoute
-                    role={role}
-                    allowedRoles={["creator", "manager", "approver"]}
-                  >
-                    <ChangePassword />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/payee-roll"
-                element={
-                  <ProtectedRoute
-                    role={role}
-                    allowedRoles={["creator"]}
-                  >
-                    <PaymentForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/drafts"
-                element={
-                  <ProtectedRoute
-                    role={role}
-                    allowedRoles={["creator"]}
-                  >
-                    <DraftManagement />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-              path="/approvals"
-              element={
-              <ProtectedRoute role={role} allowedRoles={["approver"]}>
-                <ApprovePayee role={role}/>
-              </ProtectedRoute>
-                }
-              />
-               <Route
-              path="/submits"
-              element={
-              <ProtectedRoute role={role} allowedRoles={["manager,jrmanager,srmanager,director"]}>
-                <Manager role={role}/>
-              </ProtectedRoute>
-                }
-              />
-               <Route
-              path="/payees"
-              element={
-              <ProtectedRoute role={role} allowedRoles={["creator"]}>
-                <RolledPayees role={role}/>
-              </ProtectedRoute>
-                }
-              />
-              <Route
-              path="/transactions"
-              element={
-              <ProtectedRoute role={role} allowedRoles={["creator"]}>
-                <Transactions/>
-              </ProtectedRoute>
-                }
-              />
-              <Route
-              path="/statements"
-              element={
-              <ProtectedRoute role={role} allowedRoles={["creator"]}>
-                <Statements/>
-              </ProtectedRoute>
-                }
-              />
-            </Route>
-        </Routes>
-        
-      </BrowserRouter>
-     
- 
-  );
-}
-export default App;
 import React, { useState, useEffect } from "react";
-import { Table, Form, Button, Card } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Card, Table, Form, Button, Alert } from "react-bootstrap";
 import axios from "axios";
+import qs from "qs";
+import API from "../../axiosInstance.js";
 
-export default function BatchTable({ batches, setBatches }) {
-  const [selected, setSelected] = useState([]);
+export default function SubmitApproval({ role }) {
+  const userId = 6;
+  const [password, setPassword] = useState("");
+
+  const [batch, setBatch] = useState(null);
+  const [comments, setComments] = useState("");
+
+  const getNextBatchUrl = () => {
+    if (role === "jrmanager") return "/jr-manager/next-batch";
+    if (role === "srmanager") return "/sr-manager/next-batch";
+    if (role === "director") return "/director/next-batch";
+    return "";
+  };
+
+  const getDecisionUrl = () => {
+    if (role === "jrmanager") return "/jr-manager/decision";
+    if (role === "srmanager") return "/sr-manager/decision";
+    if (role === "director") return "/director/decision";
+    return "";
+  };
+
+  const getUserIdParam = () => {
+    if (role === "jrmanager") return { jrManagerId: userId };
+    if (role === "srmanager") return { srManagerId: userId };
+    if (role === "director") return { directorId: userId };
+    return {};
+  };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8081/api/approver/batches", {
-        
-      })
-      .then((res) => setBatches(res.data))
-      .catch((err) => console.error("Error fetching batches:", err));
-  }, [setBatches]); //no prob can be empty will run once
-
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id] //select all ids or add new id to end
-    );
-  };
+    const fetchNextBatch = async () => {
+      try {
+        const res = await API.get( //pause func until completion
+          `/api${getNextBatchUrl()}`
+         
+        );
+        setBatch(res.data);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch batch!");
+      }
+    };
+    fetchNextBatch();
+  }, []); // for future
 
   const handleDecision = async (approved) => {
 
-    if (!selected.length) return;
-
-    const action = approved ? "approve" : "reject";
-    const confirmAction = window.confirm(
-      `Are you sure you want to ${action} batches: ${selected.join(", ")}?`
-    );
-    if (!confirmAction) return;
-
-    const approverId = 1;
-
     try {
-      await axios.post(
-        "http://localhost:8081/api/approver/decision",
-        null,
+      const res = await API.post(
+        `/api${getDecisionUrl()}`,
+        null, // req body
         {
-          params: {
-            batchIds: selected.join(","),
-            approverId: approverId,
-            approved: approved,
-          },
-
+          params: { batchIds: [batch.batchId], approved, password, comment: comments, ...getUserIdParam() },
+          headers: {Authorization: `Bearer ${localStorage.getItem("jwt")}`},
+          paramsSerializer: (params) => qs.stringify(params, {arrayFormat: "repeat"})
+          
         }
       );
-
-      alert(`${approved ? "✅ Approved" : "❌ Rejected"} batches successfully!`);
-      setBatches((prev) => prev.filter((b) => !selected.includes(b.batchId)));
-      setSelected([]);
+      alert("Batch submitted successfullly")
+      setBatch(null);
+      setComments("");
     } catch (err) {
-      console.error("Error submitting decision:", err);
-      alert("Failed to update batches");
+      console.error(err);
+      alert("Failed to submit decision!");
     }
   };
 
-  return (
-    <Card className="p-3">
-      <h4>Pending Batches</h4>
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>Select</th>
-            <th>Batch Reference</th>
-            <th>Name</th>
-            <th># Payments</th>
-            <th>Amount</th>
-            <th>Currency</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {batches.map((batch) => (  // unique id, stable rendering
-            <tr key={batch.batchId}> 
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={selected.includes(batch.batchId)}
-                  onChange={() => toggleSelect(batch.batchId)}
-                />
-              </td>
-              <td>{batch.yourRef}</td>
-              <td>{batch.batchName}</td>
-              <td>{batch.numOfPayments}</td>
-              <td>₹{batch.totAmt}</td>
-              <td>{batch.currency}</td>
-              <td>{batch.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+  if (!batch) return <div className="text-center mt-5">No pending batches.</div>;
 
-      <Button
-        variant="success"
-        onClick={() => handleDecision(true)}
-        disabled={!selected.length}
+  return (
+    <div className="container mt-4">
+      <Card className="mb-3 shadow-sm">
+        <Card.Header className="bg-primary text-white">Batch Information</Card.Header>
+        <Card.Body>
+          <Table striped bordered hover responsive>
+            <tbody>
+              <tr><th>Reference</th><td>{batch.yourRef}</td></tr>
+              <tr><th>Name</th><td>{batch.batchName}</td></tr>
+              <tr><th>Currency</th><td>{batch.currency}</td></tr>
+              <tr><th>Status</th><td>{batch.status}</td></tr>
+              <tr><th>Payment Ref</th><td>{batch.paymentRef}</td></tr>
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
+
+      <Card className="mb-3 shadow-sm">
+        <Card.Header className="bg-primary text-white">Batch Summary</Card.Header>
+        <Card.Body>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Source Account ID</th>
+                <th>Comments</th>
+                <th># Payments</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>{batch.sourceAccId}</td>
+                  <td>{batch.comments}</td>
+                  <td>{batch.numOfPayments}</td>
+                  <td>{batch.totAmt}</td>
+                </tr>
        
-      >
-        Approve
-      </Button>
-      <Button
-        variant="danger"
-        onClick={() => handleDecision(false)}
-        disabled={!selected.length}
-      >
-        Reject
-      </Button>
-    </Card>
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
+      <Card className="mb-3 shadow-sm">
+        <Card.Header className="bg-primary text-white">Approval Details</Card.Header>
+        <Card.Body>
+          <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>Comments (optional)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your Password"
+              />
+            </Form.Group>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      <div className="d-flex justify-content-end gap-2 mb-4">
+        <Button variant="success" onClick={() => handleDecision(true)} disabled={!password}>
+          Approve
+        </Button>
+        <Button variant="danger" onClick={() => handleDecision(false)} disabled={!password}>
+          Reject
+        </Button>
+      </div>
+    </div>
   );
-}
+} 
