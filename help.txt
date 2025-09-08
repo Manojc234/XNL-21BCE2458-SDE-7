@@ -1,347 +1,188 @@
-import React, { useState, useEffect } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { Card, Table, Form, Button } from "react-bootstrap";
-import {jwtDecode} from "jwt-decode";
-import qs from "qs";
-import API from "../../axiosInstance";
+package com.scb.Payment.Initiation.service;
 
-export default function SubmitApproval({ role }) {
-  // safely decode token to get user id (if present)
-  const token = localStorage.getItem("jwt");
-  let userId = null;
-  try {
-    if (token) {
-      const decoded = jwtDecode(token);
-      userId = decoded?.sub ?? null;
-    }
-  } catch (e) {
-    console.warn("Failed to decode JWT", e);
-    userId = null;
-  }
+import com.scb.Payment.Initiation.entity.Batch;
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.repository.BatchRepository;
+import com.scb.Payment.Initiation.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-  const [password, setPassword] = useState("");
-  const [batch, setBatch] = useState(null);
-  const [comments, setComments] = useState("");
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-  const getNextBatchUrl = () => {
-    if (role === "jrmanager") return "/jr-manager/next-batch";
-    if (role === "srmanager") return "/sr-manager/next-batch";
-    if (role === "director") return "/director/next-batch";
-    return "";
-  };
+@Service
+@Transactional
+public class BatchService {
 
-  const getDecisionUrl = () => {
-    if (role === "jrmanager") return "/jr-manager/decision";
-    if (role === "srmanager") return "/sr-manager/decision";
-    if (role === "director") return "/director/decision";
-    return "";
-  };
+    @Autowired
+    private BatchRepository batchRepository;
 
-  const getUserIdParam = () => {
-    if (!userId) return {};
-    if (role === "jrmanager") return { jrManagerId: userId };
-    if (role === "srmanager") return { srManagerId: userId };
-    if (role === "director") return { directorId: userId };
-    return {};
-  };
+    @Autowired
+    private UserRepository userRepository;
 
-  
-  useEffect(() => {
-    console.log("fetchin");
-    if (!role) {
-      console.debug("SubmitApproval: role not yet available - skipping fetch");
-      return;
+    public Batch saveBatch(Batch batch) {
+        Users creator = userRepository.findById(batch.getCreatedBy().getId()).orElseThrow(()-> new RuntimeException("User not found"));
+        batch.setCreatedBy(creator);
+        return batchRepository.save(batch);
+
     }
 
-    const url = getNextBatchUrl();
-    if (!url) {
-      console.warn("SubmitApproval: unknown role, can't fetch next batch:", role);
-      return;
+    public List<Batch> getAllBatches() {
+        return batchRepository.findAll();
     }
 
-    const fetchNextBatch = async () => {
-      try {
-        console.debug("Fetching next batch from", `/api${url}`, "params:", getUserIdParam());
-        const res = await API.get(`/api${url}`, {
-          params: getUserIdParam(),
-        });
+    public Optional<Batch> getBatchById(Long batchId) {
+        return batchRepository.findByBatchId(batchId);
+    }
 
-        console.debug("fetchNextBatch response:", res.data);
+    public List<Batch> getBatchesByCreatedBy(Long createdById) {
+        Users user = userRepository.findById(createdById).orElseThrow(()-> new RuntimeException("User Not found"));
+        return batchRepository.findByCreatedBy(user);
+    }
 
-        // backend might return an array or a single object
-        if (Array.isArray(res.data)) {
-          if (res.data.length > 0) {
-            setBatch(res.data[0]); 
-            console.log(res.data[0]);// take the first "next" batch
-          } else {
-            setBatch(null); 
-          }
-        } else if (res.data) {
-          setBatch(res.data);
-          console.log(res.data);
-        } else {
-          setBatch(null);
+    public List<Batch> getBatchesByStatus(String status) {
+        return batchRepository.findByStatus(status);
+    }
+
+    public List<Batch> getDraftBatches() {
+        return batchRepository.findByIsDraft(true);
+    }
+
+    public List<Batch> getBatchesByName(String batchName) {
+        return batchRepository.findByBatchNameContaining(batchName);
+    }
+
+    public Batch updateBatch(Long batchId, Batch batchDetails) {
+        Optional<Batch> optionalBatch = batchRepository.findByBatchId(batchId);
+        if (optionalBatch.isPresent()) {
+            Batch batch = optionalBatch.get();
+            batch.setBatchName(batchDetails.getBatchName());
+            batch.setTotAmt(batchDetails.getTotAmt());
+            batch.setCurrency(batchDetails.getCurrency());
+            batch.setStatus(batchDetails.getStatus());
+            batch.setDraft(batchDetails.getDraft());
+            batch.setTotDebitAmt(batchDetails.getTotDebitAmt());
+            batch.setComments(batchDetails.getComments());
+            batch.setNumOfPayments(batchDetails.getNumOfPayments());
+            batch.setYourRef(batchDetails.getYourRef());
+            batch.setPaymentRef(batchDetails.getPaymentRef());
+            return batchRepository.save(batch);
         }
-      } catch (err) {
-        console.error("Error fetching batch:", err);
-        alert("Failed to fetch batch!");
-      }
-    };
-   // console.log(res.data);
-    fetchNextBatch();
-  }, [role]); 
-
-  const handleDecision = async (approved) => {
-    const url = getDecisionUrl();
-    if (!url) {
-      alert("Unknown role, cannot submit decision!");
-      return;
+        return null;
     }
 
-    if (!batch) {
-      alert("No batch loaded to submit decision for.");
-      return;
-    }
-
-    try {
-      await API.post(
-        `/api${url}`,
-        null, // no body
-        {
-          params: {
-            batchIds: [batch.batchId],
-            approved,
-            password,
-            comment: comments,
-            ...getUserIdParam(),
-          },
-          paramsSerializer: (params) => qs.stringify(params, { arrayFormat: "repeat" }),
+    public boolean deleteBatch(Long batchId) {
+        if (batchRepository.existsById(batchId)) {
+            batchRepository.deleteById(batchId);
+            return true;
         }
-      );
-      alert("Batch submitted successfully!");
-      setBatch(null);
-      setComments("");
-      setPassword("");
-    } catch (err) {
-      console.error("Error submitting decision:", err);
-      alert("Failed to submit decision!");
+        return false;
     }
-  };
 
-  if (!batch) return <div className="text-center mt-5">No pending batches.</div>;
+    public List<Batch> getBatchesByCreatedByAndStatus(Integer createdBy, String status) {
+        return batchRepository.findByCreatedByAndStatus(createdBy, status);
+    }
+}
+package com.scb.Payment.Initiation.controller;
 
-  return (
-    <div className="container mt-4">
-      {/* Batch Information */}
-      <Card className="mb-3 shadow-sm">
-        <Card.Header className="bg-primary text-white">Batch Information</Card.Header>
-        <Card.Body>
-          <Table striped bordered hover responsive>
-            <tbody>
-              <tr><th>Reference</th><td>{batch.yourRef}</td></tr>
-              <tr><th>Name</th><td>{batch.batchName}</td></tr>
-              <tr><th>Currency</th><td>{batch.currency}</td></tr>
-              <tr><th>Status</th><td>{batch.status}</td></tr>
-              <tr><th>Payment Ref</th><td>{batch.paymentRef}</td></tr>
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
 
-      {/* Batch Summary */}
-      <Card className="mb-3 shadow-sm">
-        <Card.Header className="bg-primary text-white">Batch Summary</Card.Header>
-        <Card.Body>
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>Source Account ID</th>
-                <th>Comments</th>
-                <th># Payments</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{batch.sourceAccId}</td>
-                <td>{batch.comments}</td>
-                <td>{batch.numOfPayments}</td>
-                <td>{batch.totAmt}</td>
-              </tr>
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
 
-      {/* Approval Form */}
-      <Card className="mb-3 shadow-sm">
-        <Card.Header className="bg-primary text-white">Approval Details</Card.Header>
-        <Card.Body>
-          <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>Comments (optional)</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your Password"
-              />
-            </Form.Group>
-          </Form>
-        </Card.Body>
-      </Card>
+import com.scb.Payment.Initiation.entity.Batch;
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.repository.UserRepository;
 
-      {/* Buttons */}
-      <div className="d-flex justify-content-end gap-2 mb-4">
-        <Button variant="success" onClick={() => handleDecision(true)} disabled={!password}>
-          Approve
-        </Button>
-        <Button variant="danger" onClick={() => handleDecision(false)} disabled={!password}>
-          Reject
-        </Button>
-      </div>
-    </div>
-  );
+import com.scb.Payment.Initiation.service.ApproverService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+
+@RestController
+@RequestMapping("/api")
+public class ApproverController {
+
+    @Autowired
+    private ApproverService approverService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+
+
+    @GetMapping("/approver/batches")
+    public List<Batch> getPendingBatches() {
+        return approverService.getPendingBatches();
+    }
+
+    @PostMapping("/approver/decision")
+    public String approverDecision(@RequestParam List<Long> batchIds,
+                                   @RequestParam String approverId,
+                                   @RequestParam boolean approved) {
+        Users approver = userRepository.findByUserId(approverId)
+                .orElseThrow(() -> new RuntimeException("Approver not found"));
+
+        approverService.approverDecision(batchIds, approver, approved);
+        return approved ? "Batches approved by approver" : "Batches rejected by approver";
+    }
+
+
+    @GetMapping("/jr-manager/next-batch")
+    public Batch getNextBatchForJrManager() {
+        return approverService.getNextBatchForJrManager();
+    }
+    @PostMapping("/jr-manager/decision")
+    public String jrManagerDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String jrManagerId,
+                                    @RequestParam boolean approved,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestParam String password
+                                    ) {
+        Users jrManager = userRepository.findByUserId(jrManagerId)
+                .orElseThrow(() -> new RuntimeException("Jr Manager not found"));
+
+        approverService.jrManagerDecision(batchIds, jrManager, approved,comment,password);
+        return approved ? "Batch approved by Jr Manager" : "Batch rejected by Jr Manager";
+    }
+
+
+    @GetMapping("/sr-manager/next-batch")
+    public Batch getNextBatchForSrManager() {
+        return approverService.getNextBatchForSrManager();
+    }
+
+    @PostMapping("/sr-manager/decision")
+    public String srManagerDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String srManagerId,
+                                    @RequestParam boolean approved,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestParam String password) {
+        Users srManager = userRepository.findByUserId(srManagerId)
+                .orElseThrow(() -> new RuntimeException("Sr Manager not found"));
+
+        approverService.srManagerDecision(batchIds, srManager, approved,comment,password);
+        return approved ? "Batch approved by Sr Manager" : "Batch rejected by Sr Manager";
+    }
+
+    @GetMapping("/director/next-batch")
+    public Batch getNextBatchForDirector() {
+        return approverService.getNextBatchForDirector();
+    }
+
+    @PostMapping("/director/decision")
+    public String directorDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String directorId,
+                                    @RequestParam boolean approved,
+                                   @RequestParam(required = false) String comment,
+                                   @RequestParam String password) {
+        Users director = userRepository.findByUserId(directorId)
+                .orElseThrow(() -> new RuntimeException("Director not found"));
+
+        approverService.DirectorDecision(batchIds, director, approved,comment,password);
+        return approved ? "Batch approved by Director" : "Batch rejected by Director";
+    }
 }
 
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:8081", 
-});
-
-
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("jwt"); 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-export default API; 
-
-import React, { useState, useEffect } from "react";
-import { Table, Form, Button, Card } from "react-bootstrap";
-
-import API from "../axiosInstance";
-
-export default function BatchTable({ batches, setBatches}) {
-  const [selected, setSelected] = useState([]);
-
-  useEffect(() => {
-    API
-      .get("/api/approver/batches"
-
-      )
-      .then((res) => setBatches(res.data))
-      .catch((err) => console.error("Error fetching batches:", err));
-  }, [setBatches]); //no prob can be empty will run once
-
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id] //select all ids or add new id to end
-    );
-  };
-
-  const handleDecision = async (approved) => {
-
-    if (!selected.length) return;
-
-    const action = approved ? "approve" : "reject";
-    const confirmAction = window.confirm(
-      `Are you sure you want to ${action} batches: ${selected.join(", ")}?`
-    );
-    if (!confirmAction) return;
-
-    const approverId = 1;
-
-    try {
-      await API.post(
-        "/api/approver/decision",
-        null,
-        {
-          params: {
-            batchIds: selected.join(","),
-            approverId: approverId,
-            approved: approved,
-          },
-
-        }
-      );
-
-      alert(`${approved ? "✅ Approved" : "❌ Rejected"} batches successfully!`);
-      setBatches((prev) => prev.filter((b) => !selected.includes(b.batchId)));
-      setSelected([]);
-    } catch (err) {
-      console.error("Error submitting decision:", err);
-      alert("Failed to update batches");
-    }
-  };
-
-  return (
-    <Card className="p-3">
-      <h4>Pending Batches</h4>
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>Select</th>
-            <th>Batch Reference</th>
-            <th>Name</th>
-            <th># Payments</th>
-            <th>Amount</th>
-            <th>Currency</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {batches.map((batch) => (  // unique id, stable rendering
-            <tr key={batch.batchId}> 
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={selected.includes(batch.batchId)}
-                  onChange={() => toggleSelect(batch.batchId)}
-                />
-              </td>
-              <td>{batch.yourRef}</td>
-              <td>{batch.batchName}</td>
-              <td>{batch.numOfPayments}</td>
-              <td>₹{batch.totAmt}</td>
-              <td>{batch.currency}</td>
-              <td>{batch.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      <Button
-        variant="success"
-        onClick={() => handleDecision(true)}
-        disabled={!selected.length}
-       
-      >
-        Approve
-      </Button>
-      <Button
-        variant="danger"
-        onClick={() => handleDecision(false)}
-        disabled={!selected.length}
-      >
-        Reject
-      </Button>
-    </Card>
-  );
-}
