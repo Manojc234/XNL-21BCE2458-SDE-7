@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Card, Table, Form, Button, Alert } from "react-bootstrap";
-import axios from "axios";
+import { Card, Table, Form, Button } from "react-bootstrap";
 import qs from "qs";
 import API from "../../axiosInstance.js";
 
 export default function SubmitApproval({ role }) {
   const userId = 6;
   const [password, setPassword] = useState("");
-
   const [batch, setBatch] = useState(null);
   const [comments, setComments] = useState("");
 
@@ -33,50 +31,71 @@ export default function SubmitApproval({ role }) {
     return {};
   };
 
+  // ✅ Fetch next batch only when role is ready
   useEffect(() => {
+    if (!role) return;
+    const url = getNextBatchUrl();
+    if (!url) {
+      console.warn("Unknown role, cannot fetch next batch");
+      return;
+    }
+
     const fetchNextBatch = async () => {
       try {
-        const res = await API.get( //pause func until completion
-          `/api${getNextBatchUrl()}`
-         
-        );
+        const res = await API.get(`/api${url}`);
         setBatch(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching batch:", err);
         alert("Failed to fetch batch!");
       }
     };
+
     fetchNextBatch();
-  }, []); // for future
+  }, [role]);
 
   const handleDecision = async (approved) => {
+    const url = getDecisionUrl();
+    if (!url) {
+      alert("Unknown role, cannot submit decision!");
+      return;
+    }
 
     try {
-      const res = await API.post(
-        `/api${getDecisionUrl()}`,
-        null, // req body
+      await API.post(
+        `/api${url}`,
+        null, // no body
         {
-          params: { batchIds: [batch.batchId], approved, password, comment: comments, ...getUserIdParam() },
-          headers: {Authorization: `Bearer ${localStorage.getItem("jwt")}`},
-          paramsSerializer: (params) => qs.stringify(params, {arrayFormat: "repeat"})
-          
+          params: {
+            batchIds: [batch.batchId],
+            approved,
+            password,
+            comment: comments,
+            ...getUserIdParam(),
+          },
+          paramsSerializer: (params) =>
+            qs.stringify(params, { arrayFormat: "repeat" }),
         }
       );
-      alert("Batch submitted successfullly")
+      alert("Batch submitted successfully!");
       setBatch(null);
       setComments("");
+      setPassword("");
     } catch (err) {
-      console.error(err);
+      console.error("Error submitting decision:", err);
       alert("Failed to submit decision!");
     }
   };
 
-  if (!batch) return <div className="text-center mt-5">No pending batches.</div>;
+  if (!batch)
+    return <div className="text-center mt-5">No pending batches.</div>;
 
   return (
     <div className="container mt-4">
+      {/* Batch Information */}
       <Card className="mb-3 shadow-sm">
-        <Card.Header className="bg-primary text-white">Batch Information</Card.Header>
+        <Card.Header className="bg-primary text-white">
+          Batch Information
+        </Card.Header>
         <Card.Body>
           <Table striped bordered hover responsive>
             <tbody>
@@ -90,6 +109,7 @@ export default function SubmitApproval({ role }) {
         </Card.Body>
       </Card>
 
+      {/* Batch Summary */}
       <Card className="mb-3 shadow-sm">
         <Card.Header className="bg-primary text-white">Batch Summary</Card.Header>
         <Card.Body>
@@ -103,20 +123,22 @@ export default function SubmitApproval({ role }) {
               </tr>
             </thead>
             <tbody>
-              
-                <tr>
-                  <td>{batch.sourceAccId}</td>
-                  <td>{batch.comments}</td>
-                  <td>{batch.numOfPayments}</td>
-                  <td>{batch.totAmt}</td>
-                </tr>
-       
+              <tr>
+                <td>{batch.sourceAccId}</td>
+                <td>{batch.comments}</td>
+                <td>{batch.numOfPayments}</td>
+                <td>{batch.totAmt}</td>
+              </tr>
             </tbody>
           </Table>
         </Card.Body>
       </Card>
+
+      {/* Approval Form */}
       <Card className="mb-3 shadow-sm">
-        <Card.Header className="bg-primary text-white">Approval Details</Card.Header>
+        <Card.Header className="bg-primary text-white">
+          Approval Details
+        </Card.Header>
         <Card.Body>
           <Form>
             <Form.Group className="mb-2">
@@ -141,14 +163,23 @@ export default function SubmitApproval({ role }) {
         </Card.Body>
       </Card>
 
+      {/* Buttons */}
       <div className="d-flex justify-content-end gap-2 mb-4">
-        <Button variant="success" onClick={() => handleDecision(true)} disabled={!password}>
+        <Button
+          variant="success"
+          onClick={() => handleDecision(true)}
+          disabled={!password}
+        >
           Approve
         </Button>
-        <Button variant="danger" onClick={() => handleDecision(false)} disabled={!password}>
+        <Button
+          variant="danger"
+          onClick={() => handleDecision(false)}
+          disabled={!password}
+        >
           Reject
         </Button>
       </div>
     </div>
   );
-} 
+}
