@@ -98,4 +98,277 @@ public class ApproverController {
         return approved ? "Batch approved by Director" : "Batch rejected by Director";
     }
 }
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import ChangeAccount from "./pages/ChangeAccount";
+import EditAccount from "./pages/EditAccount";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+import DraftManagement from "./Components/DraftManagement";
+import ApprovePayee from "./pages/ApprovePayee";
+import Manager from "./pages/Manager";
+import RolledPayees from "./pages/RolledPayees";
+import Transactions from "./pages/Transactions";
+import Statements from "./pages/Statements";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import {jwtDecode} from "jwt-decode";
 
+
+function App() {
+  const token=localStorage.getItem("jwt");
+  let role=null;
+  if(token)
+  {
+    try{
+      const decoded=jwtDecode(token);
+      console.log(decoded);
+      if(decoded.roles&&decoded.roles.length>0)
+      {
+        role=decoded.roles[0].toLowerCase();
+        console.log(role);
+      }
+      //role=decoded.roles?decoded.roles[0]:null;
+    }
+    catch(e)
+    {
+      console.error("invalid token",e);
+    }
+  }
+  //const role="creator";
+  return (
+      <BrowserRouter>  
+        <Routes>
+          <Route path="/login" element={<LoginPage/>}/>
+          <Route path="/signup" element={<SignUpPage/>}/>
+
+            <Route path="/" element={token?<Layout role={role} />:<Navigate to="/login" replace/>}>
+              <Route
+                path="/add-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/drafts"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <DraftManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/approvals"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["approver"]}>
+                <ApprovePayee role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/submits"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["manager,jrmanager,srmanager,director"]}>
+                <Manager role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/payees"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <RolledPayees role={role}/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/transactions"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Transactions/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/statements"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Statements/>
+              </ProtectedRoute>
+                }
+              />
+            </Route>
+        </Routes>
+        
+      </BrowserRouter>
+     
+ 
+  );
+}
+export default App;
+import React, { useState, useEffect } from "react";
+import { Table, Form, Button, Card } from "react-bootstrap";
+import axios from "axios";
+
+export default function BatchTable({ batches, setBatches }) {
+  const [selected, setSelected] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8081/api/approver/batches", {
+        
+      })
+      .then((res) => setBatches(res.data))
+      .catch((err) => console.error("Error fetching batches:", err));
+  }, [setBatches]); //no prob can be empty will run once
+
+  const toggleSelect = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id] //select all ids or add new id to end
+    );
+  };
+
+  const handleDecision = async (approved) => {
+
+    if (!selected.length) return;
+
+    const action = approved ? "approve" : "reject";
+    const confirmAction = window.confirm(
+      `Are you sure you want to ${action} batches: ${selected.join(", ")}?`
+    );
+    if (!confirmAction) return;
+
+    const approverId = 1;
+
+    try {
+      await axios.post(
+        "http://localhost:8081/api/approver/decision",
+        null,
+        {
+          params: {
+            batchIds: selected.join(","),
+            approverId: approverId,
+            approved: approved,
+          },
+
+        }
+      );
+
+      alert(`${approved ? "✅ Approved" : "❌ Rejected"} batches successfully!`);
+      setBatches((prev) => prev.filter((b) => !selected.includes(b.batchId)));
+      setSelected([]);
+    } catch (err) {
+      console.error("Error submitting decision:", err);
+      alert("Failed to update batches");
+    }
+  };
+
+  return (
+    <Card className="p-3">
+      <h4>Pending Batches</h4>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Batch Reference</th>
+            <th>Name</th>
+            <th># Payments</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map((batch) => (  // unique id, stable rendering
+            <tr key={batch.batchId}> 
+              <td>
+                <Form.Check
+                  type="checkbox"
+                  checked={selected.includes(batch.batchId)}
+                  onChange={() => toggleSelect(batch.batchId)}
+                />
+              </td>
+              <td>{batch.yourRef}</td>
+              <td>{batch.batchName}</td>
+              <td>{batch.numOfPayments}</td>
+              <td>₹{batch.totAmt}</td>
+              <td>{batch.currency}</td>
+              <td>{batch.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      <Button
+        variant="success"
+        onClick={() => handleDecision(true)}
+        disabled={!selected.length}
+       
+      >
+        Approve
+      </Button>
+      <Button
+        variant="danger"
+        onClick={() => handleDecision(false)}
+        disabled={!selected.length}
+      >
+        Reject
+      </Button>
+    </Card>
+  );
+}
