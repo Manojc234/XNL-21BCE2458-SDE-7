@@ -1,73 +1,101 @@
-import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+package com.scb.Payment.Initiation.controller;
 
 
-/*const ProtectedRoute = ({ role, allowedRoles, children }) => {
-  const [restricted, setRestricted] = useState(false);
 
-  useEffect(() => {
-    if (!allowedRoles.includes(role)) {
-      setRestricted(true);
-    }
-  }, [role, allowedRoles]);
+import com.scb.Payment.Initiation.entity.Batch;
+import com.scb.Payment.Initiation.entity.Users;
+import com.scb.Payment.Initiation.repository.UserRepository;
 
-  if (restricted) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal-card">
-          <h3 className="modal-title">Access Restricted</h3>
-          <p className="modal-text"> You are restricted from accessing this page!</p>
-          <div className="modal-actions">
-            <a className="modal-btn" href="/">Close</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
+import com.scb.Payment.Initiation.service.ApproverService;
 
-  return children;
-};
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
-export default ProtectedRoute;*/
+import java.util.List;
 
-import { jwtDecode } from "jwt-decode";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("jwt");
+@RestController
+@RequestMapping("/api")
+public class ApproverController {
 
-  if (!token) {
-    
-    return <Navigate to="/login" replace />;
-  }
+    @Autowired
+    private ApproverService approverService;
 
-  try {
-    const decoded = jwtDecode(token);
-    const userRoles = (decoded.roles || []).map(r=>r.toLowerCase());
+    @Autowired
+    private UserRepository userRepository;
 
-    
-    const hasAccess = allowedRoles.some(role => userRoles.includes(role.toLowerCase()));
 
-    if (!hasAccess) {
-      return (
-        <div className="modal-overlay">
-        <div className="modal-card">
-          <h3 className="modal-title">Access Restricted</h3>
-          <p className="modal-text"> You are restricted from accessing this page!</p>
-          <div className="modal-actions">
-            <a className="modal-btn" href="/">Close</a>
-          </div>
-        </div>
-      </div>
-      );
-     
+
+    @GetMapping("/approver/batches")
+    public List<Batch> getPendingBatches() {
+        return approverService.getPendingBatches();
     }
 
-    return children;
-  } catch (err) {
-    console.error("Invalid token", err);
-    return <Navigate to="/login" replace />;
-  }
-};
+    @PostMapping("/approver/decision")
+    public String approverDecision(@RequestParam List<Long> batchIds,
+                                   @RequestParam String approverId,
+                                   @RequestParam boolean approved) {
+        Users approver = userRepository.findByUserId(approverId)
+                .orElseThrow(() -> new RuntimeException("Approver not found"));
 
-export default ProtectedRoute;
+        approverService.approverDecision(batchIds, approver, approved);
+        return approved ? "Batches approved by approver" : "Batches rejected by approver";
+    }
+
+
+    @GetMapping("/jr-manager/next-batch")
+    public Batch getNextBatchForJrManager() {
+        return approverService.getNextBatchForJrManager();
+    }
+    @PostMapping("/jr-manager/decision")
+    public String jrManagerDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String jrManagerId,
+                                    @RequestParam boolean approved,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestParam String password
+                                    ) {
+        Users jrManager = userRepository.findByUserId(jrManagerId)
+                .orElseThrow(() -> new RuntimeException("Jr Manager not found"));
+
+        approverService.jrManagerDecision(batchIds, jrManager, approved,comment,password);
+        return approved ? "Batch approved by Jr Manager" : "Batch rejected by Jr Manager";
+    }
+
+
+    @GetMapping("/sr-manager/next-batch")
+    public Batch getNextBatchForSrManager() {
+        return approverService.getNextBatchForSrManager();
+    }
+
+    @PostMapping("/sr-manager/decision")
+    public String srManagerDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String srManagerId,
+                                    @RequestParam boolean approved,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestParam String password) {
+        Users srManager = userRepository.findByUserId(srManagerId)
+                .orElseThrow(() -> new RuntimeException("Sr Manager not found"));
+
+        approverService.srManagerDecision(batchIds, srManager, approved,comment,password);
+        return approved ? "Batch approved by Sr Manager" : "Batch rejected by Sr Manager";
+    }
+
+    @GetMapping("/director/next-batch")
+    public Batch getNextBatchForDirector() {
+        return approverService.getNextBatchForDirector();
+    }
+
+    @PostMapping("/director/decision")
+    public String directorDecision(@RequestParam List<Long> batchIds,
+                                    @RequestParam String directorId,
+                                    @RequestParam boolean approved,
+                                   @RequestParam(required = false) String comment,
+                                   @RequestParam String password) {
+        Users director = userRepository.findByUserId(directorId)
+                .orElseThrow(() -> new RuntimeException("Director not found"));
+
+        approverService.DirectorDecision(batchIds, director, approved,comment,password);
+        return approved ? "Batch approved by Director" : "Batch rejected by Director";
+    }
+}
 
