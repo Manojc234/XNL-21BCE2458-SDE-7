@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Table, Form, Button } from "react-bootstrap";
-import jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import qs from "qs";
 import API from "../../axiosInstance";
 
@@ -45,8 +45,9 @@ export default function SubmitApproval({ role }) {
     return {};
   };
 
-  // Fetch next batch only when role is available
+  
   useEffect(() => {
+    console.log("fetchin");
     if (!role) {
       console.debug("SubmitApproval: role not yet available - skipping fetch");
       return;
@@ -70,12 +71,14 @@ export default function SubmitApproval({ role }) {
         // backend might return an array or a single object
         if (Array.isArray(res.data)) {
           if (res.data.length > 0) {
-            setBatch(res.data[0]); // take the first "next" batch
+            setBatch(res.data[0]); 
+            console.log(res.data[0]);// take the first "next" batch
           } else {
-            setBatch(null); // empty array => no pending batches
+            setBatch(null); 
           }
         } else if (res.data) {
           setBatch(res.data);
+          console.log(res.data);
         } else {
           setBatch(null);
         }
@@ -84,9 +87,9 @@ export default function SubmitApproval({ role }) {
         alert("Failed to fetch batch!");
       }
     };
-
+   // console.log(res.data);
     fetchNextBatch();
-  }, [role]); // re-run when role changes
+  }, [role]); 
 
   const handleDecision = async (approved) => {
     const url = getDecisionUrl();
@@ -207,5 +210,138 @@ export default function SubmitApproval({ role }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+import axios from "axios";
+
+const API = axios.create({
+  baseURL: "http://localhost:8081", 
+});
+
+
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("jwt"); 
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default API; 
+
+import React, { useState, useEffect } from "react";
+import { Table, Form, Button, Card } from "react-bootstrap";
+
+import API from "../axiosInstance";
+
+export default function BatchTable({ batches, setBatches}) {
+  const [selected, setSelected] = useState([]);
+
+  useEffect(() => {
+    API
+      .get("/api/approver/batches"
+
+      )
+      .then((res) => setBatches(res.data))
+      .catch((err) => console.error("Error fetching batches:", err));
+  }, [setBatches]); //no prob can be empty will run once
+
+  const toggleSelect = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id] //select all ids or add new id to end
+    );
+  };
+
+  const handleDecision = async (approved) => {
+
+    if (!selected.length) return;
+
+    const action = approved ? "approve" : "reject";
+    const confirmAction = window.confirm(
+      `Are you sure you want to ${action} batches: ${selected.join(", ")}?`
+    );
+    if (!confirmAction) return;
+
+    const approverId = 1;
+
+    try {
+      await API.post(
+        "/api/approver/decision",
+        null,
+        {
+          params: {
+            batchIds: selected.join(","),
+            approverId: approverId,
+            approved: approved,
+          },
+
+        }
+      );
+
+      alert(`${approved ? "✅ Approved" : "❌ Rejected"} batches successfully!`);
+      setBatches((prev) => prev.filter((b) => !selected.includes(b.batchId)));
+      setSelected([]);
+    } catch (err) {
+      console.error("Error submitting decision:", err);
+      alert("Failed to update batches");
+    }
+  };
+
+  return (
+    <Card className="p-3">
+      <h4>Pending Batches</h4>
+      <Table striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Batch Reference</th>
+            <th>Name</th>
+            <th># Payments</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map((batch) => (  // unique id, stable rendering
+            <tr key={batch.batchId}> 
+              <td>
+                <Form.Check
+                  type="checkbox"
+                  checked={selected.includes(batch.batchId)}
+                  onChange={() => toggleSelect(batch.batchId)}
+                />
+              </td>
+              <td>{batch.yourRef}</td>
+              <td>{batch.batchName}</td>
+              <td>{batch.numOfPayments}</td>
+              <td>₹{batch.totAmt}</td>
+              <td>{batch.currency}</td>
+              <td>{batch.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+
+      <Button
+        variant="success"
+        onClick={() => handleDecision(true)}
+        disabled={!selected.length}
+       
+      >
+        Approve
+      </Button>
+      <Button
+        variant="danger"
+        onClick={() => handleDecision(false)}
+        disabled={!selected.length}
+      >
+        Reject
+      </Button>
+    </Card>
   );
 }
