@@ -1,188 +1,440 @@
-package com.scb.Payment.Initiation.service;
+import { Routes, Route, Navigate,BrowserRouter, useNavigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import ChangeAccount from "./pages/ChangeAccount";
+import EditAccount from "./pages/EditAccount";
+import AccountDetails from "./pages/AccountDetails";
+import ViewEmployees from "./pages/ViewEmployees";
+import Layout from "./pages/Layout";
+import ProtectedRoute from "./Components/ProtectedRoute";
+import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./Components/PaymentForm";
+import DraftManagement from "./Components/DraftManagement";
+import ApprovePayee from "./pages/ApprovePayee";
+import Manager from "./pages/Manager";
+import RolledPayees from "./pages/RolledPayees";
+import Transactions from "./pages/Transactions";
+import Statements from "./pages/Statements";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import {jwtDecode} from "jwt-decode";
+import { toast } from "react-toastify";
 
-import com.scb.Payment.Initiation.entity.Batch;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.repository.BatchRepository;
-import com.scb.Payment.Initiation.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
-@Service
-@Transactional
-public class BatchService {
-
-    @Autowired
-    private BatchRepository batchRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    public Batch saveBatch(Batch batch) {
-        Users creator = userRepository.findById(batch.getCreatedBy().getId()).orElseThrow(()-> new RuntimeException("User not found"));
-        batch.setCreatedBy(creator);
-        return batchRepository.save(batch);
-
+function App() {
+  const token=localStorage.getItem("jwt");
+  let role=null;
+  if(token)
+  {
+    try{
+      const decoded=jwtDecode(token);
+      console.log(decoded);
+      if(decoded.roles&&decoded.roles.length>0)
+      {
+        role=decoded.roles[0].toLowerCase();
+        console.log(role);
+        toast.success("Login Successfull",{
+          autoClose:1000
+        });
+      }
+      //role=decoded.roles?decoded.roles[0]:null;
     }
-
-    public List<Batch> getAllBatches() {
-        return batchRepository.findAll();
+    catch(e)
+    {
+      console.error("invalid token",e);
     }
+  }
+  //const role="creator";
+  return (
+      <BrowserRouter>  
+        <Routes>
+          <Route path="/login" element={<LoginPage/>}/>
+          <Route path="/signup" element={<SignUpPage/>}/>
 
-    public Optional<Batch> getBatchById(Long batchId) {
-        return batchRepository.findByBatchId(batchId);
-    }
+            <Route path="/" element={token?<Layout role={role} />:<Navigate to="/login" replace/>}>
+              <Route
+                path="/add-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <ChangeAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                    <EditAccount />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-account"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <AccountDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/view-employees"
+                element={
+                  <ProtectedRoute role={role} allowedRoles={["creator", "manager"]}>
+                    <ViewEmployees />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator", "manager", "approver"]}
+                  >
+                    <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payee-roll"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <PaymentForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/drafts"
+                element={
+                  <ProtectedRoute
+                    role={role}
+                    allowedRoles={["creator"]}
+                  >
+                    <DraftManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/approvals"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["approver"]}>
+                <ApprovePayee role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/submits"
+              element={
 
-    public List<Batch> getBatchesByCreatedBy(Long createdById) {
-        Users user = userRepository.findById(createdById).orElseThrow(()-> new RuntimeException("User Not found"));
-        return batchRepository.findByCreatedBy(user);
-    }
+              
 
-    public List<Batch> getBatchesByStatus(String status) {
-        return batchRepository.findByStatus(status);
-    }
+              <ProtectedRoute role={role} allowedRoles={["jrmanager","srmanager","director"]}>
 
-    public List<Batch> getDraftBatches() {
-        return batchRepository.findByIsDraft(true);
-    }
-
-    public List<Batch> getBatchesByName(String batchName) {
-        return batchRepository.findByBatchNameContaining(batchName);
-    }
-
-    public Batch updateBatch(Long batchId, Batch batchDetails) {
-        Optional<Batch> optionalBatch = batchRepository.findByBatchId(batchId);
-        if (optionalBatch.isPresent()) {
-            Batch batch = optionalBatch.get();
-            batch.setBatchName(batchDetails.getBatchName());
-            batch.setTotAmt(batchDetails.getTotAmt());
-            batch.setCurrency(batchDetails.getCurrency());
-            batch.setStatus(batchDetails.getStatus());
-            batch.setDraft(batchDetails.getDraft());
-            batch.setTotDebitAmt(batchDetails.getTotDebitAmt());
-            batch.setComments(batchDetails.getComments());
-            batch.setNumOfPayments(batchDetails.getNumOfPayments());
-            batch.setYourRef(batchDetails.getYourRef());
-            batch.setPaymentRef(batchDetails.getPaymentRef());
-            return batchRepository.save(batch);
-        }
-        return null;
-    }
-
-    public boolean deleteBatch(Long batchId) {
-        if (batchRepository.existsById(batchId)) {
-            batchRepository.deleteById(batchId);
-            return true;
-        }
-        return false;
-    }
-
-    public List<Batch> getBatchesByCreatedByAndStatus(Integer createdBy, String status) {
-        return batchRepository.findByCreatedByAndStatus(createdBy, status);
-    }
+                <Manager role={role}/>
+              </ProtectedRoute>
+                }
+              />
+               <Route
+              path="/payees"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <RolledPayees role={role}/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/transactions"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Transactions/>
+              </ProtectedRoute>
+                }
+              />
+              <Route
+              path="/statements"
+              element={
+              <ProtectedRoute role={role} allowedRoles={["creator"]}>
+                <Statements/>
+              </ProtectedRoute>
+                }
+              />
+            </Route>
+        </Routes>
+        
+      </BrowserRouter>
+     
+ 
+  );
 }
-package com.scb.Payment.Initiation.controller;
+export default App;
+import axios from "axios";
+
+const API = axios.create({
+  baseURL: "http://localhost:8080", 
+});
 
 
-
-import com.scb.Payment.Initiation.entity.Batch;
-import com.scb.Payment.Initiation.entity.Users;
-import com.scb.Payment.Initiation.repository.UserRepository;
-
-import com.scb.Payment.Initiation.service.ApproverService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-
-@RestController
-@RequestMapping("/api")
-public class ApproverController {
-
-    @Autowired
-    private ApproverService approverService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-
-
-    @GetMapping("/approver/batches")
-    public List<Batch> getPendingBatches() {
-        return approverService.getPendingBatches();
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("jwt"); 
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    @PostMapping("/approver/decision")
-    public String approverDecision(@RequestParam List<Long> batchIds,
-                                   @RequestParam String approverId,
-                                   @RequestParam boolean approved) {
-        Users approver = userRepository.findByUserId(approverId)
-                .orElseThrow(() -> new RuntimeException("Approver not found"));
+export default API;
+import React, { useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import Sidebar from "../Components/Sidebar";
+import "../Styles/layout.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-        approverService.approverDecision(batchIds, approver, approved);
-        return approved ? "Batches approved by approver" : "Batches rejected by approver";
-    }
+import {
+  UserPlus,
+  UserCheck,
+  FileText,
+  Users,
+  UserPlus2,
+  CheckCircle,
+  Send,
+  Repeat,
+  FileEdit,
+  Settings,
+} from "lucide-react";
 
+const menuItems = [
+  { name: "Add Account", icon: <UserPlus size={20} />, path: "/add-account" },
+  { name: "Edit Account", icon: <UserCheck size={20} />, path: "/edit-account" },
+  { name: "Account Details", icon: <FileText size={20} />, path: "/view-account" },
+  { name: "Employees", icon: <Users size={20} />, path: "/view-employees" },
+  { name: "Create Payee", icon: <UserPlus2 size={20} />, path: "/payee-roll" },
+  { name: "Approve Payee", icon: <CheckCircle size={20} />, path: "/approvals" },
+  { name: "Submit Payee", icon: <Send size={20} />, path: "/submits" },
+  { name: "Transactions", icon: <Repeat size={20} />, path: "/transacions" },
+  { name: "Drafts", icon: <FileEdit size={20} />, path: "/drafts" },
+  { name: "Settings", icon: <Settings size={20} />, path: "/change-password" },
+];
 
-    @GetMapping("/jr-manager/next-batch")
-    public Batch getNextBatchForJrManager() {
-        return approverService.getNextBatchForJrManager();
-    }
-    @PostMapping("/jr-manager/decision")
-    public String jrManagerDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String jrManagerId,
-                                    @RequestParam boolean approved,
-                                    @RequestParam(required = false) String comment,
-                                    @RequestParam String password
-                                    ) {
-        Users jrManager = userRepository.findByUserId(jrManagerId)
-                .orElseThrow(() -> new RuntimeException("Jr Manager not found"));
+const Layout = ({ role }) => {
+  const [sidebarWidth, setSidebarWidth] = useState(80); 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const showCenterMenu = location.pathname === "/";
 
-        approverService.jrManagerDecision(batchIds, jrManager, approved,comment,password);
-        return approved ? "Batch approved by Jr Manager" : "Batch rejected by Jr Manager";
-    }
+  return (
+    <div className="layout-container">
+      
+      <Sidebar role={role} setSidebarWidth={setSidebarWidth} />
 
+     
+      <div
+        className="layout-content"
+        style={{
+          marginLeft: `${sidebarWidth + 40}px`,
+          transition: "margin-left 0.3s ease",
+          flex: 1,
+          padding: "20px",
+        }}
+      >
+        {showCenterMenu ? (
+          <div className="menu-center">
+            <div className="menu-grid">
+              {menuItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => navigate(item.path)}
+                  className="menu-card"
+                >
+                  <span className="menu-icon">{item.icon}</span>
+                  <span className="menu-text">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Outlet />
+        )}
+      </div>
+    </div>
+  );
+};
 
-    @GetMapping("/sr-manager/next-batch")
-    public Batch getNextBatchForSrManager() {
-        return approverService.getNextBatchForSrManager();
-    }
+export default Layout;
 
-    @PostMapping("/sr-manager/decision")
-    public String srManagerDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String srManagerId,
-                                    @RequestParam boolean approved,
-                                    @RequestParam(required = false) String comment,
-                                    @RequestParam String password) {
-        Users srManager = userRepository.findByUserId(srManagerId)
-                .orElseThrow(() -> new RuntimeException("Sr Manager not found"));
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import API from "../axiosInstance";  // axios instance
+import "bootstrap/dist/css/bootstrap.min.css";
+import "../Styles2/LoginPage.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-        approverService.srManagerDecision(batchIds, srManager, approved,comment,password);
-        return approved ? "Batch approved by Sr Manager" : "Batch rejected by Sr Manager";
-    }
+function LoginPage() {
+    const navigate = useNavigate();
+    const [form, setForm] = useState({ userId: "", password: "" });
+    const [error, setError] = useState("");
 
-    @GetMapping("/director/next-batch")
-    public Batch getNextBatchForDirector() {
-        return approverService.getNextBatchForDirector();
-    }
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
-    @PostMapping("/director/decision")
-    public String directorDecision(@RequestParam List<Long> batchIds,
-                                    @RequestParam String directorId,
-                                    @RequestParam boolean approved,
-                                   @RequestParam(required = false) String comment,
-                                   @RequestParam String password) {
-        Users director = userRepository.findByUserId(directorId)
-                .orElseThrow(() -> new RuntimeException("Director not found"));
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await API.post(`/api/auth/login?userId=${form.userId}&password=${form.password}`);
+            localStorage.setItem("jwt", res.data);
+            console.log(res.data);
+            localStorage.setItem("userId", form.userId);
+            navigate("/"); 
+        } catch (err) {
+            setError("Invalid credentials");
+        }
+    };
 
-        approverService.DirectorDecision(batchIds, director, approved,comment,password);
-        return approved ? "Batch approved by Director" : "Batch rejected by Director";
-    }
+    return (
+        <div className="container-fluid min-vh-100 d-flex flex-column p-0">
+             <div className="row header-bar">
+                <div className="col-6 header-left"></div>
+                <div className="col-6 header-right"></div>
+            </div>
+
+            <div className="row justify-content-center mt-3">
+                <div className="col-auto">
+                    {/*<img src="" className="login-logo" alt="Logo" />*/}
+                </div>
+            </div>
+            <div className="row justify-content-center align-items-center flex-grow-1 login-container">
+                <div className="col-12 col-md-6 col-lg-4">
+                    <div className="card p-4 login-box">
+                        <h4 className="mf text-center">Login</h4>
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-3 text-start">
+                                <label className="form-label">Emp ID</label>
+                                <input type="text" className="form-control" name="userId"
+                                    value={form.userId} onChange={handleChange} />
+                            </div>
+                            <div className="mb-3 text-start">
+                                <label className="form-label">Password</label>
+                                <input type="password" className="form-control" name="password"
+                                    value={form.password} onChange={handleChange} />
+                            </div>
+                            {error && <p className="text-danger">{error}</p>}
+                            <div className="d-grid">
+                                <button type="submit" className="btn btn-primary">Login</button>
+                                <button type="button" className="bn btn-link p-0" onClick={() => navigate("/signup")}>Sign Up</button>
+                            </div>
+                        </form>
+                        <div className="text-center mt-3 login-footer">Here For Good</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
+export default LoginPage;
 
+import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import API from "../axiosInstance";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "../Styles2/SignUpPage.css";
+
+function SignUpPage() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    userId: "",
+    email: "",
+    password: "",
+    retype_password: "",
+    securityQuestion: "Mother's Surname",
+    securityAnswer: ""
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.password !== form.retype_password) {
+      alert("Passwords do not match");
+      return;
+    }
+    try {
+      await API.post("/api/auth/signup", {
+        userId: form.userId,
+        password: form.password,
+        securityQuestion: form.securityQuestion,
+        securityAnswer: form.securityAnswer
+      });
+      alert("Signup successful! Please login.");
+      navigate("/login");
+    } catch (err) {
+      alert("Signup failed. Try again.");
+    }
+  };
+
+  return (
+    <div className="container-fluid min-vh-100 overflow-hidden d-flex flex-column p-0">
+      <div className="row header-bar">
+        <div className="col-6 header-left"></div>
+        <div className="col-6 header-right"></div>
+
+      </div>
+      <div className="row justify-content-center mt-3">
+        <div className="col-auto">
+          <img src=""className="login-logo"/> 
+        </div>
+      </div>
+      <div className="row justify-content-center mt-2">
+        <div className="col-12 text-center fw-bold">Standard Chartered Internal Payment InitationSystem</div>
+          
+        
+      </div>
+      <div className="row justify-content-center align-items-center flex-grow-1">
+        <div className="col-12 col-md-6 col-lg-4">
+          <div className="card p-4">
+            <h4 className="text-center">Sign Up</h4>
+            <form onSubmit={handleSubmit}>
+            <label className="form-label">Employee ID</label>
+              <input type="text" className="form-control mb-2" name="userId"
+                value={form.userId} onChange={handleChange} placeholder="Employee ID" />
+                <label className="form-label">Email</label>
+              <input type="email" className="form-control mb-2" name="email"
+                value={form.email} onChange={handleChange} placeholder="Email ID" />
+                <label className="form-label">Password</label>
+              <input type="password" className="form-control mb-2" name="password"
+                value={form.password} onChange={handleChange} placeholder="Password" />
+                <label className="form-label">Confirm Password</label>
+              <input type="password" className="form-control mb-2" name="retype_password"
+                value={form.retype_password} onChange={handleChange} placeholder="Re-type Password" />
+                <label className="form-label">Question</label>
+              <select className="form-select mb-2" name="securityQuestion"
+                value={form.securityQuestion} onChange={handleChange}>
+                <option value="Mother's Surname">Mother's Surname</option>
+                <option value="Pet's Name">Pet's Name</option>
+              </select>
+              <label className="form-label">Answer</label>
+              <input type="text" className="form-control mb-2" name="securityAnswer"
+                value={form.securityAnswer} onChange={handleChange} placeholder="Security Answer" />
+              <button type="button" className="bn btn-link p-0" onClick={()=>navigate("/login")}>Back to Login</button>
+              <div className="d-grid">
+                <button type="submit" className="btn btn-success">Sign Up</button>
+              </div>
+            </form>
+            <div className="text-center mt-3 login-footer">Here For Good</div>
+          </div>
+        </div>
+      </div>
+      {/* ... your footer ... */}
+    </div>
+  );
+}
+export default SignUpPage;
