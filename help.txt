@@ -1,1 +1,87 @@
+import { html, LitElement,css } from 'lit';
+
+export class Form extends LitElement {
+  static styles=css`:host,sc-button,sc-title{
+    display:flex;
+    justify-content:center;
+ 
+
+  }
+ `;
+ static properties={formData:{type:Object}};
+ constructor(){
+  super();
+  this.formData={
+    name:'',
+    email:'',
+    dob:'',
+    gender:'',
+    pno:''
+  };
+ }
+ handleChange(e){
+  const{name,value}=e.target;
+  this.formData={...this.formData,[name]:value};
+ }
+ handleClick(e)
+ {
+  e.preventDefault();
+  window.alert(`Submitting :${JSON.stringify(this.formData)}`);
+ }
+
+  render() {
+    return html`
+    <div class="d-flex justify-content-center">
+    <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" text-align="middle" vertical-align="middle" width="150%" height="auto" action-button="" icon="" icon-size="" icon-align="" icon-vertical-align="top" button-state-primary="default" button-state-secondary="default" placement="middle">
+        <sc-form-viewer @submit=${this.handleClick}>
+        <div style="height: 100%; padding: 0 24px;">
+            <sc-title level="4" rows="2" hero="True">
+            Form
+            </sc-title>
+            <sc-spacer size="08"></sc-spacer>
+            <sc-label label="Name:" label-size="lg" tooltip="" tooltip-placement="" required="true"">
+            </sc-label>
+            <sc-text-input  placeholder="Enter Your Name" name="name" .value=${this.formData.name} @input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Email:" label-size="lg" tooltip="" tooltip-placement="" required="true" placeholder="Enter Your Name">
+            </sc-label>
+            <sc-text-input placeholder="Enter Your Email" name="email" .value=${this.formData.email} @input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="DOB:" label-size="lg" tooltip="" tooltip-placement="" required="true" >
+            </sc-label>
+            <sc-date-input label="" label-size="lg" label-position="right" tooltip="" tooltip-placement="top" help-text="" value="" placeholder="" border-type="line" success-message="" error-message="" name="dob" .value=${this.formData.dob} @input=${this.handleChange}>   
+            </sc-date-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Gender:" label-size="lg" tooltip="" tooltip-placement="" required="true">
+            </sc-label>
+            <sc-radio-group value="1" direction="vertical" label="" tooltip="" tooltip-placement="top" label-size="xs" placeholder="">
+                <sc-radio name=gender value="male" ? checked=${this.formData.gender==='male'} @change=${this.handleChange}>Male</sc-radio>
+                <sc-radio name=gender value="female" ? checked=${this.formData.gender==='female'} @change=${this.handleChange}>Female</sc-radio>     
+            </sc-radio-group>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Phone Number:" label-size="lg" tooltip="" tooltip-placement="">
+            </sc-label>
+            <sc-text-input placeholder="Enter Your PhoneNumber" name="pno" .value=${this.formData.pno} @input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-button type="default" size="md" width="auto" icon="" icon-position="" loading-text="">
+                Submit
+            </sc-button>
+            
+        </div>   
+        </sc-form-viewer>
+        </sc-card>
+        </div>
+       
+    `;
+  }
+  
+}
+
+import { Home } from '../src/Home.js';
+import { HomeContent } from '../src/components/HomeContent.js';
+import {Form} from '../src/components/Form.js';
+
+window.customElements.define('sb-test-service-bench-plugin-home', Home);
+window.customElements.define('sb-test-service-bench-plugin-home-content', Form);
+
 
