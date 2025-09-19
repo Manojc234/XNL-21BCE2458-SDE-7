@@ -1,0 +1,10 @@
+# Datasource configuration
+quarkus.datasource.db-kind=postgresql    # or mysql, h2, etc.
+quarkus.datasource.username=your_username
+quarkus.datasource.password=your_password
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/yourdb
+
+# Hibernate ORM config
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+
