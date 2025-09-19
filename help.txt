@@ -1,86 +1,166 @@
-import { html, LitElement,css } from 'lit';
+import { html, LitElement, css } from 'lit';
 
 export class Form extends LitElement {
-  static styles=css`:host,sc-button-group,sc-title{
-    display:flex;
-    justify-content:center;
- 
+  static styles = css`
+    :host, sc-button-group, sc-title {
+      display: flex;
+      justify-content: center;
+    }
+  `;
 
+  static properties = {
+    formData: { type: Object },
+    errors: { type: Object },
+  };
+
+  constructor() {
+    super();
+    this.formData = {
+      name: '',
+      email: '',
+      dob: '',
+      gender: '',
+      pno: ''
+    };
+    this.errors = {};
   }
- `;
- static properties={formData:{type:Object}};
- constructor(){
-  super();
-  this.formData={
-    name:'',
-    email:'',
-    dob:'',
-    gender:'',
-    pno:''
-  };
- }
- handleChange(e){
-  const target=e.target;
-  const name=target.getAttribute("name");
-  let value=e.detail?.value??target.value;
-  if(!name)return;
-  this.formData={
-    ...this.formData,[name]:value,
-  };
-  
- }
- handleClick(e)
- {
-  e.preventDefault();
-  window.alert(`Submitting :${JSON.stringify(this.formData)}`);
- }
+
+  handleChange(e) {
+    const target = e.target;
+    const name = target.getAttribute("name");
+    let value = e.detail?.value ?? target.value;
+    if (!name) return;
+
+    this.formData = {
+      ...this.formData,
+      [name]: value,
+    };
+
+    // Run live validation
+    this.validateField(name, value);
+  }
+
+  validateField(field, value) {
+    let error = "";
+
+    switch (field) {
+      case "name":
+        if (!value || value.trim().length < 2) {
+          error = "Name must be at least 2 characters long";
+        }
+        break;
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          error = "Enter a valid email address";
+        }
+        break;
+      case "pno":
+        if (!/^\d{10}$/.test(value)) {
+          error = "Phone number must be 10 digits";
+        }
+        break;
+      case "dob":
+        const today = new Date();
+        const dobDate = new Date(value);
+        if (!value || dobDate >= today) {
+          error = "Date of Birth must be before today";
+        }
+        break;
+    }
+
+    this.errors = {
+      ...this.errors,
+      [field]: error
+    };
+  }
+
+  validateForm() {
+    Object.keys(this.formData).forEach((key) => {
+      this.validateField(key, this.formData[key]);
+    });
+
+    // Check if any errors exist
+    return Object.values(this.errors).every((err) => !err);
+  }
+
+  handleClick(e) {
+    e.preventDefault();
+
+    if (this.validateForm()) {
+      window.alert(`✅ Submitting: ${JSON.stringify(this.formData)}`);
+    } else {
+      window.alert("❌ Please fix the validation errors before submitting.");
+    }
+  }
 
   render() {
     return html`
-    <div class="d-flex justify-content-center">
-    <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" text-align="middle" vertical-align="middle" width="150%" height="auto" action-button="" icon="" icon-size="" icon-align="" icon-vertical-align="top" button-state-primary="default" button-state-secondary="default" placement="middle">
-        <sc-form-viewer>
-        <div style="height: 100%; padding: 0 24px;">
-            <sc-title level="4" rows="2" hero="True">
-            Form
-            </sc-title>
-            <sc-spacer size="08"></sc-spacer>
-            <sc-label label="Name:" label-size="lg" tooltip="" tooltip-placement="" required="true"">
-            </sc-label>
-            <sc-text-input  error-message="Please provide valid justification" placeholder="Enter Your Name" name="name" .value=${this.formData.name} @sc-input=${this.handleChange}></sc-text-input>
-            <sc-spacer size="04"></sc-spacer>
-            <sc-label label="Email:" label-size="lg" tooltip="" tooltip-placement="" required="true" placeholder="Enter Your Name">
-            </sc-label>
-            <sc-text-input placeholder="Enter Your Email" error-message="Please provide valid justification" name="email" .value=${this.formData.email} @sc-input=${this.handleChange}></sc-text-input>
-            <sc-spacer size="04"></sc-spacer>
-            <sc-label label="DOB:" label-size="lg" tooltip="" tooltip-placement="" required="true" >
-            </sc-label>
-            <sc-date-input placeholder="Please Enter Date" name="dob" .value=${this.formData.dob} @sc-change=${this.handleChange}></sc-date-input>
-            <sc-spacer size="04"></sc-spacer>
-            <sc-label label="Gender:" label-size="lg" tooltip="" tooltip-placement="" required="true">
-            </sc-label>
-            <sc-radio-group name="gender" .value=${this.formData.gender} @sc-change=${this.handleChange} direction="vertical" label="" tooltip="" tooltip-placement="top" label-size="xs" placeholder="">
+      <div class="d-flex justify-content-center">
+        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" 
+                 text-align="middle" vertical-align="middle" width="150%" height="auto">
+          <sc-form-viewer>
+            <div style="height: 100%; padding: 0 24px;">
+              <sc-title level="4" rows="2" hero="True">Form</sc-title>
+              <sc-spacer size="08"></sc-spacer>
+
+              <!-- Name -->
+              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Name" 
+                             name="name"
+                             .value=${this.formData.name}
+                             error-message=${this.errors.name || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Email -->
+              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Email" 
+                             name="email"
+                             .value=${this.formData.email}
+                             error-message=${this.errors.email || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- DOB -->
+              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
+              <sc-date-input placeholder="Please Enter Date"
+                             name="dob"
+                             .value=${this.formData.dob}
+                             error-message=${this.errors.dob || ""}
+                             @sc-change=${this.handleChange}></sc-date-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Gender -->
+              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
+              <sc-radio-group name="gender"
+                              .value=${this.formData.gender}
+                              @sc-change=${this.handleChange}
+                              direction="vertical">
                 <sc-radio value="male">Male</sc-radio>
                 <sc-radio value="female">Female</sc-radio>     
-            </sc-radio-group>
-            <sc-spacer size="04"></sc-spacer>
-            <sc-label label="Phone Number:" label-size="lg" tooltip="" tooltip-placement="">
-            </sc-label>
-            <sc-text-input error-message="Please provide valid justification" placeholder="Enter Your PhoneNumber" name="pno" .value=${this.formData.pno} @sc-input=${this.handleChange}></sc-text-input>
-            <sc-spacer size="04"></sc-spacer>
-            <div style="padding: 20px 30px">
-              <sc-button-group size="md" label="" label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" help-text="" error-message="" @sc-select=${this.handleClick}>
-              <sc-button-group-item value="1">Submit</sc-button-group-item>
-              </sc-button-group>
+              </sc-radio-group>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Phone Number -->
+              <sc-label label="Phone Number:" label-size="lg"></sc-label>
+              <sc-text-input placeholder="Enter Your Phone Number" 
+                             name="pno"
+                             .value=${this.formData.pno}
+                             error-message=${this.errors.pno || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Submit Button -->
+              <div style="padding: 20px 30px">
+                <sc-button-group size="md" @sc-select=${this.handleClick}>
+                  <sc-button-group-item value="1">Submit</sc-button-group-item>
+                </sc-button-group>
               </div>
-            
-        </div>   
-        </sc-form-viewer>
+            </div>   
+          </sc-form-viewer>
         </sc-card>
-        </div>
-       
+      </div>
     `;
   }
-  
 }
-
