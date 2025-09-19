@@ -1,10 +1,86 @@
-# Datasource configuration
-quarkus.datasource.db-kind=postgresql    # or mysql, h2, etc.
-quarkus.datasource.username=your_username
-quarkus.datasource.password=your_password
-quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/yourdb
+import { html, LitElement,css } from 'lit';
 
-# Hibernate ORM config
-quarkus.hibernate-orm.database.generation=update
-quarkus.hibernate-orm.log.sql=true
+export class Form extends LitElement {
+  static styles=css`:host,sc-button-group,sc-title{
+    display:flex;
+    justify-content:center;
+ 
+
+  }
+ `;
+ static properties={formData:{type:Object}};
+ constructor(){
+  super();
+  this.formData={
+    name:'',
+    email:'',
+    dob:'',
+    gender:'',
+    pno:''
+  };
+ }
+ handleChange(e){
+  const target=e.target;
+  const name=target.getAttribute("name");
+  let value=e.detail?.value??target.value;
+  if(!name)return;
+  this.formData={
+    ...this.formData,[name]:value,
+  };
+  
+ }
+ handleClick(e)
+ {
+  e.preventDefault();
+  window.alert(`Submitting :${JSON.stringify(this.formData)}`);
+ }
+
+  render() {
+    return html`
+    <div class="d-flex justify-content-center">
+    <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" text-align="middle" vertical-align="middle" width="150%" height="auto" action-button="" icon="" icon-size="" icon-align="" icon-vertical-align="top" button-state-primary="default" button-state-secondary="default" placement="middle">
+        <sc-form-viewer>
+        <div style="height: 100%; padding: 0 24px;">
+            <sc-title level="4" rows="2" hero="True">
+            Form
+            </sc-title>
+            <sc-spacer size="08"></sc-spacer>
+            <sc-label label="Name:" label-size="lg" tooltip="" tooltip-placement="" required="true"">
+            </sc-label>
+            <sc-text-input  error-message="Please provide valid justification" placeholder="Enter Your Name" name="name" .value=${this.formData.name} @sc-input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Email:" label-size="lg" tooltip="" tooltip-placement="" required="true" placeholder="Enter Your Name">
+            </sc-label>
+            <sc-text-input placeholder="Enter Your Email" error-message="Please provide valid justification" name="email" .value=${this.formData.email} @sc-input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="DOB:" label-size="lg" tooltip="" tooltip-placement="" required="true" >
+            </sc-label>
+            <sc-date-input placeholder="Please Enter Date" name="dob" .value=${this.formData.dob} @sc-change=${this.handleChange}></sc-date-input>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Gender:" label-size="lg" tooltip="" tooltip-placement="" required="true">
+            </sc-label>
+            <sc-radio-group name="gender" .value=${this.formData.gender} @sc-change=${this.handleChange} direction="vertical" label="" tooltip="" tooltip-placement="top" label-size="xs" placeholder="">
+                <sc-radio value="male">Male</sc-radio>
+                <sc-radio value="female">Female</sc-radio>     
+            </sc-radio-group>
+            <sc-spacer size="04"></sc-spacer>
+            <sc-label label="Phone Number:" label-size="lg" tooltip="" tooltip-placement="">
+            </sc-label>
+            <sc-text-input error-message="Please provide valid justification" placeholder="Enter Your PhoneNumber" name="pno" .value=${this.formData.pno} @sc-input=${this.handleChange}></sc-text-input>
+            <sc-spacer size="04"></sc-spacer>
+            <div style="padding: 20px 30px">
+              <sc-button-group size="md" label="" label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" help-text="" error-message="" @sc-select=${this.handleClick}>
+              <sc-button-group-item value="1">Submit</sc-button-group-item>
+              </sc-button-group>
+              </div>
+            
+        </div>   
+        </sc-form-viewer>
+        </sc-card>
+        </div>
+       
+    `;
+  }
+  
+}
 
