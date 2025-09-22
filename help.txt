@@ -523,3 +523,9 @@ public class ProcessService {
 
     }
 }
+
+quarkus.http.port=8080
+quarkus.http.host=0.0.0.0
+quarkus.grpc.dev-mode.force-server-start=false
+quarkus.otel.enabled=false
+quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
