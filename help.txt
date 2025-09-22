@@ -232,3 +232,202 @@ http://localhost:8080/graphql
     "details": "Error id 588e2012-581f-4dc8-b28f-ddc80c82e053-8, io.quarkus.funqy.runtime.ApplicationException: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto, com.sc.faas, com.sc.devkit]\"",
     "stack": "io.quarkus.funqy.runtime.ApplicationException: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto, com.sc.faas, com.sc.devkit]\"\r\n\tat io.quarkus.funqy.runtime.FunctionInvoker.invoke(FunctionInvoker.java:136)\r\n\tat io.quarkus.funqy.runtime.bindings.http.VertxRequestHandler.dispatch(VertxRequestHandler.java:143)\r\n\tat io.quarkus.funqy.runtime.bindings.http.VertxRequestHandler$1.run(VertxRequestHandler.java:118)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:599)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2516)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2495)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1521)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto, com.sc.faas, com.sc.devkit]\"\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.getCacheKeyString(TypesCache.kt:130)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.get$graphql_kotlin_schema_generator(TypesCache.kt:53)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.get$graphql_kotlin_schema_generator(TypesCache.kt:48)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.objectFromReflection(generateGraphQLType.kt:58)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.generateGraphQLType(generateGraphQLType.kt:45)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction(generateFunction.kt:56)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction$default(generateFunction.kt:34)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateObjectKt.generateObject(generateObject.kt:64)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.getGraphQLType(generateGraphQLType.kt:106)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.access$getGraphQLType(generateGraphQLType.kt:1)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt$objectFromReflection$1.invoke(generateGraphQLType.kt:67)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt$objectFromReflection$1.invoke(generateGraphQLType.kt:66)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.buildIfNotUnderConstruction$graphql_kotlin_schema_generator(TypesCache.kt:150)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.objectFromReflection(generateGraphQLType.kt:66)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.generateGraphQLType(generateGraphQLType.kt:45)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction(generateFunction.kt:56)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction$default(generateFunction.kt:34)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateMutationKt.generateMutations(generateMutation.kt:48)\r\n\tat com.expediagroup.graphql.generator.SchemaGenerator.generateSchema(SchemaGenerator.kt:81)\r\n\tat com.expediagroup.graphql.generator.federation.FederatedSchemaGenerator.generateSchema(FederatedSchemaGenerator.kt:45)\r\n\tat com.expediagroup.graphql.generator.SchemaGenerator.generateSchema$default(SchemaGenerator.kt:58)\r\n\tat com.expediagroup.graphql.generator.federation.ToFederatedSchemaKt.toFederatedSchema(toFederatedSchema.kt:44)\r\n\tat com.expediagroup.graphql.generator.federation.ToFederatedSchemaKt.toFederatedSchema$default(toFederatedSchema.kt:35)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphqlSchema$2.invoke(GraphQLServer.kt:60)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphqlSchema$2.invoke(GraphQLServer.kt:41)\r\n\tat kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:74)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.getGraphqlSchema(GraphQLServer.kt:41)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.access$getGraphqlSchema(GraphQLServer.kt:33)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphQL$2.invoke(GraphQLServer.kt:91)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphQL$2.invoke(GraphQLServer.kt:67)\r\n\tat kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:74)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.getGraphQL(GraphQLServer.kt:67)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.serve(GraphQLServer.kt:126)\r\n\tat com.sc.faas.Function.graphql(Function.java:39)\r\n\tat com.sc.faas.Function_ClientProxy.graphql(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.funqy.runtime.FunctionInvoker.invoke(FunctionInvoker.java:123)\r\n\t... 10 more"
 }
+package com.sc.faas.controller;
+
+import com.sc.faas.dto.SubmitResponse;
+import com.sc.faas.dto.UserForm;
+import com.sc.faas.service.ProcessService;
+import io.vertx.ext.auth.User;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import java.awt.*;
+import java.util.Map;
+
+@Path("/submit")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+public class ProcessController {
+    @Inject
+    ProcessService service;
+    @POST
+    public SubmitResponse submit(UserForm dto)
+    {
+        service.submitForm(dto);
+        SubmitResponse response=new SubmitResponse();
+        response.setMessage("Saved");
+        response.setStatus("SUCCESS");
+        response.setSavedForm(dto);
+        return response;
+    }
+}
+package com.sc.faas.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class MyObject {
+    private Long id;
+    private String name;
+
+    public MyObject(long l, String helloWorld) {
+    }
+}
+package com.sc.faas.dto;
+
+import com.sc.faas.entity.Form;
+
+public class SubmitResponse {
+    private String status;
+    private String message;
+    private UserForm savedForm;
+    public SubmitResponse()
+    {
+
+    }
+
+    public SubmitResponse(String status, String message, UserForm savedForm) {
+        this.status = status;
+        this.message = message;
+        this.savedForm = savedForm;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public UserForm getSavedForm() {
+        return savedForm;
+    }
+
+    public void setSavedForm(UserForm savedForm) {
+        this.savedForm = savedForm;
+    }
+}
+package com.sc.faas.dto;
+
+public class UserForm {
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+
+}
+package com.sc.faas.entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="user_form")
+public class Form extends PanacheEntity {
+
+
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+
+}
+package com.sc.faas.service;
+import com.sc.faas.dto.MyObject;
+import com.sc.faas.dto.UserForm;
+import com.sc.faas.entity.Form;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
+@ApplicationScoped
+public class ProcessService {
+    public MyObject getObjectById(Long id) {
+        return new MyObject(id, "Hello World");
+    }
+    @Transactional
+    public void submitForm(UserForm dto)
+    {
+        Form entity=new Form();
+        entity.name=dto.name;
+        entity.email=dto.email;
+        entity.dob=dto.dob;
+        entity.gender=dto.gender;
+        entity.pno=dto.pno;
+
+        entity.persist();
+
+    }
+}
+package com.sc.faas;
+
+import com.sc.faas.service.ProcessService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+
+
+@Path("/api/experience/v1/")
+public class Function {
+
+    @Inject
+    private ProcessService processService;
+
+    /**
+     * exposed REST GET api at /api/experience/v1/objects/{id}
+     */
+    @Path("/objects/{id}")
+    @GET
+    public Object getObjectById(@PathParam("id") Long id) {
+        return processService.getObjectById(id);
+    }
+
+
+
+
+}
+quarkus.http.port=8081
+quarkus.http.host=0.0.0.0
+quarkus.otel.enabled=false
+# Datasource configuration
+quarkus.datasource.db-kind=postgresql    
+quarkus.datasource.username=postgres
+quarkus.datasource.password=
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:4000/Test
+
+# Hibernate ORM config
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+quarkus.hibernate-orm.packages=com.sc.faas.entity
+quarkus.http.cors=true
+quarkus.http.cors.origins=http://localhost:11001
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with
+quarkus.http.cors.exposed-headers=location,link
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
+
