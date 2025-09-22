@@ -71,3 +71,32 @@ devkit.federated.supported.packages=com.sc.faas,com.sc.devkit
     ],
     "dataPresent": true
 }
+
+public class SubmitResponse {
+    private String status;
+    private String message;
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+}
+
+@Path("/submit")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+public class ProcessController {
+
+    @Inject
+    ProcessService service;
+
+    @POST
+    public SubmitResponse submit(UserForm dto) {
+        service.submitForm(dto); // save to DB or whatever logic
+        SubmitResponse response = new SubmitResponse();
+        response.setStatus("SUCCESS");
+        response.setMessage("Saved successfully");
+        return response;
+    }
+}
