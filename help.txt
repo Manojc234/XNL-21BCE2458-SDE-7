@@ -1,531 +1,73 @@
-package com.sc.faas.client;
-
-import com.sc.faas.dto.Employee;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-
-import java.util.List;
-
-@Path("/api/process/v1/")
-@RegisterRestClient
-public interface ExpClient{
-    @GET
-    @Path("/employee")
-    @Produces(MediaType.APPLICATION_JSON)
-    List<Employee> getAllEmployees();
-
-    @POST
-    @Path("/employee/create")
-    @Consumes(MediaType.APPLICATION_JSON)
-    long create(Employee user);
-}
-
-package com.sc.faas.dto;
-
-
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import java.util.Date;
-
-@AllArgsConstructor
-
-
-public class Employee {
-
-
-    public String firstName;
-    public String lastName;
-    public String gender;
-    public String city;
-
-
-}
-
 package com.sc.faas.service;
 
-import com.sc.faas.client.ExpClient;
-import com.sc.faas.dto.Employee;
+import com.sc.faas.API.Xapi;
+import com.sc.faas.dto.Form;
 import com.sc.faas.dto.MyObject;
+import com.sc.faas.dto.SubmitResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @ApplicationScoped
 public class MutationService {
-
     @Inject
     @RestClient
-    ExpClient expClient;
+    Xapi Xapi;
+
+    public SubmitResponse submitForm(Form form)
+    {
+        return Xapi.submit(form);
+    }
+
     public MyObject updateObject(Long id, String name) {
         return new MyObject(id, name);
     }
-
-    public long create(Employee user){
-        return expClient.create(user);
-    }
 }
-import { html, css, LitElement } from 'lit';
-import { createContext, contexts } from '@scdevkit/data';
+package com.sc.faas.API;
 
-// NOTE: the context is coming from sc-data, not service-bench-core
-
-const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
-
-export class CustomerList extends LitElement {
-  static styles = css`
-    .container {
-      text-align: left;
-      margin-left: 28px;
-      margin-right: 28px;
-    }
-  `;
-
-  static properties={
-  employees:{type:Array}}
-
-  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.loadData();
-  }
-
-  async loadData() {
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-    let response;
-    try {
-      response = await graphQLClient.query(`{getAllEmployees {firstName,lastName,gender,city}}`);
-      const data = await response.json();
-      console.log(data);
-      const employeeArray = data.data;
-      console.log(employeeArray)
-      this.employees =employeeArray.getAllEmployees;
-      console.log();
-
-      // TODO: Handle data
-    } catch (error) {
-      // TODO: Handle error
-      return;
-    }
-  }
-
-  render() {
-  const conf = [
-        { property: 'firstName', header: 'First Name' },
-        { property: 'lastName', header: 'Last Name' },
-        { property: 'gender', header: 'Gender' },
-        { property: 'city', header: 'City' },
-        { property: 'action',
-          header: 'Action',
-          cell: (value, properties) => {
-            return html`<sc-button @click=${()=>this.handleEdit(properties)}>Edit</sc-button>`;
-          }
-        }
-      ]
-    return html`
-      <div class="container">
-        <h1>Customer List page</h1>
-         <sc-table class="sc-table-default" .conf=${conf} .data=${this.employees} page-size="" sort="">
-         </sc-table>
-    `;
-  }
-}
-package com.sc.faas.service;
-
-import com.sc.faas.dto.MyObject;
-import jakarta.enterprise.context.ApplicationScoped;
-
-@ApplicationScoped
-public class ProcessService {
-    public MyObject getObjectById(Long id) {
-        return new MyObject(id, "Hello World");
-    }
-}
-package com.sc.faas;
-
-import com.sc.faas.dto.Employee;
-import com.sc.faas.service.ProcessService;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-
-
-@Path("/api/process/v1/")
-public class Function {
-
-    @Inject
-    private ProcessService processService;
-
-    /**
-     * exposed REST GET api at /api/experience/v1/objects/{id}
-     */
-    @Path("/objects/{id}")
-    @GET
-    public Object getObjectById(@PathParam("id") Long id) {
-        return processService.getObjectById(id);
-    }
-
-    @GET
-    @Path("/employee")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllEmployees(){
-        List<Employee> employees = Employee.listAll();
-        return Response.ok(employees).build();
-    }
-
-    @GET
-    @Path("/employee/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserById(@PathParam("id") long id){
-        return  Employee.findByIdOptional(id)
-                .map(user->Response.ok(user).build())
-                .orElse(Response.status(Response.Status.NOT_FOUND).build());
-    }
-
-    @GET
-    @Path("/employee/city/{city}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserByCountry(@PathParam("city") String city){
-        List<Employee> user= Employee.list("SELECT m FROM Employee m WHERE m.city=?1 ORDER BY id DESC",city);
-        return  Response.ok(user).build();
-    }
-
-    @GET
-    @Path("/employee/firstName/{firstName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserByFirstName(@PathParam("firstName") String firstName){
-        return Employee.find("firstName", firstName)
-                .singleResultOptional()
-                .map(user -> Response.ok(user).build())
-                .orElse(Response.status(Response.Status.NOT_FOUND).build());
-    }
-
-    @POST
-    @Transactional
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/employee/create")
-    public Response create(Employee user){
-        Employee.persist(user);
-        if(user.isPersistent()){
-            //return Response.created(URI.create("/users"+user.id)).build();
-            return Response.ok(user.id).build();
-        }
-        return Response.status(Response.Status.BAD_REQUEST).build();
-    }
-
-    @DELETE
-    @Transactional
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/employee/{id}")
-    public Response deleteById(@PathParam("id") Long id,Employee employee){
-        boolean deleted = Employee.deleteById(id);
-        if(deleted){
-            return Response.noContent().build();
-        }
-        return Response.status(Response.Status.BAD_REQUEST).build();
-    }
-
-    @PUT
-    @Transactional
-    @Path("/employee/update/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateById(@PathParam("id") Long id,Employee employee){
-        Employee entity = Employee.findById(id);
-        if(entity==null){
-            throw new NotFoundException();
-        }
-        entity.firstName = employee.firstName;
-        entity.lastName=employee.lastName;
-        entity.gender=employee.gender;
-        entity.city= employee.city;
-        return Response.ok(entity).build();
-
-    }
-}
-this is one of my application 
-i will also provide you you my other application
-import { html, LitElement, css } from 'lit';
-//import axios from "axios";
-export class Form extends LitElement {
-  static styles = css`
-    :host, sc-button-group, sc-title {
-      display: flex;
-      justify-content: center;
-    }
-  `;
-
-  static properties = {
-    formData: { type: Object },
-    errors: { type: Object },
-  };
-
-  constructor() {
-    super();
-    this.formData = {
-      name: '',
-      email: '',
-      dob: '',
-      gender: '',
-      pno: ''
-    };
-    this.errors = {};
-  }
-
-  handleChange(e) {
-    const target = e.target;
-    const name = target.getAttribute("name");
-    let value = e.detail?.value ?? target.value;
-    if (!name) return;
-
-    this.formData = {
-      ...this.formData,
-      [name]: value,
-    };
-    this.validateField(name, value);
-  }
-
-  validateField(field, value) {
-    let error = "";
-
-    switch (field) {
-      case "name":
-        if (!value || value.trim().length < 2) {
-          error = "Name must be at least 2 characters long";
-        }
-        break;
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          error = "Enter a valid email address";
-        }
-        break;
-      case "pno":
-        if (!/^\d{10}$/.test(value)) {
-          error = "Phone number must be 10 digits";
-        }
-        break;
-      case "dob":
-        const today = new Date();
-        const dobDate = new Date(value);
-        if (!value || dobDate >= today) {
-          error = "Date of Birth must be before today";
-        }
-        break;
-    }
-
-    this.errors = {
-      ...this.errors,
-      [field]: error
-    };
-  }
-
-  validateForm() {
-    Object.keys(this.formData).forEach((key) => {
-      this.validateField(key, this.formData[key]);
-    });
-    return Object.values(this.errors).every((err) => !err);
-  }
-
-  handleClick(e) {
-    e.preventDefault();
-  
-    if (this.validateForm()) {
-      fetch("http://localhost:8081/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(this.formData),
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to submit");
-        return res.json();
-      })
-      .then(data => {
-        console.log("Success:", data);
-        window.alert(data.message);
-        window.location.reload();
-        
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        window.alert("Submission failed. Please try again.");
-      });
-    } else {
-      window.alert("Please fix validation errors first.");
-    }
-  }
-
-  render() {
-    return html`
-      <div class="d-flex justify-content-center">
-        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" 
-                 text-align="middle" vertical-align="middle" width="150%" height="auto">
-          <sc-form-viewer>
-            <div style="height: 100%; padding: 0 24px;">
-              <sc-title level="4" rows="2" hero="True">Form</sc-title>
-              <sc-spacer size="08"></sc-spacer>
-
-              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Name" 
-                             name="name"
-                             .value=${this.formData.name}
-                             error-message=${this.errors.name || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-
-              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Email" 
-                             name="email"
-                             .value=${this.formData.email}
-                             error-message=${this.errors.email || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-
-              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
-              <sc-date-input placeholder="Please Enter Date"
-                             name="dob"
-                             .value=${this.formData.dob}
-                             error-message=${this.errors.dob || ""}
-                             @sc-change=${this.handleChange}></sc-date-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
-              <sc-radio-group name="gender"
-                              .value=${this.formData.gender}
-                              @sc-change=${this.handleChange}
-                              direction="vertical">
-                <sc-radio value="male">Male</sc-radio>
-                <sc-radio value="female">Female</sc-radio>     
-              </sc-radio-group>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Phone Number" 
-                             name="pno"
-                             .value=${this.formData.pno}
-                             error-message=${this.errors.pno || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <!-- Submit Button -->
-              <div style="padding: 20px 30px">
-                <sc-button-group size="md" @sc-select=${this.handleClick}>
-                  <sc-button-group-item value="1">Submit</sc-button-group-item>
-                </sc-button-group>
-              </div>
-            </div>   
-          </sc-form-viewer>
-        </sc-card>
-      </div>
-    `;
-  }
-}
-package com.sc.faas.entity;
-
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.*;
-
-@Entity
-@Table(name="user_form")
-public class Form extends PanacheEntity {
-
-
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-
-}
-package com.sc.faas.dto;
-
-public class UserForm {
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-
-}
-package com.sc.faas.controller;
-
-import com.sc.faas.dto.UserForm;
-import com.sc.faas.service.ProcessService;
-import io.vertx.ext.auth.User;
-import jakarta.inject.Inject;
+import com.sc.faas.dto.Form;
+import com.sc.faas.dto.SubmitResponse;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-
-import java.awt.*;
-import java.util.Map;
-
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 @Path("/submit")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-public class ProcessController {
-    @Inject
-    ProcessService service;
+@RegisterRestClient
+public interface Xapi {
+
     @POST
-    public Response submit(UserForm dto)
-    {
-        service.submitForm(dto);
-        return Response.ok(Map.of("message","Saved")).build();
-    }
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    SubmitResponse submit(Form dto);
 }
-package com.sc.faas.service;
-import com.sc.faas.dto.MyObject;
-import com.sc.faas.dto.UserForm;
-import com.sc.faas.entity.Form;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.Response;
-@ApplicationScoped
-public class ProcessService {
-    public MyObject getObjectById(Long id) {
-        return new MyObject(id, "Hello World");
-    }
-    @Transactional
-    public void submitForm(UserForm dto)
-    {
-        Form entity=new Form();
-        entity.name=dto.name;
-        entity.email=dto.email;
-        entity.dob=dto.dob;
-        entity.gender=dto.gender;
-        entity.pno=dto.pno;
-
-        entity.persist();
-
-    }
-}
-
 quarkus.http.port=8080
 quarkus.http.host=0.0.0.0
 quarkus.grpc.dev-mode.force-server-start=false
 quarkus.otel.enabled=false
 quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
+devkit.federated.supported.packages=com.sc.faas,com.sc.devkit
+
+{
+    "extensions": null,
+    "data": null,
+    "errors": [
+        {
+            "message": "Error injecting com.sc.faas.API.Xapi com.sc.faas.service.MutationService.Xapi",
+            "locations": [
+                {
+                    "line": 2,
+                    "column": 5,
+                    "sourceName": null
+                }
+            ],
+            "errorType": "DataFetchingException",
+            "path": [
+                "submitForm"
+            ],
+            "extensions": null
+        }
+    ],
+    "dataPresent": true
+}
