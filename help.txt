@@ -1,3 +1,45 @@
+package com.sc.faas.API;
+
+import com.sc.faas.dto.Form;
+import com.sc.faas.dto.SubmitResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+@Path("/submit")
+@RegisterRestClient(configKey = "Xapi")
+public interface Xapi {
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    SubmitResponse submit(Form dto);
+}
+package com.sc.faas.dto;
+
+public class Form {
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+}
+package com.sc.faas.dto;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Message {
+    public String name;
+}
+package com.sc.faas.dto;
+
+public class SubmitResponse {
+    public String message;
+}
 package com.sc.faas.service;
 
 import com.sc.faas.API.Xapi;
@@ -23,80 +65,9 @@ public class MutationService {
         return new MyObject(id, name);
     }
 }
-package com.sc.faas.API;
-
-import com.sc.faas.dto.Form;
-import com.sc.faas.dto.SubmitResponse;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-@Path("/submit")
-@RegisterRestClient
-public interface Xapi {
-
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    SubmitResponse submit(Form dto);
-}
 quarkus.http.port=8080
 quarkus.http.host=0.0.0.0
 quarkus.grpc.dev-mode.force-server-start=false
 quarkus.otel.enabled=false
-quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
+quarkus.rest-client."com.sc.faas.API.Xapi".url=http://localhost:8081
 devkit.federated.supported.packages=com.sc.faas,com.sc.devkit
-
-{
-    "extensions": null,
-    "data": null,
-    "errors": [
-        {
-            "message": "Error injecting com.sc.faas.API.Xapi com.sc.faas.service.MutationService.Xapi",
-            "locations": [
-                {
-                    "line": 2,
-                    "column": 5,
-                    "sourceName": null
-                }
-            ],
-            "errorType": "DataFetchingException",
-            "path": [
-                "submitForm"
-            ],
-            "extensions": null
-        }
-    ],
-    "dataPresent": true
-}
-
-public class SubmitResponse {
-    private String status;
-    private String message;
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-}
-
-@Path("/submit")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-public class ProcessController {
-
-    @Inject
-    ProcessService service;
-
-    @POST
-    public SubmitResponse submit(UserForm dto) {
-        service.submitForm(dto); // save to DB or whatever logic
-        SubmitResponse response = new SubmitResponse();
-        response.setStatus("SUCCESS");
-        response.setMessage("Saved successfully");
-        return response;
-    }
-}
