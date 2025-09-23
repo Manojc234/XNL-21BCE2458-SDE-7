@@ -1,8 +1,8 @@
 import { html, LitElement, css } from 'lit';
-//import axios from "axios";
-import {createContext,contexts} from '@scdevkit/data';
+import { createContext, contexts } from '@scdevkit/data';
 
-const graphQLClientContext=createContext(contexts.GRAPHQL_CLIENT);
+const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
+
 export class Form extends LitElement {
   static styles = css`
     :host, sc-button-group, sc-title {
@@ -19,6 +19,7 @@ export class Form extends LitElement {
   constructor() {
     super();
     this.formData = {
+      id: 0,
       name: '',
       email: '',
       dob: '',
@@ -27,7 +28,9 @@ export class Form extends LitElement {
     };
     this.errors = {};
   }
-  _graphQLClientContextConsumer=graphQLClientContext.createConsumer(this);
+
+  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
+
   handleChange(e) {
     const target = e.target;
     const name = target.getAttribute("name");
@@ -83,33 +86,6 @@ export class Form extends LitElement {
     return Object.values(this.errors).every((err) => !err);
   }
 
-  /*handleClick(e) {
-    e.preventDefault();
-  
-    if (this.validateForm()) {
-      fetch("http://localhost:8081/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(this.formData),
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to submit");
-        return res.json();
-      })
-      .then(data => {
-        console.log("Success:", data);
-        window.alert(data.message);
-        window.location.reload();
-        
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        window.alert("Submission failed. Please try again.");
-      });
-    } else {
-      window.alert("Please fix validation errors first.");
-    }
-  }*/
   async handleClick(e) {
     e.preventDefault();
 
@@ -121,8 +97,8 @@ export class Form extends LitElement {
     const graphQLClient = this._graphQLClientContextConsumer.value;
 
     const mutation = `
-      mutation SubmitForm($input: FormInput!) {
-        submitForm(input: $input) {
+      mutation SubmitForm($dto: FormDto!) {
+        submitForm(dto: $dto) {
           id
           name
           email
@@ -135,7 +111,7 @@ export class Form extends LitElement {
 
     try {
       const response = await graphQLClient.query(mutation, {
-        input: this.formData
+        dto: this.formData  // ✅ wrap inside dto
       });
 
       const data = await response.json();
@@ -154,11 +130,10 @@ export class Form extends LitElement {
     }
   }
 
-
   render() {
     return html`
       <div class="d-flex justify-content-center">
-        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" 
+        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm"
                  text-align="middle" vertical-align="middle" width="150%" height="auto">
           <sc-form-viewer>
             <div style="height: 100%; padding: 0 24px;">
@@ -166,22 +141,20 @@ export class Form extends LitElement {
               <sc-spacer size="08"></sc-spacer>
 
               <sc-label label="Name:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Name" 
+              <sc-text-input placeholder="Enter Your Name"
                              name="name"
                              .value=${this.formData.name}
                              error-message=${this.errors.name || ""}
                              @sc-input=${this.handleChange}></sc-text-input>
               <sc-spacer size="04"></sc-spacer>
 
-
               <sc-label label="Email:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Email" 
+              <sc-text-input placeholder="Enter Your Email"
                              name="email"
                              .value=${this.formData.email}
                              error-message=${this.errors.email || ""}
                              @sc-input=${this.handleChange}></sc-text-input>
               <sc-spacer size="04"></sc-spacer>
-
 
               <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
               <sc-date-input placeholder="Please Enter Date"
@@ -197,12 +170,12 @@ export class Form extends LitElement {
                               @sc-change=${this.handleChange}
                               direction="vertical">
                 <sc-radio value="male">Male</sc-radio>
-                <sc-radio value="female">Female</sc-radio>     
+                <sc-radio value="female">Female</sc-radio>
               </sc-radio-group>
               <sc-spacer size="04"></sc-spacer>
 
               <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Phone Number" 
+              <sc-text-input placeholder="Enter Your Phone Number"
                              name="pno"
                              .value=${this.formData.pno}
                              error-message=${this.errors.pno || ""}
@@ -215,26 +188,10 @@ export class Form extends LitElement {
                   <sc-button-group-item value="1">Submit</sc-button-group-item>
                 </sc-button-group>
               </div>
-            </div>   
+            </div>
           </sc-form-viewer>
         </sc-card>
       </div>
     `;
   }
-}
-
-{
-    "extensions": null,
-    "data": {
-        "submitForm": {
-            "id": 2353,
-            "name": "mm",
-            "email": "mm@gmail.com",
-            "dob": "2027-08-02",
-            "gender": "female",
-            "pno": "90000000"
-        }
-    },
-    "errors": null,
-    "dataPresent": true
 }
