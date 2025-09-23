@@ -19,7 +19,7 @@ export class Form extends LitElement {
   constructor() {
     super();
     this.formData = {
-      id: 0,
+      id:0,
       name: '',
       email: '',
       dob: '',
@@ -110,19 +110,18 @@ export class Form extends LitElement {
     `;
 
     try {
-      const response = await graphQLClient.query(mutation, {
+      const data = await graphQLClient.query(mutation, {
         dto: this.formData  
       });
 
-      const data = await response.json();
-      console.log("GraphQL response:", data);
+
 
       if (data.errors) {
         console.error("GraphQL Errors:", data.errors);
         window.alert("Submission failed. Please try again.");
       } else {
         window.alert("Form submitted successfully!");
-        window.location.reload();
+        //window.location.reload();
       }
     } catch (err) {
       console.error("Error:", err);
@@ -194,4 +193,42 @@ export class Form extends LitElement {
       </div>
     `;
   }
+}
+
+http://localhost:8082/graphql
+
+mutation{
+    submitForm(dto:{
+        id:"4",
+        name:"exp",
+        email:"m@gmail.com",
+        dob:"2027-08-02",
+        gender:"female",
+        pno:"000000000"
+
+    })
+    {
+        id
+        name
+        email
+        dob
+        gender
+        pno
+    } 
+}
+
+{
+    "extensions": null,
+    "data": {
+        "submitForm": {
+            "id": 2357,
+            "name": "exp",
+            "email": "m@gmail.com",
+            "dob": "2027-08-02",
+            "gender": "female",
+            "pno": "000000000"
+        }
+    },
+    "errors": null,
+    "dataPresent": true
 }
