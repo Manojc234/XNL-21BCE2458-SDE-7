@@ -194,41 +194,173 @@ export class Form extends LitElement {
     `;
   }
 }
+package com.sc.faas.client;
 
-http://localhost:8082/graphql
+import com.sc.faas.dto.Form;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
-mutation{
-    submitForm(dto:{
-        id:"4",
-        name:"exp",
-        email:"m@gmail.com",
-        dob:"2027-08-02",
-        gender:"female",
-        pno:"000000000"
+import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-    })
+@Path("/submit")
+@RegisterRestClient
+public interface ExpClient {
+    @POST
+    @Path("form")
+    @Consumes(MediaType.APPLICATION_JSON)
+    Form submit(Form dto);
+}
+package com.sc.faas.dto;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Form {
+    public Long id;
+
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+}
+package com.sc.faas.service;
+
+import com.expediagroup.graphql.generator.annotations.GraphQLDescription;
+import com.expediagroup.graphql.generator.annotations.GraphQLName;
+import com.sc.faas.client.ExpClient;
+import com.sc.faas.dto.Form;
+import com.sc.faas.dto.MyObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+@ApplicationScoped
+public class MutationService {
+
+    @Inject
+    @RestClient
+    ExpClient xapi;
+
+    public Form submitForm(Form dto)
     {
-        id
-        name
-        email
-        dob
-        gender
-        pno
-    } 
-}
+        return xapi.submit(dto);
+    }
 
-{
-    "extensions": null,
-    "data": {
-        "submitForm": {
-            "id": 2357,
-            "name": "exp",
-            "email": "m@gmail.com",
-            "dob": "2027-08-02",
-            "gender": "female",
-            "pno": "000000000"
-        }
-    },
-    "errors": null,
-    "dataPresent": true
+    public MyObject updateObject(Long id, String name) {
+        return new MyObject(id, name);
+    }
 }
+quarkus.http.port=8082
+quarkus.http.host=0.0.0.0
+quarkus.grpc.dev-mode.force-server-start=false
+quarkus.otel.enabled=false
+devkit.federated.supported.packages=com.sc.faas.dto
+quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
+package com.sc.faas.controller;
+
+import com.sc.faas.dto.UserForm;
+import com.sc.faas.entity.Form;
+import com.sc.faas.service.ProcessService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+
+@Path("/submit")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+public class ProcessController {
+    @Inject
+    ProcessService service;
+    @POST
+    @Path("/form")
+    public Form submit(UserForm dto)
+    {
+        return service.submitForm(dto);
+
+    }
+}
+package com.sc.faas.dto;
+
+public class UserForm {
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+
+}
+package com.sc.faas.entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="user_form")
+public class Form extends PanacheEntity {
+
+
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+
+}
+package com.sc.faas.service;
+import com.sc.faas.dto.MyObject;
+import com.sc.faas.dto.UserForm;
+import com.sc.faas.entity.Form;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
+@ApplicationScoped
+public class ProcessService {
+    public MyObject getObjectById(Long id) {
+        return new MyObject(id, "Hello World");
+    }
+    @Transactional
+    public Form submitForm(UserForm dto)
+    {
+        Form entity=new Form();
+        entity.name=dto.name;
+        entity.email=dto.email;
+        entity.dob=dto.dob;
+        entity.gender=dto.gender;
+        entity.pno=dto.pno;
+
+        entity.persist();
+        return entity;
+
+    }
+}
+quarkus.http.port=8081
+quarkus.http.host=0.0.0.0
+quarkus.otel.enabled=false
+# Datasource configuration
+quarkus.datasource.db-kind=postgresql    
+quarkus.datasource.username=postgres
+quarkus.datasource.password=
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:4000/Test
+
+# Hibernate ORM config
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+quarkus.hibernate-orm.packages=com.sc.faas.entity
+quarkus.http.cors=true
+quarkus.http.cors.origins=http://localhost:11001
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with
+quarkus.http.cors.exposed-headers=location,link
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
