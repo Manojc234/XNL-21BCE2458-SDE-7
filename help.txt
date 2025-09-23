@@ -1,221 +1,177 @@
-package com.sc.faas.API;
-
-import com.sc.faas.dto.Form;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-@Path("/submit")
-@RegisterRestClient
-public interface Xapi {
-
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    Form submit(Form dto);
-}
-package com.sc.faas.dto;
-
-public class Form {
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-    public String getName() {
-        return name;
+import { html, LitElement, css } from 'lit';
+//import axios from "axios";
+export class Form extends LitElement {
+  static styles = css`
+    :host, sc-button-group, sc-title {
+      display: flex;
+      justify-content: center;
     }
+  `;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  static properties = {
+    formData: { type: Object },
+    errors: { type: Object },
+  };
 
-    public String getEmail() {
-        return email;
-    }
+  constructor() {
+    super();
+    this.formData = {
+      name: '',
+      email: '',
+      dob: '',
+      gender: '',
+      pno: ''
+    };
+    this.errors = {};
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  handleChange(e) {
+    const target = e.target;
+    const name = target.getAttribute("name");
+    let value = e.detail?.value ?? target.value;
+    if (!name) return;
 
-    public String getDob() {
-        return dob;
-    }
+    this.formData = {
+      ...this.formData,
+      [name]: value,
+    };
+    this.validateField(name, value);
+  }
 
-    public void setDob(String dob) {
-        this.dob = dob;
-    }
+  validateField(field, value) {
+    let error = "";
 
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getPno() {
-        return pno;
-    }
-
-    public void setPno(String pno) {
-        this.pno = pno;
-    }
-}
-package com.sc.faas.dto;
-
-
-
-
-public class Message {
-    public String name;
-
-
-}
-package com.sc.faas.dto;
-
-
-
-public class MyObject {
-    public Long id;
-    public String name;
-
-    public MyObject(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-}
-package com.sc.faas.service;
-
-import com.sc.faas.API.Xapi;
-import com.sc.faas.dto.Form;
-//import com.sc.faas.dto.MyObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
-@ApplicationScoped
-public class MutationService {
-    @Inject
-    @RestClient
-    Xapi xapi;
-
-    public Form submitForm(Form form)
-    {
-        return xapi.submit(form);
-    }
-
-    //public MyObject updateObject(Long id, String name) {
-       // return new MyObject(id, name);
-    //}
-}
-package com.sc.faas.service;
-
-import com.sc.faas.dto.Message;
-//import com.sc.faas.dto.MyObject;
-import jakarta.enterprise.context.ApplicationScoped;
-
-import java.util.List;
-
-@ApplicationScoped
-public class QueryService {
-
-    //public List<MyObject> objects() {
-        //return List.of(new MyObject(10L, "TEST"));
-    //}
-
-    public Message get_message(){
-        return  new Message();
-    }
-}
-package com.sc.faas;
-
-import com.expediagroup.graphql.generator.TopLevelObject;
-import com.sc.devkit.graphql.dto.Input;
-import com.sc.devkit.graphql.service.GraphQLServer;
-import com.sc.devkit.graphql.service.GraphQLUtil;
-import com.sc.faas.service.MutationService;
-import com.sc.faas.service.QueryService;
-import io.quarkus.funqy.Funq;
-import jakarta.inject.Inject;
-import jakarta.enterprise.context.ApplicationScoped;
-
-import java.util.List;
-
-@ApplicationScoped
-public class Function {
-
-    @Inject
-    private QueryService queryService;
-
-    @Inject
-    private MutationService mutationService;
-
-    private GraphQLServer graphQLServer;
-
-    public GraphQLServer getGraphQLServer() {
-        if (graphQLServer == null) {
-            graphQLServer = new GraphQLServer.Builder()
-                    .federatedSupportedPackages(List.of("com.sc.faas.dto"))
-                    .queries(List.of(new TopLevelObject(queryService, GraphQLUtil.fromJavaClass(QueryService.class))))
-                    .mutations(List.of(new TopLevelObject(mutationService, GraphQLUtil.fromJavaClass(MutationService.class))))
-                    .build();
+    switch (field) {
+      case "name":
+        if (!value || value.trim().length < 2) {
+          error = "Name must be at least 2 characters long";
         }
-        return graphQLServer;
+        break;
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          error = "Enter a valid email address";
+        }
+        break;
+      case "pno":
+        if (!/^\d{10}$/.test(value)) {
+          error = "Phone number must be 10 digits";
+        }
+        break;
+      case "dob":
+        const today = new Date();
+        const dobDate = new Date(value);
+        if (!value || dobDate >= today) {
+          error = "Date of Birth must be before today";
+        }
+        break;
     }
 
-    @Funq
-    public Object graphql(Input input) {
-        return getGraphQLServer().serve(input);
+    this.errors = {
+      ...this.errors,
+      [field]: error
+    };
+  }
+
+  validateForm() {
+    Object.keys(this.formData).forEach((key) => {
+      this.validateField(key, this.formData[key]);
+    });
+    return Object.values(this.errors).every((err) => !err);
+  }
+
+  handleClick(e) {
+    e.preventDefault();
+  
+    if (this.validateForm()) {
+      fetch("http://localhost:8081/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(this.formData),
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to submit");
+        return res.json();
+      })
+      .then(data => {
+        console.log("Success:", data);
+        window.alert(data.message);
+        window.location.reload();
+        
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        window.alert("Submission failed. Please try again.");
+      });
+    } else {
+      window.alert("Please fix validation errors first.");
     }
-}
-quarkus.http.port=8080
-quarkus.http.host=0.0.0.0
-quarkus.grpc.dev-mode.force-server-start=false
-quarkus.otel.enabled=false
-quarkus.rest-client."com.sc.faas.API.Xapi".url=http://localhost:8081
-devkit.federated.supported.packages=com.sc.faas,com.sc.devkit
-http://localhost:8080/graphql
-mutation{
-    submitForm(form:{
-        name:"xxy",
-        email:"xxy@gmail.com",
-        dob:"2027-08-02",
-        gender:"female",
-        pno:"900000"
+  }
 
-    })
-    {
-        name
-        email
-        dob
-        gender
-        pno
-    } 
-}
-"details": "Error id c5414d1d-7186-45dd-9de7-fc4d36b8fdf8-1, io.quarkus.funqy.runtime.ApplicationException: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto, com.sc.faas, com.sc.devkit]\"",
+  render() {
+    return html`
+      <div class="d-flex justify-content-center">
+        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm" 
+                 text-align="middle" vertical-align="middle" width="150%" height="auto">
+          <sc-form-viewer>
+            <div style="height: 100%; padding: 0 24px;">
+              <sc-title level="4" rows="2" hero="True">Form</sc-title>
+              <sc-spacer size="08"></sc-spacer>
 
-process api is runnin all fine no errors there and returnin this after postin :{
-    "id": 2251,
-    "name": "axy",
-    "email": "Exy@gmail.com",
-    "dob": "2027-08-02",
-    "gender": "female",
-    "pno": "900000"
+              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Name" 
+                             name="name"
+                             .value=${this.formData.name}
+                             error-message=${this.errors.name || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+
+              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Email" 
+                             name="email"
+                             .value=${this.formData.email}
+                             error-message=${this.errors.email || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+
+              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
+              <sc-date-input placeholder="Please Enter Date"
+                             name="dob"
+                             .value=${this.formData.dob}
+                             error-message=${this.errors.dob || ""}
+                             @sc-change=${this.handleChange}></sc-date-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
+              <sc-radio-group name="gender"
+                              .value=${this.formData.gender}
+                              @sc-change=${this.handleChange}
+                              direction="vertical">
+                <sc-radio value="male">Male</sc-radio>
+                <sc-radio value="female">Female</sc-radio>     
+              </sc-radio-group>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Phone Number" 
+                             name="pno"
+                             .value=${this.formData.pno}
+                             error-message=${this.errors.pno || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Submit Button -->
+              <div style="padding: 20px 30px">
+                <sc-button-group size="md" @sc-select=${this.handleClick}>
+                  <sc-button-group-item value="1">Submit</sc-button-group-item>
+                </sc-button-group>
+              </div>
+            </div>   
+          </sc-form-viewer>
+        </sc-card>
+      </div>
+    `;
+  }
 }
