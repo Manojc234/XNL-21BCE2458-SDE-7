@@ -432,3 +432,22 @@ quarkus.grpc.dev-mode.force-server-start=false
 quarkus.otel.enabled=false
 devkit.federated.supported.packages=com.sc.faas.dto
 quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
+mutation{
+    submitForm(dto:{
+        id:"1",
+        name:"exp",
+        email:"m@gmail.com",
+        dob:"2027-08-02",
+        gender:"female",
+        pno:"000000000"
+
+    })
+    {
+        id
+        name
+        email
+        dob
+        gender
+        pno
+    } 
+}
