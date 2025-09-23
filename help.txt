@@ -175,3 +175,70 @@ export class Form extends LitElement {
     `;
   }
 }
+import { html, css, LitElement } from 'lit';
+import { createContext, contexts } from '@scdevkit/data';
+
+// NOTE: the context is coming from sc-data, not service-bench-core
+
+const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
+
+export class CustomerList extends LitElement {
+  static styles = css`
+    .container {
+      text-align: left;
+      margin-left: 28px;
+      margin-right: 28px;
+    }
+  `;
+
+  static properties={
+  employees:{type:Array}}
+
+  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.loadData();
+  }
+
+  async loadData() {
+    const graphQLClient = this._graphQLClientContextConsumer.value;
+    let response;
+    try {
+      response = await graphQLClient.query(`{getAllEmployees {firstName,lastName,gender,city}}`);
+      const data = await response.json();
+      console.log(data);
+      const employeeArray = data.data;
+      console.log(employeeArray)
+      this.employees =employeeArray.getAllEmployees;
+      console.log();
+
+      // TODO: Handle data
+    } catch (error) {
+      // TODO: Handle error
+      return;
+    }
+  }
+
+  render() {
+  const conf = [
+        { property: 'firstName', header: 'First Name' },
+        { property: 'lastName', header: 'Last Name' },
+        { property: 'gender', header: 'Gender' },
+        { property: 'city', header: 'City' },
+        { property: 'action',
+          header: 'Action',
+          cell: (value, properties) => {
+            return html`<sc-button @click=${()=>this.handleEdit(properties)}>Edit</sc-button>`;
+          }
+        }
+      ]
+    return html`
+      <div class="container">
+        <h1>Customer List page</h1>
+         <sc-table class="sc-table-default" .conf=${conf} .data=${this.employees} page-size="" sort="">
+         </sc-table>
+    `;
+  }
+}
+
