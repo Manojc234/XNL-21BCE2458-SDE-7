@@ -1,3 +1,233 @@
+Got it 👍 Thanks for sharing both components and the screenshot.
+
+Right now:
+
+Component 1 (Form) is written to call a REST API (http://localhost:8081/submit) using fetch.
+
+Component 2 (CustomerList) uses the GraphQL client context to query data (getAllEmployees).
+
+
+You want Component 1 (Form) also to use GraphQL (like Component 2) instead of directly calling the REST endpoint.
+
+
+---
+
+Here’s how you can rewrite Form to use GraphQL API with the same graphQLClientContext from component 2:
+
+import { html, LitElement, css } from 'lit';
+import { createContext, contexts } from '@scdevkit/data';
+
+const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
+
+export class Form extends LitElement {
+  static styles = css`
+    :host, sc-button-group, sc-title {
+      display: flex;
+      justify-content: center;
+    }
+  `;
+
+  static properties = {
+    formData: { type: Object },
+    errors: { type: Object },
+  };
+
+  constructor() {
+    super();
+    this.formData = {
+      name: '',
+      email: '',
+      dob: '',
+      gender: '',
+      pno: ''
+    };
+    this.errors = {};
+  }
+
+  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
+
+  handleChange(e) {
+    const target = e.target;
+    const name = target.getAttribute("name");
+    let value = e.detail?.value ?? target.value;
+    if (!name) return;
+
+    this.formData = {
+      ...this.formData,
+      [name]: value,
+    };
+    this.validateField(name, value);
+  }
+
+  validateField(field, value) {
+    let error = "";
+
+    switch (field) {
+      case "name":
+        if (!value || value.trim().length < 2) {
+          error = "Name must be at least 2 characters long";
+        }
+        break;
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          error = "Enter a valid email address";
+        }
+        break;
+      case "pno":
+        if (!/^\d{10}$/.test(value)) {
+          error = "Phone number must be 10 digits";
+        }
+        break;
+      case "dob":
+        const today = new Date();
+        const dobDate = new Date(value);
+        if (!value || dobDate >= today) {
+          error = "Date of Birth must be before today";
+        }
+        break;
+    }
+
+    this.errors = {
+      ...this.errors,
+      [field]: error
+    };
+  }
+
+  validateForm() {
+    Object.keys(this.formData).forEach((key) => {
+      this.validateField(key, this.formData[key]);
+    });
+    return Object.values(this.errors).every((err) => !err);
+  }
+
+  async handleClick(e) {
+    e.preventDefault();
+
+    if (!this.validateForm()) {
+      window.alert("Please fix validation errors first.");
+      return;
+    }
+
+    const graphQLClient = this._graphQLClientContextConsumer.value;
+
+    const mutation = `
+      mutation SubmitForm($input: FormInput!) {
+        submitForm(input: $input) {
+          id
+          name
+          email
+          dob
+          gender
+          pno
+        }
+      }
+    `;
+
+    try {
+      const response = await graphQLClient.query(mutation, {
+        input: this.formData
+      });
+
+      const data = await response.json();
+      console.log("GraphQL response:", data);
+
+      if (data.errors) {
+        console.error("GraphQL Errors:", data.errors);
+        window.alert("Submission failed. Please try again.");
+      } else {
+        window.alert("Form submitted successfully!");
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      window.alert("Submission failed. Please try again.");
+    }
+  }
+
+  render() {
+    return html`
+      <div class="d-flex justify-content-center">
+        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm"  
+                 text-align="middle" vertical-align="middle" width="150%" height="auto"> 
+          <sc-form-viewer>
+            <div style="height: 100%; padding: 0 24px;">
+              <sc-title level="4" rows="2" hero="True">Form</sc-title>
+              <sc-spacer size="08"></sc-spacer>
+
+              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Name"  
+                             name="name"
+                             .value=${this.formData.name}
+                             error-message=${this.errors.name || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Email"  
+                             name="email"
+                             .value=${this.formData.email}
+                             error-message=${this.errors.email || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
+              <sc-date-input placeholder="Please Enter Date"
+                             name="dob"
+                             .value=${this.formData.dob}
+                             error-message=${this.errors.dob || ""}
+                             @sc-change=${this.handleChange}></sc-date-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
+              <sc-radio-group name="gender"
+                              .value=${this.formData.gender}
+                              @sc-change=${this.handleChange}
+                              direction="vertical">
+                <sc-radio value="male">Male</sc-radio>
+                <sc-radio value="female">Female</sc-radio>      
+              </sc-radio-group>
+              <sc-spacer size="04"></sc-spacer>
+
+              <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
+              <sc-text-input placeholder="Enter Your Phone Number"  
+                             name="pno"
+                             .value=${this.formData.pno}
+                             error-message=${this.errors.pno || ""}
+                             @sc-input=${this.handleChange}></sc-text-input>
+              <sc-spacer size="04"></sc-spacer>
+
+              <!-- Submit Button -->
+              <div style="padding: 20px 30px">
+                <sc-button-group size="md" @sc-select=${this.handleClick}>
+                  <sc-button-group-item value="1">Submit</sc-button-group-item>
+                </sc-button-group>
+              </div>
+            </div>    
+          </sc-form-viewer>
+        </sc-card>
+      </div>
+    `;
+  }
+}
+
+
+---
+
+✅ Changes made
+
+Replaced fetch("http://localhost:8081/submit") with a GraphQL mutation call.
+
+Used the same GraphQL client context (graphQLClientContext) like CustomerList.
+
+Mutation submitForm(input: FormInput!) matches the GraphQL schema from your screenshot (id, name, email, dob, gender, pno).
+
+
+
+---
+
+Do you want me to also show the matching FormInput GraphQL schema (so you can confirm backend compatibility), or should I just stick to the frontend component?
+
 import { html, LitElement, css } from 'lit';
 //import axios from "axios";
 export class Form extends LitElement {
