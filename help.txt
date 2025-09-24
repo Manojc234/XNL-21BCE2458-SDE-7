@@ -1,0 +1,249 @@
+import { html, LitElement, css } from "lit";
+import { createContext, contexts } from "@scdevkit/data";
+
+const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
+
+export class Grid extends LitElement {
+  static styles = css`
+    :host {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+    sc-table{
+      width: 100%;
+      max-width: 1000px;
+    }
+  `;
+
+  static properties = {
+    rows: { type: Array },
+  };
+
+  constructor() {
+    super();
+    this.rows = [];
+  }
+
+  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.fetchData();
+  }
+
+  async fetchData() {
+    const graphQLClient = this._graphQLClientContextConsumer.value;
+    console.log("GraphQL Client:",graphQLClient);
+    let response;
+
+    try {
+      const response = await graphQLClient.query( `{
+        show {
+          name
+          email
+          dob
+          gender
+          pno
+        }
+      }
+    `);
+      const result=await response.json();
+      console.log(result);
+      const rowsArray=result.data;
+      console.log(rowsArray);
+      this.rows=rowsArray.show;
+      
+    } catch (err) {
+      console.error("GraphQL query failed:", err);
+    }
+  }
+  render() {
+    const conf=[
+          { property: "name", header: "Name" },
+          { property: "email", header: "Email" },
+          { property: "dob", header: "Date of Birth" },
+          { property: "gender", header: "Gender" },
+          { property: "pno", header: "Phone Number" },
+        
+      ]
+    return html`
+      <sc-table
+      .conf=${conf} .data=${this.rows}
+       page-size="" sort=""
+      >
+      </sc-table>
+    `;
+  }
+}
+
+package com.sc.faas.service;
+
+import com.sc.faas.dto.Details;
+import com.sc.faas.dto.MyObject;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class MutationService {
+
+    public MyObject updateObject(Long id, String name) {
+        return new MyObject(id, name);
+    }
+}
+package com.sc.faas.dto;
+
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Details {
+
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+}
+package com.sc.faas.service;
+
+import com.sc.faas.Xapi.Api;
+import com.sc.faas.dto.Details;
+import com.sc.faas.dto.Message;
+import com.sc.faas.dto.MyObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import java.util.List;
+
+@ApplicationScoped
+public class QueryService {
+    @Inject
+    @RestClient
+    Api api;
+
+    public List<MyObject> objects() {
+        return List.of(new MyObject(10L, "TEST"));
+    }
+    public List<Details> show() {
+        return api.show();
+
+
+    }
+
+    public Message get_message(){
+        return  new Message("Welcome to Service Bench - API - Kotlin Experience API (Java)");
+    }
+}
+package com.sc.faas.Xapi;
+
+import com.sc.faas.dto.Details;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import java.util.List;
+
+@Path("/fetch")
+@RegisterRestClient(configKey = "process-api")
+public interface Api {
+    @GET
+    @Path("/get")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Details> show();
+}
+quarkus.http.port=8082
+quarkus.http.host=0.0.0.0
+quarkus.grpc.dev-mode.force-server-start=false
+quarkus.otel.enabled=false
+devkit.federated.supported.packages=com.sc.faas.dto
+quarkus.rest-client.process-api.url=http://localhost:8080
+package com.sc.faas.dto;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name="Details")
+public class Details extends PanacheEntity {
+    public String name;
+    public String email;
+    public String dob;
+    public String gender;
+    public String pno;
+
+}
+package com.sc.faas.service;
+
+import com.sc.faas.dto.Details;
+import com.sc.faas.dto.MyObject;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import java.util.List;
+
+@ApplicationScoped
+public class ProcessService {
+    public MyObject getObjectById(Long id) {
+        return new MyObject(id, "Hello World");
+    }
+
+    public List<Details> show()
+    {
+        return Details.listAll();
+    }
+}
+package com.sc.faas;
+
+import com.sc.faas.dto.Details;
+import com.sc.faas.service.ProcessService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+
+import java.util.List;
+
+@Path("/fetch")
+public class Function {
+
+    @Inject
+    private ProcessService processService;
+
+    /**
+     * exposed REST GET api at /api/experience/v1/objects/{id}
+     */
+    @Path("/objects/{id}")
+    @GET
+    public Object getObjectById(@PathParam("id") Long id) {
+        return processService.getObjectById(id);
+    }
+
+    @GET
+    @Path("/get")
+    public List<Details> show()
+    {
+        return processService.show();
+    }
+}
+quarkus.http.port=8080
+quarkus.http.host=0.0.0.0
+quarkus.otel.enabled=false
+# Datasource configuration
+quarkus.datasource.db-kind=postgresql    
+quarkus.datasource.username=postgres
+quarkus.datasource.password=
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:4000/qw
+
+# Hibernate ORM config
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+#quarkus.hibernate-orm.packages=com.sc.faas.dto
+quarkus.http.cors=true
+quarkus.http.cors.origins=http://localhost:11001
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with
+quarkus.http.cors.exposed-headers=location,link
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
