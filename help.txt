@@ -10,24 +10,9 @@ export class Grid extends LitElement {
       justify-content: center;
       padding: 1rem;
     }
-    sc-table {
+    sc-table{
       width: 100%;
       max-width: 1000px;
-    }
-    button {
-      padding: 0.25rem 0.5rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-right: 4px;
-    }
-    .edit-btn {
-      background-color: #4caf50;
-      color: white;
-    }
-    .delete-btn {
-      background-color: #f44336;
-      color: white;
     }
   `;
 
@@ -49,8 +34,11 @@ export class Grid extends LitElement {
 
   async fetchData() {
     const graphQLClient = this._graphQLClientContextConsumer.value;
+    console.log("GraphQL Client:",graphQLClient);
+    let response;
+
     try {
-      const response = await graphQLClient.query(`{
+      const response = await graphQLClient.query( `{
         show {
           id
           name
@@ -59,14 +47,18 @@ export class Grid extends LitElement {
           gender
           pno
         }
-      }`);
-      const result = await response.json();
-      this.rows = result.data.show;
+      }
+    `);
+      const result=await response.json();
+      console.log(result);
+      const rowsArray=result.data;
+      console.log(rowsArray);
+      this.rows=rowsArray.show;
+      
     } catch (err) {
       console.error("GraphQL query failed:", err);
     }
   }
-
   async updateRow(row) {
     const graphQLClient = this._graphQLClientContextConsumer.value;
     // Here you could open a modal/form to edit row data; for demo we'll just append " (Edited)"
@@ -95,7 +87,7 @@ export class Grid extends LitElement {
     `;
     try {
       await graphQLClient.query(mutation);
-      this.fetchData(); // reload table
+      this.fetchData(); 
     } catch (err) {
       console.error("Update failed:", err);
     }
@@ -105,37 +97,39 @@ export class Grid extends LitElement {
     const graphQLClient = this._graphQLClientContextConsumer.value;
     const mutation = `
       mutation {
-        deleteDetails(id: ${row.id})
+        deleteDetails(id: "${row.id}")
       }
     `;
     try {
       await graphQLClient.query(mutation);
-      this.fetchData(); // reload table
+      this.fetchData(); 
     } catch (err) {
       console.error("Delete failed:", err);
     }
   }
 
   render() {
-    const conf = [
-      { property: "name", header: "Name" },
-      { property: "email", header: "Email" },
-      { property: "dob", header: "Date of Birth" },
-      { property: "gender", header: "Gender" },
-      { property: "pno", header: "Phone Number" },
-      {
-        header: "Actions",
-        render: (row) => html`
-          <button class="edit-btn" @click=${() => this.updateRow(row)}>Edit</button>
-          <button class="delete-btn" @click=${() => this.deleteRow(row)}>Delete</button>
-        `
-      }
-    ];
+    const conf=[
+          { property: "name", header: "Name" },
+          { property: "email", header: "Email" },
+          { property: "dob", header: "Date of Birth" },
+          { property: "gender", header: "Gender" },
+          { property: "pno", header: "Phone Number" },
+          {
+            header:"Actions",
+            cell:(rows)=>html`<sc-button @click="${() => this.updateRow(rows)}">Edit</sc-button>
+                          <sc-button @click="${() => this.deleteRow(rows)}">Delete</sc-button> `
 
+          }
+        
+      ];
     return html`
-      <sc-table .conf=${conf} .data=${this.rows}></sc-table>
+      <sc-table
+      .conf=${conf} .data=${this.rows}
+       page-size="" sort=""
+      >
+      </sc-table>
     `;
   }
 }
 
-customElements.define("sc-grid", Grid);
