@@ -49,7 +49,7 @@ export class Grid extends LitElement {
       const graphQLClient = this._graphQLClientContextConsumer.value;
       console.log("GraphQL Client:",graphQLClient);
       const result = await graphQLClient.query(query);
-      console.log(result.json());
+      console.log(result);
 
       if (result.errors) {
         console.error("GraphQL errors:", result.errors);
@@ -57,10 +57,10 @@ export class Grid extends LitElement {
       }
 
       if (result.data && result.data.show) {
-        this.rows = result.data.show.map((item, index) => ({
+        this.rows = result.data.show.map((item) => ({
           //uuid: index.toString(),
-          name: item.name?item.name.trim():"",
-          email: item.email?item.email.trim():"",
+          name: item.name||"",
+          email: item.email||"",
           dob: item.dob||"",
           gender: item.gender||"",
           pno: item.pno || "",
@@ -82,7 +82,7 @@ export class Grid extends LitElement {
           { property: "email", header: "Email" },
           { property: "dob", header: "Date of Birth" },
           { property: "gender", header: "Gender" },
-          { property: "phoneNumber", header: "Phone Number" },
+          { property: "pno", header: "Phone Number" },
         ]}
       >
       </sc-data-grid>
