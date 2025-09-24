@@ -1,429 +1,142 @@
-{
-    "errors": [
-        {
-            "message": "field 'submitForm' not found in type: 'mutation_root'",
-            "extensions": {
-                "path": "$.selectionSet.submitForm",
-                "code": "validation-failed"
-            }
-        }
-    ]
-}
-import { html, LitElement, css } from 'lit';
-import { createContext, contexts } from '@scdevkit/data';
-//import axios from 'axios';
-const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
+import { html, LitElement,css } from 'lit';
+import { createContext, contexts } from '@scdevkit/service-bench-core';
 
-export class Form extends LitElement {
-  static styles = css`
+const userContext = createContext(contexts.USER);
+
+export class Grid extends LitElement {
+    static styles = css`
     :host, sc-button-group, sc-title {
       display: flex;
       justify-content: center;
     }
   `;
 
-  static properties = {
-    formData: { type: Object },
-    errors: { type: Object },
-  };
-
-  constructor() {
-    super();
-    this.formData = {
-      id:0,
-      name: '',
-      email: '',
-      dob: '',
-      gender: '',
-      pno: ''
-    };
-    this.errors = {};
-  }
-
-  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
-
-  handleChange(e) {
-    const target = e.target;
-    const name = target.getAttribute("name");
-    let value = e.detail?.value ?? target.value;
-    if (!name) return;
-
-    this.formData = {
-      ...this.formData,
-      [name]: value,
-    };
-    this.validateField(name, value);
-  }
-
-  validateField(field, value) {
-    let error = "";
-
-    switch (field) {
-      case "name":
-        if (!value || value.trim().length < 2) {
-          error = "Name must be at least 2 characters long";
-        }
-        break;
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          error = "Enter a valid email address";
-        }
-        break;
-      case "pno":
-        if (!/^\d{10}$/.test(value)) {
-          error = "Phone number must be 10 digits";
-        }
-        break;
-      case "dob":
-        const today = new Date();
-        const dobDate = new Date(value);
-        if (!value || dobDate >= today) {
-          error = "Date of Birth must be before today";
-        }
-        break;
-    }
-
-    this.errors = {
-      ...this.errors,
-      [field]: error
-    };
-  }
-
-  validateForm() {
-    Object.keys(this.formData).forEach((key) => {
-      this.validateField(key, this.formData[key]);
-    });
-    return Object.values(this.errors).every((err) => !err);
-  }
-
-  async handleClick(e) {
-    e.preventDefault();
-
-    if (!this.validateForm()) {
-      window.alert("Please fix validation errors first.");
-      return;
-    }
-
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-
-    const mutation = `
-      mutation SubmitForm($dto: FormDto!) {
-        submitForm(dto: $dto) {
-          id
-          name
-          email
-          dob
-          gender
-          pno
-        }
-      }
-    `;
-
-    try {
-      const data = await graphQLClient.query(mutation, {
-        dto: this.formData  
-      });
-
-
-
-      if (data.errors) {
-        console.error("GraphQL Errors:", data.errors);
-        window.alert("Submission failed. Please try again.");
-      } else {
-        window.alert("Form submitted successfully!");
-        //window.location.reload();
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      window.alert("Submission failed. Please try again.");
-    }
-  }
+  _userContextConsumer = userContext.createConsumer(this);
 
   render() {
+    const user = this._userContextConsumer.value;
     return html`
-      <div class="d-flex justify-content-center">
-        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm"
-                 text-align="middle" vertical-align="middle" width="150%" height="auto">
-          <sc-form-viewer>
-            <div style="height: 100%; padding: 0 24px;">
-              <sc-title level="4" rows="2" hero="True">Form</sc-title>
-              <sc-spacer size="08"></sc-spacer>
-
-              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Name"
-                             name="name"
-                             .value=${this.formData.name}
-                             error-message=${this.errors.name || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Email"
-                             name="email"
-                             .value=${this.formData.email}
-                             error-message=${this.errors.email || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
-              <sc-date-input placeholder="Please Enter Date"
-                             name="dob"
-                             .value=${this.formData.dob}
-                             error-message=${this.errors.dob || ""}
-                             @sc-change=${this.handleChange}></sc-date-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
-              <sc-radio-group name="gender"
-                              .value=${this.formData.gender}
-                              @sc-change=${this.handleChange}
-                              direction="vertical">
-                <sc-radio value="male">Male</sc-radio>
-                <sc-radio value="female">Female</sc-radio>
-              </sc-radio-group>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Phone Number"
-                             name="pno"
-                             .value=${this.formData.pno}
-                             error-message=${this.errors.pno || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <!-- Submit Button -->
-              <div style="padding: 20px 30px">
-                <sc-button-group size="md" @sc-select=${this.handleClick}>
-                  <sc-button-group-item value="1">Submit</sc-button-group-item>
-                </sc-button-group>
-              </div>
-            </div>
-          </sc-form-viewer>
-        </sc-card>
-      </div>
+      <sc-data-grid
+  .data=${[
+          {
+                    "uuid": "0",
+                    "firstName": "Cullen",
+                    "lastName": "Nitzsche",
+                    "age": 6,
+                    "visits": 3,
+                    "progress": 29,
+                    "date": new Date("2026-03-24T11:02:16.218Z"),
+                    "isAdult": false,
+                    "object": {
+                              "value": "tangerine fan, author 👊🏿"
+                    },
+                    "status": "status"
+          },
+          {
+                    "uuid": "1",
+                    "firstName": "Abraham",
+                    "lastName": "Champlin",
+                    "age": 1,
+                    "visits": 3,
+                    "progress": 83,
+                    "date": new Date("2024-10-01T21:32:20.583Z"),
+                    "isAdult": false,
+                    "object": {
+                              "value": "causeway enthusiast"
+                    },
+                    "status": "status"
+          },
+          {
+                    "uuid": "2",
+                    "firstName": "Stanton",
+                    "lastName": "Barrows",
+                    "age": 6,
+                    "visits": 0,
+                    "progress": 77,
+                    "date": new Date("2025-04-22T01:25:47.924Z"),
+                    "isAdult": true,
+                    "object": {
+                              "value": "inauguration enthusiast  🔬"
+                    },
+                    "status": "status"
+          },
+          {
+                    "uuid": "3",
+                    "firstName": "Mellie",
+                    "lastName": "Kling",
+                    "age": 2,
+                    "visits": 16,
+                    "progress": 53,
+                    "date": new Date("2025-10-30T00:47:15.166Z"),
+                    "isAdult": true,
+                    "object": {
+                              "value": "purity devotee"
+                    },
+                    "status": "status"
+          }
+]}
+  .columns=${[
+          {
+                    "property": "name",
+                    "header": "name",
+                    
+          },
+          {
+                    "property": "email",
+                    "header": "email",
+                    
+          },
+          {
+                    "property": "dob",
+                    "header": "dob",
+          },
+          {
+                    "property": "gender",
+                    "header": "gender",
+          },{
+                    "property": "Phone Number",
+                    "header": "Phone Number",
+                    
+          },
+]}
+>
+</sc-data-grid>
     `;
   }
 }
-package com.sc.faas.controller;
-
-import com.sc.faas.dto.FormDto;
-import com.sc.faas.entity.Form;
-import com.sc.faas.service.ProcessService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-
-@Path("/submit")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-public class ProcessController {
-    @Inject
-    ProcessService service;
-    @POST
-    @Path("/form")
-    public Form submit(FormDto dto)
-    {
-        return service.submitForm(dto);
-
-    }
-}
-package com.sc.faas.controller;
-
-import com.sc.faas.dto.FormDto;
-import com.sc.faas.entity.Form;
-import com.sc.faas.service.ProcessService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-
-@Path("/submit")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-public class ProcessController {
-    @Inject
-    ProcessService service;
-    @POST
-    @Path("/form")
-    public Form submit(FormDto dto)
-    {
-        return service.submitForm(dto);
-
-    }
-}
-package com.sc.faas.dto;
-
-public class FormDto {
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-
-}
-package com.sc.faas.dto;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
-public class MyObject {
-    private Long id;
-    private String name;
-
-    public MyObject(long l, String helloWorld) {
-    }
-}
-package com.sc.faas.entity;
-
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.*;
-
-@Entity
-@Table(name="user_form")
-public class Form extends PanacheEntity {
-
-
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-
+http://localhost:8082/graphql
+{
+    "extensions": null,
+    "data": {
+        "show": [
+            {
+                "name": "manoj\n",
+                "email": "manoj@mail.com\n",
+                "dob": "2025-09-13",
+                "gender": "male"
+            }
+        ]
+    },
+    "dataPresent": true,
+    "errors": null
 }
 package com.sc.faas.service;
+
+import com.sc.faas.dto.Details;
 import com.sc.faas.dto.MyObject;
-import com.sc.faas.dto.FormDto;
-import com.sc.faas.entity.Form;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @ApplicationScoped
 public class ProcessService {
     public MyObject getObjectById(Long id) {
         return new MyObject(id, "Hello World");
     }
-    @Transactional
-    public Form submitForm(FormDto dto)
+
+    public List<Details> show()
     {
-        Form entity=new Form();
-        entity.name=dto.name;
-        entity.email=dto.email;
-        entity.dob=dto.dob;
-        entity.gender=dto.gender;
-        entity.pno=dto.pno;
-
-        entity.persist();
-        return entity;
-
-    }
-}
-quarkus.http.port=8081
-quarkus.http.host=0.0.0.0
-quarkus.otel.enabled=false
-# Datasource configuration
-quarkus.datasource.db-kind=postgresql    
-quarkus.datasource.username=postgres
-quarkus.datasource.password=
-quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:4000/Test
-
-# Hibernate ORM config
-quarkus.hibernate-orm.database.generation=update
-quarkus.hibernate-orm.log.sql=true
-quarkus.hibernate-orm.packages=com.sc.faas.entity
-quarkus.http.cors=true
-quarkus.http.cors.origins=http://localhost:11001
-quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
-quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with
-quarkus.http.cors.exposed-headers=location,link
-quarkus.http.cors.access-control-max-age=24H
-quarkus.http.cors.access-control-allow-credentials=true
-package com.sc.faas.client;
-
-import com.sc.faas.dto.Form;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-
-import jakarta.ws.rs.core.MediaType;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-
-@Path("/submit")
-@RegisterRestClient
-public interface ExpClient {
-    @POST
-    @Path("form")
-    @Consumes(MediaType.APPLICATION_JSON)
-    Form submit(Form dto);
-}
-package com.sc.faas.dto;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-public class Form {
-    public Long id;
-
-    public String name;
-    public String email;
-    public String dob;
-    public String gender;
-    public String pno;
-
-}
-package com.sc.faas.dto;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-public class Message {
-    public String name;
-}
-package com.sc.faas.dto;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-public class MyObject {
-    public Long id;
-    public String name;
-}
-package com.sc.faas.service;
-
-import com.expediagroup.graphql.generator.annotations.GraphQLDescription;
-import com.expediagroup.graphql.generator.annotations.GraphQLName;
-import com.sc.faas.client.ExpClient;
-import com.sc.faas.dto.Form;
-import com.sc.faas.dto.MyObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
-@ApplicationScoped
-public class MutationService {
-
-    @Inject
-    @RestClient
-    ExpClient xapi;
-
-    public Form submitForm(Form dto)
-    {
-        return xapi.submit(dto);
-    }
-
-    public MyObject updateObject(Long id, String name) {
-        return new MyObject(id, name);
+        return Details.listAll();
     }
 }
 quarkus.http.port=8082
@@ -431,23 +144,74 @@ quarkus.http.host=0.0.0.0
 quarkus.grpc.dev-mode.force-server-start=false
 quarkus.otel.enabled=false
 devkit.federated.supported.packages=com.sc.faas.dto
-quarkus.rest-client."com.sc.faas.client.ExpClient".url=http://localhost:8081
-mutation{
-    submitForm(dto:{
-        id:"1",
-        name:"exp",
-        email:"m@gmail.com",
-        dob:"2027-08-02",
-        gender:"female",
-        pno:"000000000"
+quarkus.rest-client.process-api.url=http://localhost:8080
 
-    })
-    {
-        id
-        name
-        email
-        dob
-        gender
-        pno
-    } 
+
+quarkus.http.port=8080
+quarkus.http.host=0.0.0.0
+quarkus.otel.enabled=false
+# Datasource configuration
+quarkus.datasource.db-kind=postgresql    
+quarkus.datasource.username=postgres
+quarkus.datasource.password=
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:4000/qw
+
+# Hibernate ORM config
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+#quarkus.hibernate-orm.packages=com.sc.faas.dto
+quarkus.http.cors=true
+quarkus.http.cors.origins=http://localhost:11001
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with
+quarkus.http.cors.exposed-headers=location,link
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
+package com.sc.faas.Xapi;
+
+import com.sc.faas.dto.Details;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import java.util.List;
+
+@Path("/fetch")
+@RegisterRestClient(configKey = "process-api")
+public interface Api {
+    @GET
+    @Path("/get")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Details> show();
+}
+package com.sc.faas.service;
+
+import com.sc.faas.Xapi.Api;
+import com.sc.faas.dto.Details;
+import com.sc.faas.dto.Message;
+import com.sc.faas.dto.MyObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import java.util.List;
+
+@ApplicationScoped
+public class QueryService {
+    @Inject
+    @RestClient
+    Api api;
+
+    public List<MyObject> objects() {
+        return List.of(new MyObject(10L, "TEST"));
+    }
+    public List<Details> show() {
+        return api.show();
+
+
+    }
+
+    public Message get_message(){
+        return  new Message("Welcome to Service Bench - API - Kotlin Experience API (Java)");
+    }
 }
