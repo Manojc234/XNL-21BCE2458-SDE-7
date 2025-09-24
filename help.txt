@@ -1,204 +1,90 @@
-import { html, LitElement, css } from 'lit';
-import { createContext, contexts } from '@scdevkit/data';
-//import axios from 'axios';
+import { html, LitElement, css } from "lit";
+import { createContext, contexts } from "@scdevkit/data";
+
 const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
 
-export class Form extends LitElement {
+export class Grid extends LitElement {
   static styles = css`
-    :host, sc-button-group, sc-title {
+    :host {
       display: flex;
       justify-content: center;
+      padding: 1rem;
+    }
+    sc-data-grid {
+      width: 100%;
+      max-width: 1000px;
     }
   `;
 
   static properties = {
-    formData: { type: Object },
-    errors: { type: Object },
+    rows: { type: Array },
   };
 
   constructor() {
     super();
-    this.formData = {
-      id:0,
-      name: '',
-      email: '',
-      dob: '',
-      gender: '',
-      pno: ''
-    };
-    this.errors = {};
+    this.rows = [];
   }
 
   _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
 
-  handleChange(e) {
-    const target = e.target;
-    const name = target.getAttribute("name");
-    let value = e.detail?.value ?? target.value;
-    if (!name) return;
-
-    this.formData = {
-      ...this.formData,
-      [name]: value,
-    };
-    this.validateField(name, value);
+  connectedCallback() {
+    super.connectedCallback();
+    this.fetchData();
   }
 
-  validateField(field, value) {
-    let error = "";
-
-    switch (field) {
-      case "name":
-        if (!value || value.trim().length < 2) {
-          error = "Name must be at least 2 characters long";
+  async fetchData() {
+    const query = `
+      query {
+        show {
+          id
+          name
+          email
+          dob
+          gender
+          pno
         }
-        break;
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          error = "Enter a valid email address";
-        }
-        break;
-      case "pno":
-        if (!/^\d{10}$/.test(value)) {
-          error = "Phone number must be 10 digits";
-        }
-        break;
-      case "dob":
-        const today = new Date();
-        const dobDate = new Date(value);
-        if (!value || dobDate >= today) {
-          error = "Date of Birth must be before today";
-        }
-        break;
-    }
-
-    this.errors = {
-      ...this.errors,
-      [field]: error
-    };
-  }
-
-  validateForm() {
-    Object.keys(this.formData).forEach((key) => {
-      this.validateField(key, this.formData[key]);
-    });
-    return Object.values(this.errors).every((err) => !err);
-  }
-
-  async handleClick(e) {
-    e.preventDefault();
-
-    if (!this.validateForm()) {
-      window.alert("Please fix validation errors first.");
-      return;
-    }
-
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-  
-
-    const mutation = `
-      mutation {
-        submitForm(dto: {
-          id:"${this.formData.id}",
-          name:"${this.formData.name}",
-          email:"${this.formData.email}",
-          dob:"${this.formData.dob}",
-          gender:"${this.formData.gender}",
-          pno:"${this.formData.pno}",
-        
-      }){
-        id
-        name
-        email
-        dob
-        gender
-        pno
-        }
-  }
+      }
     `;
 
     try {
-      const data = await graphQLClient.query(mutation 
-      );
+      const graphQLClient = this._graphQLClientContextConsumer.value;
+      const result = await graphQLClient.query(query);
 
+      if (result.errors) {
+        console.error("GraphQL errors:", result.errors);
+        return;
+      }
 
-
-      if (data.errors) {
-        console.error("GraphQL Errors:", data.errors);
-        window.alert("Submission failed. Please try again.");
-      } else {
-        window.alert("Form submitted successfully!");
-        //window.location.reload();
+      if (result.data && result.data.show) {
+        this.rows = result.data.show.map((item, index) => ({
+          uuid: index.toString(),
+          name: item.name?.trim(),
+          email: item.email?.trim(),
+          dob: item.dob,
+          gender: item.gender,
+          phoneNumber: item.pno || "N/A",
+        }));
       }
     } catch (err) {
-      console.error("Error:", err);
-      window.alert("Submission failed. Please try again.");
+      console.error("GraphQL query failed:", err);
     }
   }
 
   render() {
     return html`
-      <div class="d-flex justify-content-center">
-        <sc-card direction="verical" title-size="sm" body-size="xs" space-size="sm"
-                 text-align="middle" vertical-align="middle" width="150%" height="auto">
-          <sc-form-viewer>
-            <div style="height: 100%; padding: 0 24px;">
-              <sc-title level="4" rows="2" hero="True">Form</sc-title>
-              <sc-spacer size="08"></sc-spacer>
-
-              <sc-label label="Name:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Name"
-                             name="name"
-                             .value=${this.formData.name}
-                             error-message=${this.errors.name || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Email:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Email"
-                             name="email"
-                             .value=${this.formData.email}
-                             error-message=${this.errors.email || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="DOB:" label-size="lg" required="true"></sc-label>
-              <sc-date-input placeholder="Please Enter Date"
-                             name="dob"
-                             .value=${this.formData.dob}
-                             error-message=${this.errors.dob || ""}
-                             @sc-change=${this.handleChange}></sc-date-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Gender:" label-size="lg" required="true"></sc-label>
-              <sc-radio-group name="gender"
-                              .value=${this.formData.gender}
-                              @sc-change=${this.handleChange}
-                              direction="vertical">
-                <sc-radio value="male">Male</sc-radio>
-                <sc-radio value="female">Female</sc-radio>
-              </sc-radio-group>
-              <sc-spacer size="04"></sc-spacer>
-
-              <sc-label label="Phone Number:" label-size="lg" required="true"></sc-label>
-              <sc-text-input placeholder="Enter Your Phone Number"
-                             name="pno"
-                             .value=${this.formData.pno}
-                             error-message=${this.errors.pno || ""}
-                             @sc-input=${this.handleChange}></sc-text-input>
-              <sc-spacer size="04"></sc-spacer>
-
-              <!-- Submit Button -->
-              <div style="padding: 20px 30px">
-                <sc-button-group size="md" @sc-select=${this.handleClick}>
-                  <sc-button-group-item value="1">Submit</sc-button-group-item>
-                </sc-button-group>
-              </div>
-            </div>
-          </sc-form-viewer>
-        </sc-card>
-      </div>
+      <sc-data-grid
+        .data=${this.rows}
+        .columns=${[
+          { property: "name", header: "Name" },
+          { property: "email", header: "Email" },
+          { property: "dob", header: "Date of Birth" },
+          { property: "gender", header: "Gender" },
+          { property: "phoneNumber", header: "Phone Number" },
+        ]}
+      >
+      </sc-data-grid>
     `;
   }
 }
+
+customElements.define("grid-component", Grid);
