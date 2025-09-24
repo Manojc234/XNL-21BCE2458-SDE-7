@@ -33,8 +33,12 @@ export class Grid extends LitElement {
   }
 
   async fetchData() {
-    const query = `
-      query{
+    const graphQLClient = this._graphQLClientContextConsumer.value;
+    console.log("GraphQL Client:",graphQLClient);
+    let response;
+
+    try {
+      const response = await graphQLClient.query( `{
         show {
           name
           email
@@ -43,49 +47,33 @@ export class Grid extends LitElement {
           pno
         }
       }
-    `;
-
-    try {
-      const graphQLClient = this._graphQLClientContextConsumer.value;
-      console.log("GraphQL Client:",graphQLClient);
-      const result = await graphQLClient.query(query);
+    `);
+      const result=await response.json();
       console.log(result);
-
-      if (result.errors) {
-        console.error("GraphQL errors:", result.errors);
-        return;
-      }
-
-      if (result.data && result.data.show) {
-        this.rows = result.data.show.map((item) => ({
-          //uuid: index.toString(),
-          name: item.name||"",
-          email: item.email||"",
-          dob: item.dob||"",
-          gender: item.gender||"",
-          pno: item.pno || "",
-        }));
-        console.log(result.data.show);
-        console.log(this.rows);
-      }
+      const rowsArray=result.data;
+      console.log(rowsArray);
+      this.rows=rowsArray.show;
+      
     } catch (err) {
       console.error("GraphQL query failed:", err);
     }
   }
 
   render() {
-    return html`
-      <sc-data-grid
-        .data=${this.rows}
-        .columns=${[
+    const conf=[
           { property: "name", header: "Name" },
           { property: "email", header: "Email" },
           { property: "dob", header: "Date of Birth" },
           { property: "gender", header: "Gender" },
           { property: "pno", header: "Phone Number" },
-        ]}
+        
+      ]
+    return html`
+      <sc-table
+      .conf=${conf} .data=${this.rows}
+       page-size="" sort=""
       >
-      </sc-data-grid>
+      </sc-table>
     `;
   }
 }
