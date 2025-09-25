@@ -1,153 +1,66 @@
-Updating row: null
-Grid.js:66  Uncaught (in promise) TypeError: Cannot read properties of null (reading 'name')
-    at Grid.updateRow (Grid.js:66:27)
-    at ScButton.<anonymous> (Grid.js:127:62)
-    at EventPart.handleEvent (lit-html.ts:2109:29)
-updateRow @ Grid.js:66
-(anonymous) @ Grid.js:127
-handleEvent @ lit-html.ts:2109
-Show 1 more frame
-Show less
-import { html, LitElement, css } from "lit";
-import { createContext, contexts } from "@scdevkit/data";
+import { html, css, LitElement } from 'lit';
+import { createContext, contexts } from '@scdevkit/data';
+
+// NOTE: the context is coming from sc-data, not service-bench-core
 
 const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
 
-export class Grid extends LitElement {
+export class CustomerList extends LitElement {
   static styles = css`
-    :host {
-      display: flex;
-      justify-content: center;
-      padding: 1rem;
-    }
-    sc-table{
-      width: 100%;
-      max-width: 1000px;
+    .container {
+      text-align: left;
+      margin-left: 28px;
+      margin-right: 28px;
     }
   `;
 
-  static properties = {
-    rows: { type: Array },
-  };
-
-  constructor() {
-    super();
-    this.rows = [];
-  }
+  static properties={
+  employees:{type:Array}}
 
   _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
 
   connectedCallback() {
     super.connectedCallback();
-    this.fetchData();
+    this.loadData();
   }
 
-  async fetchData() {
+  async loadData() {
     const graphQLClient = this._graphQLClientContextConsumer.value;
-    console.log("GraphQL Client:",graphQLClient);
     let response;
-
     try {
-      const response = await graphQLClient.query( `{
-        show {
-          id
-          name
-          email
-          dob
-          gender
-          pno
-        }
-      }
-    `);
-      const result=await response.json();
-      console.log(result);
-      const rowsArray=result.data;
-      console.log(rowsArray);
-      this.rows=rowsArray.show;
-      
-    } catch (err) {
-      console.error("GraphQL query failed:", err);
-    }
-  }
-  async updateRow(row) {
-    console.log("Updating row:", row);
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-    // Here you could open a modal/form to edit row data; for demo we'll just append " (Edited)"
-    const updatedName=row.name + " (Edited)";
-    const updated = {
-      ...row,
-      name: updatedName
-    };
+      response = await graphQLClient.query(`{getAllEmployees {firstName,lastName,gender,city}}`);
+      const data = await response.json();
+      console.log(data);
+      const employeeArray = data.data;
+      console.log(employeeArray)
+      this.employees =employeeArray.getAllEmployees;
+      console.log();
 
-    const mutation = `
-      mutation {
-        updateDetails(details: {
-          id: "${row.id}",
-          name: "${updated.name}",
-          email: "${updated.email}",
-          dob: "${updated.dob}",
-          gender: "${updated.gender}",
-          pno: "${updated.pno}"
-        }) {
-          id
-          name
-          email
-          dob
-          gender
-          pno
-        }
-      }
-    `;
-    
-  
-    try {
-      await graphQLClient.query(mutation);
-      this.fetchData(); 
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  }
-
-  async deleteRow(row) {
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-    const mutation = `
-      mutation {
-        deleteDetails(id: "${row.id}")
-      }
-    `;
-
-
-    try {
-      await graphQLClient.query(mutation);
-      this.fetchData(); 
-    } catch (err) {
-      console.error("Delete failed:", err);
+      // TODO: Handle data
+    } catch (error) {
+      // TODO: Handle error
+      return;
     }
   }
 
   render() {
-    const conf=[
-          { property: "name", header: "Name" },
-          { property: "email", header: "Email" },
-          { property: "dob", header: "Date of Birth" },
-          { property: "gender", header: "Gender" },
-          { property: "pno", header: "Phone Number" },
-          {
-            header:"Actions",
-            cell:(row)=>html`<sc-button @click="${() => this.updateRow(row)}">Edit</sc-button>
-                          <sc-button @click="${() => this.deleteRow(row)}">Delete</sc-button> `
-
+  const conf = [
+        { property: 'firstName', header: 'First Name' },
+        { property: 'lastName', header: 'Last Name' },
+        { property: 'gender', header: 'Gender' },
+        { property: 'city', header: 'City' },
+        { property: 'action',
+          header: 'Action',
+          cell: (value, properties) => {
+            return html`<sc-button @click=${()=>this.handleEdit(properties)}>Edit</sc-button>`;
           }
-        
-      ];
-      console.log(this.rows);
+        }
+      ]
     return html`
-      <sc-table
-      .conf=${conf} .data=${this.rows}
-       page-size="" sort=""
-      >
-      </sc-table>
+      <div class="container">
+        <h1>Customer List page</h1>
+         <sc-table class="sc-table-default" .conf=${conf} .data=${this.employees} page-size="" sort="">
+         </sc-table>
     `;
   }
 }
-
