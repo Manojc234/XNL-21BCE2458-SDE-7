@@ -1,3 +1,13 @@
+Updating row: null
+Grid.js:66  Uncaught (in promise) TypeError: Cannot read properties of null (reading 'name')
+    at Grid.updateRow (Grid.js:66:27)
+    at ScButton.<anonymous> (Grid.js:127:62)
+    at EventPart.handleEvent (lit-html.ts:2109:29)
+updateRow @ Grid.js:66
+(anonymous) @ Grid.js:127
+handleEvent @ lit-html.ts:2109
+Show 1 more frame
+Show less
 import { html, LitElement, css } from "lit";
 import { createContext, contexts } from "@scdevkit/data";
 
@@ -60,20 +70,23 @@ export class Grid extends LitElement {
     }
   }
   async updateRow(row) {
+    console.log("Updating row:", row);
     const graphQLClient = this._graphQLClientContextConsumer.value;
     // Here you could open a modal/form to edit row data; for demo we'll just append " (Edited)"
+    const updatedName=row.name + " (Edited)";
     const updated = {
       ...row,
-      name: row.name + " (Edited)"
+      name: updatedName
     };
 
     const mutation = `
       mutation {
-        updateDetails(id: ${row.id}, details: {
-          name: "${updated.name}"
-          email: "${updated.email}"
-          dob: "${updated.dob}"
-          gender: "${updated.gender}"
+        updateDetails(details: {
+          id: "${row.id}",
+          name: "${updated.name}",
+          email: "${updated.email}",
+          dob: "${updated.dob}",
+          gender: "${updated.gender}",
           pno: "${updated.pno}"
         }) {
           id
@@ -85,6 +98,8 @@ export class Grid extends LitElement {
         }
       }
     `;
+    
+  
     try {
       await graphQLClient.query(mutation);
       this.fetchData(); 
@@ -100,6 +115,8 @@ export class Grid extends LitElement {
         deleteDetails(id: "${row.id}")
       }
     `;
+
+
     try {
       await graphQLClient.query(mutation);
       this.fetchData(); 
@@ -117,12 +134,13 @@ export class Grid extends LitElement {
           { property: "pno", header: "Phone Number" },
           {
             header:"Actions",
-            cell:(rows)=>html`<sc-button @click="${() => this.updateRow(rows)}">Edit</sc-button>
-                          <sc-button @click="${() => this.deleteRow(rows)}">Delete</sc-button> `
+            cell:(row)=>html`<sc-button @click="${() => this.updateRow(row)}">Edit</sc-button>
+                          <sc-button @click="${() => this.deleteRow(row)}">Delete</sc-button> `
 
           }
         
       ];
+      console.log(this.rows);
     return html`
       <sc-table
       .conf=${conf} .data=${this.rows}
