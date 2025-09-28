@@ -1,66 +1,1000 @@
-import { html, css, LitElement } from 'lit';
-import { createContext, contexts } from '@scdevkit/data';
-
-// NOTE: the context is coming from sc-data, not service-bench-core
-
-const graphQLClientContext = createContext(contexts.GRAPHQL_CLIENT);
-
-export class CustomerList extends LitElement {
-  static styles = css`
-    .container {
-      text-align: left;
-      margin-left: 28px;
-      margin-right: 28px;
-    }
-  `;
-
-  static properties={
-  employees:{type:Array}}
-
-  _graphQLClientContextConsumer = graphQLClientContext.createConsumer(this);
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.loadData();
-  }
-
-  async loadData() {
-    const graphQLClient = this._graphQLClientContextConsumer.value;
-    let response;
-    try {
-      response = await graphQLClient.query(`{getAllEmployees {firstName,lastName,gender,city}}`);
-      const data = await response.json();
-      console.log(data);
-      const employeeArray = data.data;
-      console.log(employeeArray)
-      this.employees =employeeArray.getAllEmployees;
-      console.log();
-
-      // TODO: Handle data
-    } catch (error) {
-      // TODO: Handle error
-      return;
-    }
-  }
-
-  render() {
-  const conf = [
-        { property: 'firstName', header: 'First Name' },
-        { property: 'lastName', header: 'Last Name' },
-        { property: 'gender', header: 'Gender' },
-        { property: 'city', header: 'City' },
-        { property: 'action',
-          header: 'Action',
-          cell: (value, properties) => {
-            return html`<sc-button @click=${()=>this.handleEdit(properties)}>Edit</sc-button>`;
-          }
+{
+    "defaultRoute": "home",
+    "routes": [
+        {
+            "path": "home",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "ncipher-nshield-connect",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "create",
+            "component": "sb-caas-apex-create-ncipher",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "protegrity-dsg",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "thales-vormetric-dsm",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "fortanix-sdkms",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "caas-risk-tracker",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "Admin-ACL",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
+        },
+        {
+            "path": "my-team-recertification",
+            "component": "sb-caas-apex-home",
+            "element": "home.js",
+            "headerDefinition": {
+                "title": "CAAS Inventory Portal",
+                "showHeader": true,
+                "menus": [
+                    { "title": "Home", "href": "home" },
+                    { "title": "nCipher nShield Connect", "href": "ncipher-nshield-connect" },
+                    { "title": "Protegrity Data Security Gateway", "href": "protegrity-dsg" },
+                    { "title": "Thales Vormetric DSM", "href": "thales-vormetric-dsm" },
+                    { "title": "Fortanix SDKMS", "href": "fortanix-sdkms" },
+                    { "title": "CaaS Risk Tracker", "href": "caas-risk-tracker" },
+                    { "title": "Service-Now Groups", "href": "service-now-groups" },
+                    { "title": "Cipher Trust Manager", "href": "cipher-trust-manager" },
+                    { "title": "LUNA", "href": "luna" }
+                ]
+            }
         }
-      ]
+    ]
+}
+import { html, LitElement,css } from 'lit';
+import { createContext as navcreatecontexts, contexts as navcontexts } from '@scdevkit/service-bench-core';
+
+export class NCipherConnect extends LitElement {
+  static styles = css`
+    :host ::deep(th),
+    :host ::deep([role="header"]) {
+      padding-left: 32px !important;
+      padding-right: 32px !important;
+      box-sizing: border-box;
+      height: 100%;
+    }
+    :host ::deep(sc-cell) {
+      height: 100%;
+    }
+    :host ::deep(.sc-data-grid-fixed-right),
+    :host ::deep([fixed="right"]),
+    :host ::deep(.sticky-actions) {
+      position: sticky !important;
+      right: 0 !important;
+      z-index: 10;
+      background: #fff;
+      box-shadow: -2px 0 4px rgba(0,0,0,0.08);
+    }
+    .table {
+      margin-top: 24px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      width: 100%;
+      min-width: 1200px;
+      /* Ensures horizontal scroll for wide tables and sticky columns */
+    }
+    .card-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+  `;
+  static properties = {
+    data: {},
+    columns: {},
+    showCreateSheet: { type: Boolean },
+    showEditSheet: { type: Boolean },
+    pageIndex: { type: Number },
+    pageSize: { type: Number },
+  };
+
+  constructor() {
+    super();
+    this.showCreateSheet = false;
+    this.showEditSheet = false;
+    this._navigationContextConsumer = navcreatecontexts(navcontexts.NAVIGATION).createConsumer(this);
+    this.data = [
+ 
+      {
+        application_name: 'Demo App',
+        application_onboard_date: '2025-09-25',
+        application_status: 'Active',
+        itam: 'ITAM12345',
+        application_owner: 'John Doe',
+        business_criticallity: 'High',
+        business_unit: 'Finance',
+        primary_contact: 'Jane Smith',
+        remedy_group: 'Support',
+        secondary_contact: 'Bob Lee',
+        service_provided: 'Data Encryption',
+        service_model: 'SaaS',
+        use_case: 'Compliance',
+        database: 'PostgreSQL',
+        database_hosted_type: 'Cloud',
+        storage_devices: 'SSD',
+        business_justification: 'Regulatory Requirement',
+        prod_or_nonprod: 'Prod',
+        'SRM/CR/REQ#': 'SRM001',
+        activity: 'Monitoring',
+        amended_date: '2025-09-20',
+        amended_by: 'Alice',
+        remarks: 'No remarks',
+        ent_spoc: 'Charlie',
+        production_date: '2025-09-01',
+        production_cr: 'CR123',
+        app_recert_date: '2025-09-15',
+        app_recert_by: 'David',
+        app_exp_days: 30,
+        app_recertify_status: 'Certified'
+      },
+      {
+        application_name: 'Alpha App',
+        application_onboard_date: '2025-05-10',
+        application_status: 'Active',
+        itam: 'ITAM13579',
+        application_owner: 'Victor Hugo',
+        business_criticallity: 'High',
+        business_unit: 'Operations',
+        primary_contact: 'Mia Wong',
+        remedy_group: 'Ops',
+        secondary_contact: 'Raj Singh',
+        service_provided: 'Automation',
+        service_model: 'Cloud',
+        use_case: 'Efficiency',
+        database: 'MongoDB',
+        database_hosted_type: 'Cloud',
+        storage_devices: 'NVMe',
+        business_justification: 'Cost Saving',
+        prod_or_nonprod: 'Prod',
+        'SRM/CR/REQ#': 'SRM005',
+        activity: 'Deployment',
+        amended_date: '2025-05-15',
+        amended_by: 'Zara',
+        remarks: 'Deployed successfully',
+        ent_spoc: 'Oscar',
+        production_date: '2025-05-01',
+        production_cr: 'CR345',
+        app_recert_date: '2025-05-20',
+        app_recert_by: 'Ethan',
+        app_exp_days: 120,
+        app_recertify_status: 'Certified'
+      },
+      {
+        application_name: 'Beta App',
+        application_onboard_date: '2025-04-18',
+        application_status: 'Inactive',
+        itam: 'ITAM97531',
+        application_owner: 'Sophie Turner',
+        business_criticallity: 'Low',
+        business_unit: 'Marketing',
+        primary_contact: 'Liam Chen',
+        remedy_group: 'Marketing',
+        secondary_contact: 'Sara Kim',
+        service_provided: 'Campaigns',
+        service_model: 'On-Prem',
+        use_case: 'Promotion',
+        database: 'SQLite',
+        database_hosted_type: 'Local',
+        storage_devices: 'USB',
+        business_justification: 'Brand Awareness',
+        prod_or_nonprod: 'Non-Prod',
+        'SRM/CR/REQ#': 'SRM006',
+        activity: 'Analysis',
+        amended_date: '2025-04-20',
+        amended_by: 'Noah',
+        remarks: 'Analysis complete',
+        ent_spoc: 'Ivy',
+        production_date: '2025-04-01',
+        production_cr: 'CR678',
+        app_recert_date: '2025-04-25',
+        app_recert_by: 'Grace',
+        app_exp_days: 15,
+        app_recertify_status: 'Expired'
+      },
+      {
+        application_name: 'Gamma App',
+        application_onboard_date: '2025-03-22',
+        application_status: 'Active',
+        itam: 'ITAM86420',
+        application_owner: 'Henry Ford',
+        business_criticallity: 'Medium',
+        business_unit: 'Logistics',
+        primary_contact: 'Ella Brown',
+        remedy_group: 'Logistics',
+        secondary_contact: 'Chris Evans',
+        service_provided: 'Tracking',
+        service_model: 'Hybrid',
+        use_case: 'Supply Chain',
+        database: 'Cassandra',
+        database_hosted_type: 'Hybrid',
+        storage_devices: 'SAN',
+        business_justification: 'Process Optimization',
+        prod_or_nonprod: 'Prod',
+        'SRM/CR/REQ#': 'SRM007',
+        activity: 'Tracking',
+        amended_date: '2025-03-25',
+        amended_by: 'Jack',
+        remarks: 'Tracking enabled',
+        ent_spoc: 'Nina',
+        production_date: '2025-03-01',
+        production_cr: 'CR901',
+        app_recert_date: '2025-03-30',
+        app_recert_by: 'Olive',
+        app_exp_days: 60,
+        app_recertify_status: 'Certified'
+      },
+    ];
+    const calcMinSize = header => Math.max(60, header.length * 12);
+
+    const mainColumns = [
+      { property: 'application_name', header: 'Application Name', minSize: calcMinSize('Application Name'), headerAlign: 'center', align: 'center' },
+      { property: 'application_onboard_date', header: 'Application Onboard Date', minSize: calcMinSize('Application Onboard Date'), headerAlign: 'center', align: 'center' },
+      { property: 'application_status', header: 'Application Status', minSize: calcMinSize('Application Status'), headerAlign: 'center', align: 'center' },
+      { property: 'itam', header: 'ITAM#', minSize:200, headerAlign: 'center', align: 'center' },
+      { property: 'application_owner', header: 'Application Owner', minSize: calcMinSize('Application Owner'), headerAlign: 'center', align: 'center' },
+      { property: 'business_criticallity', header: 'Business Criticallity', minSize: calcMinSize('Business Criticallity'), headerAlign: 'center', align: 'center' },
+      { property: 'business_unit', header: 'Business Unit/Region', minSize: calcMinSize('Business Unit/Region'), headerAlign: 'center', align: 'center' },
+      { property: 'primary_contact', header: 'Primary Contact', minSize: calcMinSize('Primary Contact'), headerAlign: 'center', align: 'center' },
+      { property: 'remedy_group', header: 'Remedy Group', minSize: calcMinSize('Remedy Group'), headerAlign: 'center', align: 'center' },
+      { property: 'secondary_contact', header: 'Secondary Contact', minSize: calcMinSize('Secondary Contact'), headerAlign: 'center', align: 'center' },
+      { property: 'service_provided', header: 'Service Provided', minSize: calcMinSize('Service Provided'), headerAlign: 'center', align: 'center' },
+      { property: 'service_model', header: 'Service Model', minSize: calcMinSize('Service Model'), headerAlign: 'center', align: 'center' },
+      { property: 'use_case', header: 'Use Case', minSize: 200, headerAlign: 'center', align: 'center' },
+      { property: 'database', header: 'Database', minSize:200, headerAlign: 'center', align: 'center' },
+      { property: 'database_hosted_type', header: 'Database Hosted Type', minSize: calcMinSize('Database Hosted Type'), headerAlign: 'center', align: 'center' },
+      { property: 'storage_devices', header: 'Storage Devices', minSize: calcMinSize('Storage Devices'), headerAlign: 'center', align: 'center' },
+      { property: 'business_justification', header: 'Business Justification', minSize: calcMinSize('Business Justification'), headerAlign: 'center', align: 'center' },
+      { property: 'prod_or_nonprod', header: 'Prod/Non-Prod', minSize: calcMinSize('Prod/Non-Prod'), headerAlign: 'center', align: 'center' },
+      { property: 'SRM/CR/REQ#', header: 'SRM/CR/REQ#', minSize: 200, headerAlign: 'center', align: 'center' },
+      { property: 'activity', header: 'Activity', minSize:200, headerAlign: 'center', align: 'center' },
+      { property: 'amended_date', header: 'Amended Date', minSize: calcMinSize('Amended Date'), headerAlign: 'center', align: 'center' },
+      { property: 'amended_by', header: 'Amended By', minSize: calcMinSize('Amended By'), headerAlign: 'center', align: 'center' },
+      { property: 'remarks', header: 'Remarks', minSize: 200, headerAlign: 'center', align: 'center' },
+      { property: 'ent_spoc', header: 'Ent Spoc', minSize: calcMinSize('Ent Spoc'), headerAlign: 'center', align: 'center' },
+      { property: 'production_date', header: 'Production Date', minSize: calcMinSize('Production Date'), headerAlign: 'center', align: 'center' },
+      { property: 'production_cr', header: 'Production CR#', minSize: calcMinSize('Production CR#'), headerAlign: 'center', align: 'center' },
+      { property: 'app_recert_date', header: 'App Recert Date', minSize: calcMinSize('App Recert Date'), headerAlign: 'center', align: 'center' },
+      { property: 'app_recert_by', header: 'App Recert By', minSize: calcMinSize('App Recert By'), headerAlign: 'center', align: 'center' },
+      { property: 'app_exp_days', header: 'App Exp Days', minSize: calcMinSize('App Exp Days'), headerAlign: 'center', align: 'center' },
+      { property: 'app_recertify_status', header: 'App Recertify Status', minSize: calcMinSize('App Recertify Status'), headerAlign: 'center', align: 'center' }
+    ];
+
+    const actionsColumn = {
+      property: 'actions',
+      header: 'Actions',
+      minSize: 120,
+      pinned: 'right',
+      cell: (value, properties) => html`
+        <div style="display: flex; align-items: center; justify-content: center; gap: 18px; min-width: 120px;">
+          <sc-icon name="edit--line" label="Edit" size="sm" library="" @click=${() => this.handleEdit(properties)} style="cursor:pointer;"></sc-icon>
+          <sc-icon name="eye--fill" label="View" size="sm" library="" @click=${() => this.handleView(properties)} style="cursor:pointer;"></sc-icon>
+        </div>
+      `
+    };
+    this.columns = [...mainColumns, actionsColumn];
+    this.pageIndex = 1;
+    this.pageSize = 2;
+  }
+  render() {
+    const navigation = this._navigationContextConsumer?.value;
     return html`
-      <div class="container">
-        <h1>Customer List page</h1>
-         <sc-table class="sc-table-default" .conf=${conf} .data=${this.employees} page-size="" sort="">
-         </sc-table>
+      <div class="card">
+        <sc-card direction="horizontal" title-size="sm" body-size="xs" space-size="sm" text-align="left" vertical-align="middle" width="23%" height="auto">
+          <div class="card-controls">
+            <sc-search-field class="sc-search-field" empty-text="No data found" placeholder=""></sc-search-field>
+            <sc-button @click=${() => {
+                navigation.go('create');
+              
+            }}>Create</sc-button>
+          </div>
+        </sc-card>
+      </div>
+      <div class="table" style="position: relative;">
+        <sc-data-grid
+          id="sc-data-grid22"
+          border="horizontal"
+          column-resize-strategy="flexible"
+          enable-resizing=""
+          pagination=""
+          page-index="1"
+          page-size="2"
+          total="-1"
+          jump-first-last-page=""
+          enable-keyboard=""
+          .data=${this.data}
+          .columns=${this.columns}
+          header-align="center"
+          align="center"
+        ></sc-data-grid>
+      </div>
     `;
   }
 }
+
+if (!window.customElements.get('sb-caas-apex-ncipher-connect')) {
+  window.customElements.define('sb-caas-apex-ncipher-connect', NCipherConnect);
+}
+
+import { html, LitElement, css } from 'lit';
+import { createContext as navcreatecontexts, contexts as navcontexts } from '@scdevkit/service-bench-core';
+
+
+
+export class CreateNCipher extends LitElement {
+
+  static styles = css`
+    :host, sc-button-group, sc-title {
+      display: flex;
+      justify-content: center;
+    }
+  `;
+
+  static properties = {
+    formData: { type: Object },
+    errors: { type: Object },
+  };
+
+  constructor() {
+    super();
+    this._navigationContextConsumer = navcreatecontexts(navcontexts.NAVIGATION).createConsumer(this);
+    this.formData = {
+      appName: '',
+      appOnboardDate: '',
+      itamCi: '',
+      businessCriticality: '',
+      primaryContact: '',
+      secondaryContact: '',
+      remedyGroup: '',
+      useCase: '',
+      type: '',
+      activity: '',
+      entSpoc: '',
+      onboardingChecklist: null,
+      implementationPlan: null,
+      productionSignoff: null,
+      recertifiedAppSpoc: '',
+      recertifiedCaasSpoc: '',
+      appStatus: '',
+      appOwner: '',
+      sbiaRating: '',
+      businessUnit: '',
+      serviceProvided: '',
+      country: '',
+      reqNumber: '',
+      remarks: '',
+      aig: null,
+      hsmConfiguredIp1: '',
+      hsmConfiguredIp2: '',
+      hsmConfiguredIp3: '',
+      nonProdSignoff: null,
+    };
+    this.errors = {};
+  }
+
+  handleClick = (e) => {
+   
+    
+  }
+
+
+  handleChange(e) {
+    const target = e.target;
+    const name = target.getAttribute("name");
+    let value = e.detail?.value ?? target.value;
+    if (!name) return;
+
+    if (target.type === 'file') {
+      value = target.files[0] || null;
+    }
+
+    this.formData = {
+      ...this.formData,
+      [name]: value,
+    };
+    this.validateField(name, value);
+  }
+
+  validateField(field, value) {
+    let error = "";
+    
+    switch (field) {
+      case "appName":
+        if (!value || value.trim().length < 2) {
+          error = "Application Name must be at least 2 characters long";
+        }
+        break;
+      case "appOnboardDate":
+        if (!value) {
+          error = "Application Onboard Date is required";
+        }
+        break;
+      case "primaryContact":
+        if (!value) {
+          error = "Primary Contact is required";
+        }
+        break;
+      case "appOwner":
+        if (!value) {
+          error = "Application Owner is required";
+        }
+        break;
+      case "reqNumber":
+        if (!value) {
+          error = "Req #(SRM/JIRA) is required";
+        }
+        break;
+      
+    }
+    this.errors = {
+      ...this.errors,
+      [field]: error
+    };
+  }
+
+  validateForm() {
+    Object.keys(this.formData).forEach((key) => {
+      this.validateField(key, this.formData[key]);
+    });
+    return Object.values(this.errors).every((err) => !err);
+  }
+
+  
+  
+
+  render() {  
+     const navigation = this._navigationContextConsumer?.value;
+    return html`
+      <div style="display: flex; justify-content: center;">
+        <sc-card direction="vertical" title-size="sm" body-size="xs" space-size="sm"
+                 text-align="middle" vertical-align="middle" width="95%" height="auto">
+          <sc-form-viewer>
+           <sc-button @click=${() => {
+                navigation.go('home');
+            }} style="margin-bottom: auto;">Back</sc-button>
+            <div style="height: 100%; padding: 0 24px;"> 
+              <sc-spacer size="12"></sc-spacer>
+              <div style="display: flex; flex-wrap: wrap; gap: 32px;">
+                <div style="flex: 1; min-width: 350px;">
+                  <sc-label label="Application Name:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="appName" placeholder="Application Name"
+                    .value=${this.formData.appName}
+                    error-message=${this.errors.appName || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Application Onboard Date:" label-size="lg"></sc-label>
+                  <sc-date-input name="appOnboardDate" placeholder="Application Onboard Date"
+                    .value=${this.formData.appOnboardDate}
+                    error-message=${this.errors.appOnboardDate || ""}
+                    @sc-change=${this.handleChange}></sc-date-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="ITAM/CI #:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="itamCi" placeholder="ITAM/CI #"
+                    .value=${this.formData.itamCi}
+                    error-message=${this.errors.itamCi || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-dropdown-input 
+                    name="businessCriticality"
+                    size="md"
+                    label="Business Criticality:"
+                    label-size="lg"
+                    dropdown-header="Select Buss Criticality"
+                    border-type="box"
+                    empty-text="No data found"
+                    placeholder="Select Buss Criticality"
+                    .value=${this.formData.businessCriticality}
+                    @change=${this.handleChange}
+                    text-align="left"
+                    error-message=${this.errors.businessCriticality || ""}
+                  >
+                    <sc-dropdown-option value="">Select Buss Criticality</sc-dropdown-option>
+                    <sc-dropdown-option value="BC-1">BC-1</sc-dropdown-option>
+                    <sc-dropdown-option value="BC-2">BC-2</sc-dropdown-option>
+                    <sc-dropdown-option value="BC-3">BC-3</sc-dropdown-option>
+                    <sc-dropdown-option value="BC-4">BC-4</sc-dropdown-option>
+                    <sc-dropdown-option value="BC-5">BC-5</sc-dropdown-option>
+                  </sc-dropdown-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Primary Contact:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="primaryContact" placeholder="Primary Contact"
+                    .value=${this.formData.primaryContact}
+                    error-message=${this.errors.primaryContact || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Secondary Contact:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="secondaryContact" placeholder="Secondary Contact"
+                    .value=${this.formData.secondaryContact}
+                    error-message=${this.errors.secondaryContact || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Remedy Group:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="remedyGroup" placeholder="Remedy Group"
+                    .value=${this.formData.remedyGroup}
+                    error-message=${this.errors.remedyGroup || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-dropdown-input 
+                    name="useCase"
+                    size="md"
+                    label="Use Case:"
+                    label-size="lg"
+                    dropdown-header="Select Use Case"
+                    border-type="box"
+                    empty-text="No data found"
+                    placeholder="Select Use Case"
+                    .value=${this.formData.useCase}
+                    @change=${this.handleChange}
+                    text-align="left"
+                    error-message=${this.errors.useCase || ""}
+                  >
+                    <sc-dropdown-option value="">Select Use Case</sc-dropdown-option>
+                    <sc-dropdown-option value="Code Signing">Code Signing</sc-dropdown-option>
+                    <sc-dropdown-option value="BYOK">BYOK</sc-dropdown-option>
+                    <sc-dropdown-option value="Others">Others</sc-dropdown-option>
+                  </sc-dropdown-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Type(Prod/Non Prod):" label-size="lg" required="true"></sc-label>
+                  <sc-radio-group name="type" direction="horizontal"
+                    .value=${this.formData.type}
+                    @sc-change=${this.handleChange}>
+                    <sc-radio value="production">Production</sc-radio>
+                    <sc-radio value="non-production">Non-Production</sc-radio>
+                  </sc-radio-group>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Activity:" label-size="lg"></sc-label>
+                  <sc-radio-group name="activity" direction="horizontal"
+                    .value=${this.formData.activity}
+                    @sc-change=${this.handleChange}>
+                    <sc-radio value="creation">Creation</sc-radio>
+                  </sc-radio-group>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="EnT SPOC - Supported by:" label-size="lg"></sc-label>
+                  <sc-text-input name="entSpoc" placeholder="EnT SPOC - Supported by"
+                    .value=${this.formData.entSpoc}
+                    error-message=${this.errors.entSpoc || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="HSM Configured IP1:" label-size="lg" ></sc-label>
+                  <sc-text-input name="hsmConfiguredIp1" placeholder="HSM Configured IP1"
+                    .value=${this.formData.hsmConfiguredIp1}
+                    error-message=${this.errors.hsmConfiguredIp1 || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="HSM Configured IP3:" label-size="lg"></sc-label>
+                  <sc-text-input name="hsmConfiguredIp3" placeholder="HSM Configured IP3"
+                    .value=${this.formData.hsmConfiguredIp3}
+                    error-message=${this.errors.hsmConfiguredIp3 || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="CR Artifacts" label-size="lg"></sc-label>
+                  <div>
+                    <sc-label label="CR Document:" label-size="lg" required="true"></sc-label>
+                     <sc-file-input label="Document"  @change=${this.handleChange} label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" placeholder="Click or drop file here" help-text="" value="" accept="" direction="vertical" max-size="0" width="100%" icon-size="lg" error-message="" success-message="">  
+                     </sc-file-input>
+                  </div>
+                  <div>
+                    <sc-label label="Application Plan:" label-size="lg" required="true"></sc-label>
+                    <sc-file-input label="Document"  @change=${this.handleChange} label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" placeholder="Click or drop file here" help-text="" value="" accept="" direction="vertical" max-size="0" width="100%" icon-size="lg" error-message="" success-message="">  
+                    </sc-file-input>
+                  </div>
+                  <div>
+                    <sc-label label="Production Signoff from App Team:" label-size="lg" required="true"></sc-label>
+                    <sc-file-input label="Document"  @change=${this.handleChange} label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" placeholder="Click or drop file here" help-text="" value="" accept="" direction="vertical" max-size="0" width="100%" icon-size="lg" error-message="" success-message="">  
+                    </sc-file-input>
+                  </div>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Application Recertification" label-size="lg" ></sc-label>
+                  <div>
+                    <sc-label label="Recertified By App Spoc:" label-size="lg" required="true"></sc-label>
+                    <sc-text-input name="recertifiedAppSpoc" placeholder="Recertified By App Spoc"
+                      .value=${this.formData.recertifiedAppSpoc}
+                      error-message=${this.errors.recertifiedAppSpoc || ""}
+                      @sc-input=${this.handleChange}></sc-text-input>
+                  </div>
+                  <div>
+                   <sc-label label="Recertified By CaaS Spoc:" label-size="lg" required="true"></sc-label>
+                    <sc-text-input name="recertifiedCaasSpoc" placeholder="Recertified By CaaS Spoc"
+                      .value=${this.formData.recertifiedCaasSpoc}
+                      error-message=${this.errors.recertifiedCaasSpoc || ""}
+                      @sc-input=${this.handleChange}></sc-text-input>
+                  </div>
+                </div>
+                <div style="flex: 1; min-width: 350px;">
+                  <sc-label label="Application Status:" label-size="lg" required="true"></sc-label>
+                  <sc-radio-group name="appStatus" direction="horizontal"
+                    .value=${this.formData.appStatus}
+                    @sc-change=${this.handleChange}>
+                    <sc-radio value="active">Active</sc-radio>
+                    <sc-radio value="decommissioned">Decommissioned</sc-radio>
+                  </sc-radio-group>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Application Owner:" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="appOwner" placeholder="Application Owner"
+                    .value=${this.formData.appOwner}
+                    error-message=${this.errors.appOwner || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  
+                  <sc-dropdown-input 
+                    name="sbiaRating"
+                    size="md"
+                    label="S-BIA Rating:"
+                    label-size="lg"
+                    dropdown-header="Select Rating"
+                    border-type="box"
+                    empty-text="No data found"
+                    placeholder="Select Rating"
+                    .value=${this.formData.sbiaRating}
+                    @change=${this.handleChange}
+                    text-align="left"
+                    error-message=${this.errors.sbiaRating || ""}
+                  >
+                    <sc-dropdown-option value="">Select Rating</sc-dropdown-option>
+                    <sc-dropdown-option value="1">1</sc-dropdown-option>
+                    <sc-dropdown-option value="2">2</sc-dropdown-option>
+                    <sc-dropdown-option value="3">3</sc-dropdown-option>
+                    <sc-dropdown-option value="4">4</sc-dropdown-option>
+                    <sc-dropdown-option value="5">5</sc-dropdown-option>
+                  </sc-dropdown-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Business Unit/Region:" label-size="lg" required="true"></sc-label>
+                  <sc-select name="businessUnit" placeholder="Select BU"
+                    .value=${this.formData.businessUnit}
+                    @change=${this.handleChange}>
+                    <sc-option value="">Select BU</sc-option>
+                  </sc-select>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-dropdown-input 
+                    name="serviceProvided"
+                    size="md"
+                    label="Service Provided:"
+                    label-size="lg"
+                    dropdown-header="Select Service Provided"
+                    border-type="box"
+                    empty-text="No data found"
+                    placeholder="Select Service Provided"
+                    .value=${this.formData.serviceProvided}
+                    @change=${this.handleChange}
+                    text-align="left"
+                    error-message=${this.errors.serviceProvided || ""}
+                  >
+                    <sc-dropdown-option value="">Select Service Provided</sc-dropdown-option>
+                    <sc-dropdown-option value="Key Management">Key Management</sc-dropdown-option>
+                    <sc-dropdown-option value="Encryption & Key Management">Encryption & Key Management</sc-dropdown-option>
+                  </sc-dropdown-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Country:" label-size="lg"></sc-label>
+                  <sc-dropdown-input name="country" placeholder="Select Country"
+                    .value=${this.formData.country}
+                    @change=${this.handleChange}>
+                    <sc-dropdown-option value=""></sc-dropdown-option>
+                  </sc-dropdown-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Req #(SRM/JIRA):" label-size="lg" required="true"></sc-label>
+                  <sc-text-input name="reqNumber" placeholder="Req #(SRM/JIRA)"
+                    .value=${this.formData.reqNumber}
+                    error-message=${this.errors.reqNumber || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Remarks:" label-size="lg"></sc-label>
+                  <sc-text-input multiline="" style="width: 100%; min-height: 80px;" .value=${this.formData.remarks}
+                    @input=${this.handleChange} label="Multiline with fixed rows" tooltip="" tooltip-placement="top" hint="" hint-placement="right" label-size="" value="" placeholder="" rows="10" resizable="false" prefix-icon="" suffix-icon="" suffix-label="" help-text="" border-type="box" max-length="1000" success-message="" error-message="" size="md" icon-size="" text-align="left">  
+                  </sc-text-input>
+                  
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="HSM Configured IP2:" label-size="lg" ></sc-label>
+                  <sc-text-input name="hsmConfiguredIp2" placeholder="HSM Configured IP2"
+                    .value=${this.formData.hsmConfiguredIp2}
+                    error-message=${this.errors.hsmConfiguredIp2 || ""}
+                    @sc-input=${this.handleChange}></sc-text-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="AIG:" label-size="lg"></sc-label>
+                  <sc-file-input label="Document"  @change=${this.handleChange} name="aig" label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" placeholder="Click or drop file here" help-text="" value="" accept="" direction="vertical" max-size="0" width="100%" icon-size="lg" error-message="" success-message="">  
+                  </sc-file-input>
+                  <sc-spacer size="04"></sc-spacer>
+                  <sc-label label="Non-Prod Sign Off from App Team:" label-size="lg" required="true"></sc-label>
+                  <sc-file-input label="Document"  @change=${this.handleChange} name="nonProdSignoff" label-size="md" tooltip="" tooltip-placement="top" hint="" hint-placement="right" placeholder="Click or drop file here" help-text="" value="" accept="" direction="vertical" max-size="0" width="100%" icon-size="lg" error-message="" success-message="">  
+                  </sc-file-input>
+                </div>
+              </div>
+              <div style="padding: 20px 30px; display: flex; gap: 16px;">
+                  <sc-button 
+            }}>ADD SERVER DETAILS</sc-button>
+              </div>
+            </div>
+          </sc-form-viewer>
+        </sc-card>
+      </div>
+    `;
+  }
+}
+
+
+import { html, LitElement } from 'lit';
+import './Home/HomeView.js';
+import './NCipher/Connect.js';
+import './NCipher/KeyInventory.js';
+import './NCipher/ServerInfraInventory.js';
+import './NCipher/RecertificationReport.js';
+import './Protegrity/Inventory.js';
+import './Protegrity/ServerInfraInventory.js';
+import './Protegrity/RecertificationReport.js';
+import './Thales/VormetricDSM.js';
+import './Thales/KeysInventory.js';
+import './Thales/ServerInfraInventory.js';
+import './Thales/RecertificationReport.js';
+
+
+import { createContext as navcreatecontexts, contexts as navcontexts } from '@scdevkit/service-bench-core';
+
+export class NavigationTab extends LitElement {
+  constructor() {
+    super();
+    this._navigationContextConsumer = navcreatecontexts(navcontexts.NAVIGATION).createConsumer(this);
+  }
+
+  render() {
+    const navigation = this._navigationContextConsumer?.value;
+    return html`
+      <sc-tab-group class="sc-tabs" type="segmented">
+        <sc-tab slot="nav" panel="home">Home</sc-tab>
+        <sc-tab slot="nav" panel="ncipher-nshield-connect">nCipher nShield Connect</sc-tab>
+        <sc-tab slot="nav" panel="protegrity-dsg">Protegrity Data Security Gateway</sc-tab>
+        <sc-tab slot="nav" panel="thales-vormetric-dsm">Thales Vormetric DSM</sc-tab>
+        <sc-tab slot="nav" panel="fortanix-sdkms">Fortanix SDKMS</sc-tab>
+        <sc-tab slot="nav" panel="caas-risk-tracker">CaaS Risk Tracker</sc-tab>
+        <sc-tab slot="nav" panel="admin-acl">Admin-ACL</sc-tab>
+        <sc-tab slot="nav" panel="my-team-recertification">My Team Recertification</sc-tab>
+        <sc-tab slot="nav" panel="decentralized-crypto">Decentralized Crypto</sc-tab>
+        <sc-tab slot="nav" panel="service-now-groups">Service-Now Groups</sc-tab>
+        <sc-tab slot="nav" panel="cipher-trust-manager">Cipher Trust Manager</sc-tab>
+        <sc-tab slot="nav" panel="luna">LUNA</sc-tab>
+
+        <sc-tab-panel name="home"><sb-caas-apex-home-view></sb-caas-apex-home-view></sc-tab-panel>
+        <sc-tab-panel name="ncipher-nshield-connect">
+          <sc-tab-group class="sc-tabs" type="segmented">
+            <sc-tab slot="nav" panel="ncipher-nshield-key-connect">nCipher nShield - Connect</sc-tab>
+            <sc-tab slot="nav" panel="ncipher-nshield-key-inventory">nCipher nShield - Key Inventory</sc-tab>
+            <sc-tab slot="nav" panel="ncipher-server-infra-inventory">nCipher - Server Infra Inventory</sc-tab>
+            <sc-tab slot="nav" panel="ncipher-recertification-report">nCipher - Recertification Report</sc-tab>
+            <sc-tab-panel name="ncipher-nshield-key-connect">
+              ${navigation === 'create' 
+                ? html`<sb-caas-apex-create-ncipher></sb-caas-apex-create-ncipher>` 
+                : html`<sb-caas-apex-ncipher-connect></sb-caas-apex-ncipher-connect>`}
+            </sc-tab-panel>
+            <sc-tab-panel name="ncipher-nshield-key-inventory"><sb-caas-apex-ncipher-key-inventory></sb-caas-apex-ncipher-key-inventory></sc-tab-panel>
+            <sc-tab-panel name="ncipher-server-infra-inventory"><sb-caas-apex-ncipher-server-infra-inventory></sb-caas-apex-ncipher-server-infra-inventory></sc-tab-panel>
+            <sc-tab-panel name="ncipher-recertification-report"><sb-caas-apex-ncipher-recertification-report></sb-caas-apex-ncipher-recertification-report></sc-tab-panel>
+          </sc-tab-group>
+        </sc-tab-panel>
+        <sc-tab-panel name="protegrity-dsg">
+          <sc-tab-group class="sc-tabs" type="segmented">
+            <sc-tab slot="nav" panel="protegrity-inventory">Protegrity Inventory</sc-tab>
+            <sc-tab slot="nav" panel="protegrity-server-infra-inventory">Protegrity - Server Infra Inventory</sc-tab>
+            <sc-tab slot="nav" panel="protegrity-recertification-report">Protegrity - Recertification Report</sc-tab>
+            <sc-tab-panel name="protegrity-inventory"><sb-caas-apex-protegrity-inventory></sb-caas-apex-protegrity-inventory></sc-tab-panel>
+            <sc-tab-panel name="protegrity-server-infra-inventory"><sb-caas-apex-protegrity-server-infra-inventory></sb-caas-apex-protegrity-server-infra-inventory></sc-tab-panel>
+            <sc-tab-panel name="protegrity-recertification-report"><sb-caas-apex-protegrity-recertification-report></sb-caas-apex-protegrity-recertification-report></sc-tab-panel>
+          </sc-tab-group>
+        </sc-tab-panel>
+        <sc-tab-panel name="thales-vormetric-dsm">
+          <sc-tab-group class="sc-tabs" type="segmented">
+            <sc-tab slot="nav" panel="thales-vormetric-dsm-main">Thales Vormetric DSM</sc-tab>
+            <sc-tab slot="nav" panel="thales-keys-inventory">Thales Keys Inventory</sc-tab>
+            <sc-tab slot="nav" panel="thales-server-infra-inventory">Thales - Server Infra Inventory</sc-tab>
+            <sc-tab slot="nav" panel="thales-recertification-report">Thales - Recertification Report</sc-tab>
+            <sc-tab-panel name="thales-vormetric-dsm-main"><sb-caas-apex-thales-vormetric-dsm></sb-caas-apex-thales-vormetric-dsm></sc-tab-panel>
+            <sc-tab-panel name="thales-keys-inventory"><sb-caas-apex-thales-keys-inventory></sb-caas-apex-thales-keys-inventory></sc-tab-panel>
+            <sc-tab-panel name="thales-server-infra-inventory"><sb-caas-apex-thales-server-infra-inventory></sb-caas-apex-thales-server-infra-inventory></sc-tab-panel>
+            <sc-tab-panel name="thales-recertification-report"><sb-caas-apex-thales-recertification-report></sb-caas-apex-thales-recertification-report></sc-tab-panel>
+          </sc-tab-group>
+        </sc-tab-panel>
+        <sc-tab-panel name="fortanix-sdkms">Fortanix SDKMS content</sc-tab-panel>
+        <sc-tab-panel name="caas-risk-tracker">CaaS Risk Tracker content</sc-tab-panel>
+        <sc-tab-panel name="admin-acl">Admin-ACL content</sc-tab-panel>
+        <sc-tab-panel name="my-team-recertification">My Team Recertification content</sc-tab-panel>
+        <sc-tab-panel name="decentralized-crypto">Decentralized Crypto content</sc-tab-panel>
+        <sc-tab-panel name="service-now-groups">Service-Now Groups content</sc-tab-panel>
+        <sc-tab-panel name="cipher-trust-manager">Cipher Trust Manager content</sc-tab-panel>
+        <sc-tab-panel name="luna">LUNA content</sc-tab-panel>
+      </sc-tab-group>
+    `;
+  }
+}
+
+if (!window.customElements.get('sb-caas-apex-navigation-tab')) {
+  window.customElements.define('sb-caas-apex-navigation-tab', NavigationTab);
+}
+import { html, css, LitElement } from 'lit';
+import { createContext, contexts } from '@scdevkit/service-bench-core';
+import ScGridStyle from '@scdevkit/webkit/styles/ScGridStyle.js';
+import './components/NavigationTab.js';
+
+
+const userContext = createContext(contexts.USER);
+
+export class Home extends LitElement {
+
+  _userContextConsumer = userContext.createConsumer(this);
+
+  static styles = css`
+    ${ScGridStyle}
+
+    .container {
+      background: transparent;
+      min-height: 80vh;
+      margin: 10px;
+      padding: 10px;
+    }
+   
+  `;
+
+  render() {
+    const user = this._userContextConsumer.value;
+    
+    return html`
+    <div class="container">
+    <sb-caas-apex-navigation-tab></sb-caas-apex-navigation-tab>
+    </div>
+    `;
+  }
+}
+import { Home } from '../src/Home.js';
+import { HomeContent } from '../src/components/HomeContent.js';
+import { CreateNCipher } from '../src/components/NCipher/CreateNCipher.js';
+
+
+
+window.customElements.define('sb-caas-apex-home', Home);
+if (!window.customElements.get('sb-caas-apex-home-content')) {
+    window.customElements.define('sb-caas-apex-home-content', HomeContent);
+}
+
+if (!window.customElements.get('sb-caas-apex-create-ncipher')) {
+window.customElements.define('sb-caas-apex-create-ncipher', CreateNCipher);
+}
+
