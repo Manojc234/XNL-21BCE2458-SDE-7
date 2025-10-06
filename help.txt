@@ -667,3 +667,81 @@ public class Function {
         return service.getProtegrityInventory(appUser);
     }
 }
+
+
+package com.sc.faas.dto.Protegrity;
+
+import java.util.Date;
+
+public class ProtegrityInventoryDTO {
+
+    public Long citSno;
+    public String citType;
+    public String citApplicationName;
+    public Date citAppOnboardDate;
+    public String citAppStatus;
+    public String citItamNo;
+    public String citAppOwner;
+    public String citBusCriticality;
+    public String citBusUnit;
+    public String citPriContact;
+    public String citRemGroup;
+    public String citSecContact;
+    public String citServiceProvided;
+    public String citServiceModel;
+    public String citUseCase;
+    public String citDatabase;
+    public String citDbHostedType;
+    public String citStorageDevices;
+    public String citBussJustification;
+    public String citTypePrNonpr;
+    public String citReqNo;
+    public String citActivity;
+    public Date citAmendedDate;
+    public String citAmendedBy;
+    public String citRemarks;
+    public String citEntSpoc;
+    public Date citProdDate;
+    public String citProdCrNo;
+    public Date recertDate;
+    public String recertBy;
+    public Long appExpDays;
+    public String recertAppStatus;
+
+    // Add a constructor for mapping
+    public ProtegrityInventoryDTO(Object[] row) {
+        int i = 0;
+        this.citSno = row[i] != null ? ((Number) row[i++]).longValue() : null;
+        this.citType = (String) row[i++];
+        this.citApplicationName = (String) row[i++];
+        this.citAppOnboardDate = (Date) row[i++];
+        this.citAppStatus = (String) row[i++];
+        this.citItamNo = (String) row[i++];
+        this.citAppOwner = (String) row[i++];
+        this.citBusCriticality = (String) row[i++];
+        this.citBusUnit = (String) row[i++];
+        this.citPriContact = (String) row[i++];
+        this.citRemGroup = (String) row[i++];
+        this.citSecContact = (String) row[i++];
+        this.citServiceProvided = (String) row[i++];
+        this.citServiceModel = (String) row[i++];
+        this.citUseCase = (String) row[i++];
+        this.citDatabase = (String) row[i++];
+        this.citDbHostedType = (String) row[i++];
+        this.citStorageDevices = (String) row[i++];
+        this.citBussJustification = (String) row[i++];
+        this.citTypePrNonpr = (String) row[i++];
+        this.citReqNo = (String) row[i++];
+        this.citActivity = (String) row[i++];
+        this.citAmendedDate = (Date) row[i++];
+        this.citAmendedBy = (String) row[i++];
+        this.citRemarks = (String) row[i++];
+        this.citEntSpoc = (String) row[i++];
+        this.citProdDate = (Date) row[i++];
+        this.citProdCrNo = (String) row[i++];
+        this.recertDate = (Date) row[i++];
+        this.recertBy = (String) row[i++];
+        this.appExpDays = row[i] != null ? ((Number) row[i++]).longValue() : null;
+        this.recertAppStatus = (String) row[i];
+    }
+}
