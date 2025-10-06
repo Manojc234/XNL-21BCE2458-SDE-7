@@ -1,201 +1,16 @@
-package com.sc.faas.repository.Protegrity;
-
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryRepository{
-    @PersistenceContext
-    EntityManager entityManager;
-
-    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser) {
-        String jpql = "SELECT new com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO(" +
-                "c.citSno, c.citApplicationName, c.citType, c.appOnboardDate, " +
-                "c.citAppStatus, c.citItamNo, c.citAppOwner, c.citBusCriticality, " +
-                "c.cetDusUnit, c.citPriContact, c.citRemGroup, c.citSlcContact, " +
-                "c.citServiceProvided, " +
-                "CASE WHEN c.citUseCase = 'Others' THEN c.citUseCaseOthers ELSE c.citUseCase END, " +
-                "CASE WHEN c.citDatabase = 'Others' THEN c.citDbOthers ELSE c.citDatabase END, " +
-                "c.citServiceModel, c.citBussJustification, c.citDoHostedType, " +
-                "CASE WHEN c.citStorageDevices = 'Others' THEN c.citStorageOthers ELSE c.citStorageDevices END, " +
-                "c.citTypePrNonPr, c.citReqNo, c.citActivity, c.citAmendedDate, " +
-                "c.citAmendedBy, c.citRemarks, c.citEntSpoc, c.citProdDate, " +
-                "c.recertDate, c.recertBy, TRUNC(c.recertAppRenewalDate), " +
-                "CASE WHEN c.recertAppStatus = 'RECERT RESPOND' THEN 'INREVIEW' " +
-                "WHEN c.recertAppStatus = 'RECERT COMPLETED' THEN 'COMPLETED' " +
-                "ELSE c.recertAppStatus END, " +
-                "c.citProdCrNo, 'VIEW') " +
-                "FROM CutApplicationEntity c " +
-                "WHERE c.citAppStatus != 'Decommissioned' " +
-                "AND c.citType = 'protegrity' " +
-                "AND (" +
-                "c.pim = :appUser OR c.workOrderAssignee = :appUser OR " +
-                "c.brquestApprover = :appUser OR c.citPriContact = :appUser OR " +
-                "c.citAppOwner = :appUser OR c.citIntSpoc = :appUser OR " +
-                "c.citSecContact = :appUser" +
-                ")";
-
-        return entityManager.createQuery(jpql, ProtegrityInventoryDTO.class)
-                .setParameter("appUser", appUser)
-                .getResultList();
-    }
-
-}
 package com.sc.faas.dto.Protegrity;
 
-import jakarta.annotation.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-
-@AllArgsConstructor
-@NoArgsConstructor
-public class ProtegrityInventoryDTO {
-    public Long citSno;
-    public String citApplicationName;
-    public String citType;
-    public LocalDate appOnboardDate;
-    public String citAppStatus;
-    public String citItamNo;
-    public String citAppOwner;
-    public String citBusCriticality;
-    public String cetDusUnit;
-    public String citPriContact;
-    public String citRemGroup;
-    public String citSlcContact;
-    public String citServiceProvided;
-    public String citUseCase;
-    public String citDatabase;
-    public String citServiceModel;
-    public String citBussJustification;
-    public String citDoHostedType;
-    public String citStorageDevices;
-    public String citTypePrNonPr;
-    public String citReqNo;
-    public String citActivity;
-    public LocalDate citAmendedDate;
-    public String citAmendedBy;
-    public String citRemarks;
-    public String citEntSpoc;
-    public LocalDate citProdDate;
-    public LocalDate recertDate;
-    public String recertBy;
-    public Long appExpDays;
-    public String recertAppStatus;
-    public String citProdCrNo;
-    public String view;
-
-}
-package com.sc.faas.service.Protegrity;
-
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryService {
-    @Inject
-    ProtegrityInventoryRepository repository;
-    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser){
-        return repository.getAllProtegrityApplications(appUser);
-    }
-}
-package com.sc.faas;
-
-import com.sc.faas.dto.Customer;
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import com.sc.faas.service.ProcessService;
-import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-import org.w3c.dom.stylesheets.LinkStyle;
-
-import java.util.List;
-
-
-@Path("/api/process/get/customer")
-public class Function {
-
-    @Inject
-    ProtegrityInventoryService protegrityInventoryService;
-
-    @Inject
-    private ProcessService processService;
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Customer getMockCustomer() {
-        return processService.getMockCustomer();
-    }
-
-    @GET
-    @Path("/protegrityapps")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(@QueryParam("appUser") String appUser){
-        return protegrityInventoryService.getAllProtegrityApplications(appUser);
-    }
-}
-quarkus.http.port=8081
-quarkus.http.host=0.0.0.0
-quarkus.otel.enabled=false
-
-# Datasource configuration
-quarkus.datasource.db-kind=oracle
-quarkus.datasource.db-version=19c
-# DB details here like user and pass
-quarkus.datasource.username=app_bcbs_sit
-quarkus.datasource.password=HKMGrand#Sep#0924AMHGrand
-
-quarkus.datasource.jdbc.url=jdbc:oracle:thin:@(DESCRIPTION_LIST=(LOAD_BALANCE=off)(FAILOVER=on)(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=5)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=hklpdddas12cb-scan.hk.standardchartered.com)(PORT=1622)))(CONNECT_DATA=(SERVICE_NAME=COOLNXT_DEV.hk.standardchartered.com)))(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=5)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=xx.hk.standardchartered.com)(PORT=1622)))(CONNECT_DATA=(SERVICE_NAME=xx.hk.standardchartered.com))))
-
-# Optional: Configure Hibernate ORM
-quarkus.hibernate-orm.log.sql=true
-
-
-#Email
-quarkus.tls.trust-all=true
-NOTIFICATION_PROCESS_API_HOST=${GET_EMAIL_SERVICE_URL}
-
-#SC-IDP
-quarkus.rest-client."com.sc.faas.client.IDPClient".url=${SC_IDP_URL}
-SC_IDP_STORE_ID=${SC_IDP_STORE_ID}  
-
-
-
-
-
-
-
-
-
-
-package com.sc.faas.dto.Thales;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Column;
 import java.util.Date;
 
 @Entity
-public class ThalesInventoryDTO {
+public class ProtegrityInventoryDTO {
 
     @Id
     @Column(name = "CIT_SNO")
-    private String citSno;
+    private Long citSno;
 
     @Column(name = "CIT_TYPE")
     private String citType;
@@ -285,116 +100,215 @@ public class ThalesInventoryDTO {
     private String recertBy;
 
     @Column(name = "APP_EXP_DAYS")
-    private Integer appExpDays;
+    private Long appExpDays;
 
     @Column(name = "RECERT_APP_STATUS")
     private String recertAppStatus;
 
-    // Getters and setters for all fields
-}  
+    // Getters and Setters
 
+    public Long getCitSno() { return citSno; }
+    public void setCitSno(Long citSno) { this.citSno = citSno; }
 
+    public String getCitType() { return citType; }
+    public void setCitType(String citType) { this.citType = citType; }
 
+    public String getCitApplicationName() { return citApplicationName; }
+    public void setCitApplicationName(String citApplicationName) { this.citApplicationName = citApplicationName; }
 
+    public Date getCitAppOnboardDate() { return citAppOnboardDate; }
+    public void setCitAppOnboardDate(Date citAppOnboardDate) { this.citAppOnboardDate = citAppOnboardDate; }
 
-package com.sc.faas.repository.Thales;
+    public String getCitAppStatus() { return citAppStatus; }
+    public void setCitAppStatus(String citAppStatus) { this.citAppStatus = citAppStatus; }
 
-import com.sc.faas.dto.Thales.ThalesInventoryDTO;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.Query;
+    public String getCitItamNo() { return citItamNo; }
+    public void setCitItamNo(String citItamNo) { this.citItamNo = citItamNo; }
 
-import java.util.List;
+    public String getCitAppOwner() { return citAppOwner; }
+    public void setCitAppOwner(String citAppOwner) { this.citAppOwner = citAppOwner; }
 
-@ApplicationScoped
-public class ThalesInventoryRepository implements PanacheRepository<ThalesInventoryDTO> {
+    public String getCitBusCriticality() { return citBusCriticality; }
+    public void setCitBusCriticality(String citBusCriticality) { this.citBusCriticality = citBusCriticality; }
 
-    public List<ThalesInventoryDTO> findByAppUser(String appUser) {
-        String sql = "SELECT \"CIT_SNO\", " +
-                "\"CIT_TYPE\", " +
-                "CIT_APPLICATION_NAME, " +
-                "\"CIT_APP_ONBOARD_DATE\", " +
-                "\"CIT_APP_STATUS\", " +
-                "\"CIT_ITAM_NO\", " +
-                "\"CIT_APP_OWNER\", " +
-                "\"CIT_BUS_CRITICALLITY\", " +
-                "\"CIT_BUS_UNIT\", " +
-                "\"CIT_PRI_CONTACT\", " +
-                "\"CIT_REM_GROUP\", " +
-                "\"CIT_SEC_CONTACT\", " +
-                "\"CIT_SERVICE_PROVIDED\", " +
-                "\"CIT_SERVICE_MODEL\", " +
-                "DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE, " +
-                "DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE, " +
-                "\"CIT_DB_HOSTED_TYPE\", " +
-                "DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES, " +
-                "\"CIT_BUSS_JUSTIFICATION\", " +
-                "\"CIT_TYPE_PR_NONPR\", " +
-                "\"CIT_REQ_NO\", " +
-                "\"CIT_ACTIVITY\", " +
-                "\"CIT_AMENDED_DATE\", " +
-                "\"CIT_AMENDED_BY\", " +
-                "\"CIT_REMARKS\", " +
-                "\"CIT_ENT_SPOC\", " +
-                "\"CIT_PROD_DATE\", " +
-                "\"CIT_PROD_CR_NO\", " +
-                "'View', " +
-                "RECERT_DATE, RECERT_BY, TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS, " +
-                "DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS " +
-                "FROM \"CAAS_INVENTORY_TAB\" " +
-                "WHERE CIT_TYPE = 'thales' " +
-                "AND CIT_APP_STATUS NOT IN ('Decommisioned') " +
-                "AND (CIT_REM_GROUP IN (SELECT DISTINCT DR_SUPP_GRP_NAME FROM CAAS_REMEDY WHERE DR_PSID = :APP_USER AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')) " +
-                "OR CIT_PRI_CONTACT = :APP_USER " +
-                "OR CIT_SEC_CONTACT = :APP_USER " +
-                "OR CIT_APP_OWNER = :APP_USER " +
-                "OR CIT_ENT_SPOC = :APP_USER " +
-                "OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active'))";
+    public String getCitBusUnit() { return citBusUnit; }
+    public void setCitBusUnit(String citBusUnit) { this.citBusUnit = citBusUnit; }
 
-        Query query = getEntityManager().createNativeQuery(sql, ThalesInventoryDTO.class);
-        query.setParameter("APP_USER", appUser);
+    public String getCitPriContact() { return citPriContact; }
+    public void setCitPriContact(String citPriContact) { this.citPriContact = citPriContact; }
 
-        return query.getResultList();
-    }
+    public String getCitRemGroup() { return citRemGroup; }
+    public void setCitRemGroup(String citRemGroup) { this.citRemGroup = citRemGroup; }
+
+    public String getCitSecContact() { return citSecContact; }
+    public void setCitSecContact(String citSecContact) { this.citSecContact = citSecContact; }
+
+    public String getCitServiceProvided() { return citServiceProvided; }
+    public void setCitServiceProvided(String citServiceProvided) { this.citServiceProvided = citServiceProvided; }
+
+    public String getCitServiceModel() { return citServiceModel; }
+    public void setCitServiceModel(String citServiceModel) { this.citServiceModel = citServiceModel; }
+
+    public String getCitUseCase() { return citUseCase; }
+    public void setCitUseCase(String citUseCase) { this.citUseCase = citUseCase; }
+
+    public String getCitDatabase() { return citDatabase; }
+    public void setCitDatabase(String citDatabase) { this.citDatabase = citDatabase; }
+
+    public String getCitDbHostedType() { return citDbHostedType; }
+    public void setCitDbHostedType(String citDbHostedType) { this.citDbHostedType = citDbHostedType; }
+
+    public String getCitStorageDevices() { return citStorageDevices; }
+    public void setCitStorageDevices(String citStorageDevices) { this.citStorageDevices = citStorageDevices; }
+
+    public String getCitBussJustification() { return citBussJustification; }
+    public void setCitBussJustification(String citBussJustification) { this.citBussJustification = citBussJustification; }
+
+    public String getCitTypePrNonpr() { return citTypePrNonpr; }
+    public void setCitTypePrNonpr(String citTypePrNonpr) { this.citTypePrNonpr = citTypePrNonpr; }
+
+    public String getCitReqNo() { return citReqNo; }
+    public void setCitReqNo(String citReqNo) { this.citReqNo = citReqNo; }
+
+    public String getCitActivity() { return citActivity; }
+    public void setCitActivity(String citActivity) { this.citActivity = citActivity; }
+
+    public Date getCitAmendedDate() { return citAmendedDate; }
+    public void setCitAmendedDate(Date citAmendedDate) { this.citAmendedDate = citAmendedDate; }
+
+    public String getCitAmendedBy() { return citAmendedBy; }
+    public void setCitAmendedBy(String citAmendedBy) { this.citAmendedBy = citAmendedBy; }
+
+    public String getCitRemarks() { return citRemarks; }
+    public void setCitRemarks(String citRemarks) { this.citRemarks = citRemarks; }
+
+    public String getCitEntSpoc() { return citEntSpoc; }
+    public void setCitEntSpoc(String citEntSpoc) { this.citEntSpoc = citEntSpoc; }
+
+    public Date getCitProdDate() { return citProdDate; }
+    public void setCitProdDate(Date citProdDate) { this.citProdDate = citProdDate; }
+
+    public String getCitProdCrNo() { return citProdCrNo; }
+    public void setCitProdCrNo(String citProdCrNo) { this.citProdCrNo = citProdCrNo; }
+
+    public Date getRecertDate() { return recertDate; }
+    public void setRecertDate(Date recertDate) { this.recertDate = recertDate; }
+
+    public String getRecertBy() { return recertBy; }
+    public void setRecertBy(String recertBy) { this.recertBy = recertBy; }
+
+    public Long getAppExpDays() { return appExpDays; }
+    public void setAppExpDays(Long appExpDays) { this.appExpDays = appExpDays; }
+
+    public String getRecertAppStatus() { return recertAppStatus; }
+    public void setRecertAppStatus(String recertAppStatus) { this.recertAppStatus = recertAppStatus; }
 }
 
 
 
 
 
-package com.sc.faas.service.Thales;
+package com.sc.faas.repository.Protegrity;
 
-import com.sc.faas.dto.Thales.ThalesInventoryDTO;
-import com.sc.faas.repository.Thales.ThalesInventoryRepository;
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
+import jakarta.persistence.Query;
 import java.util.List;
 
 @ApplicationScoped
-public class ThalesInventoryService {
+public class ProtegrityInventoryRepository implements PanacheRepository<ProtegrityInventoryDTO> {
+
+    public List<ProtegrityInventoryDTO> findByAppUser(String appUser) {
+        String sql = """
+            SELECT "CIT_SNO",
+                   "CIT_TYPE",
+                   CIT_APPLICATION_NAME,
+                   "CIT_APP_ONBOARD_DATE",
+                   "CIT_APP_STATUS",
+                   "CIT_ITAM_NO",
+                   "CIT_APP_OWNER",
+                   "CIT_BUS_CRITICALLITY",
+                   "CIT_BUS_UNIT",
+                   "CIT_PRI_CONTACT",
+                   "CIT_REM_GROUP",
+                   "CIT_SEC_CONTACT",
+                   "CIT_SERVICE_PROVIDED",
+                   "CIT_SERVICE_MODEL",
+                   DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE,
+                   DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE,
+                   "CIT_DB_HOSTED_TYPE",
+                   DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES,
+                   "CIT_BUSS_JUSTIFICATION",
+                   "CIT_TYPE_PR_NONPR",
+                   "CIT_REQ_NO",
+                   "CIT_ACTIVITY",
+                   "CIT_AMENDED_DATE",
+                   "CIT_AMENDED_BY",
+                   "CIT_REMARKS",
+                   "CIT_ENT_SPOC",
+                   "CIT_PROD_DATE",
+                   "CIT_PROD_CR_NO",
+                   RECERT_DATE,
+                   RECERT_BY,
+                   TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS,
+                   DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS
+            FROM "CAAS_INVENTORY_TAB"
+            WHERE CIT_TYPE = 'protegrity'
+              AND CIT_APP_STATUS NOT IN ('Decommissioned')
+              AND (
+                  CIT_REM_GROUP IN (
+                      SELECT DISTINCT DR_SUPP_GRP_NAME
+                      FROM CAAS_REMEDY
+                      WHERE DR_PSID = :APP_USER
+                        AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')
+                  )
+                  OR CIT_PRI_CONTACT = :APP_USER
+                  OR CIT_SEC_CONTACT = :APP_USER
+                  OR CIT_APP_OWNER = :APP_USER
+                  OR CIT_ENT_SPOC = :APP_USER
+                  OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
+              )
+        """;
+
+        Query query = getEntityManager().createNativeQuery(sql, ProtegrityInventoryDTO.class);
+        query.setParameter("APP_USER", appUser);
+        return query.getResultList();
+    }
+}
+
+
+package com.sc.faas.service.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryService {
 
     @Inject
-    private ThalesInventoryRepository repository;
+    private ProtegrityInventoryRepository repository;
 
-    public List<ThalesInventoryDTO> getThalesInventory(String appUser) {
+    public List<ProtegrityInventoryDTO> getProtegrityInventory(String appUser) {
         try {
             return repository.findByAppUser(appUser);
         } catch (Exception e) {
-            // Log the exception and rethrow it or handle it as needed
-            System.err.println("Error fetching Thales inventory: " + e.getMessage());
-            throw new RuntimeException("Failed to fetch Thales inventory", e);
+            System.err.println("Error fetching Protegrity inventory: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch Protegrity inventory", e);
         }
     }
-} 
+}
 
 
 package com.sc.faas;
 
 import com.sc.faas.dto.Customer;
-import com.sc.faas.dto.Thales.ThalesInventoryDTO;
-import com.sc.faas.service.Thales.ThalesInventoryService;
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
 import com.sc.faas.repository.CustomerRepository;
+import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -404,17 +318,17 @@ import java.util.List;
 public class Function {
 
     @Inject
-    private ThalesInventoryService service;
+    private ProtegrityInventoryService protegrityService;
 
     @Inject
     private CustomerRepository customerRepository;
 
     @GET
-    @Path("/get/thales-inventory")
+    @Path("/get/protegrity-inventory")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<ThalesInventoryDTO> getThalesInventory(@QueryParam("appUser") String appUser) {
-        System.out.println("Fetching Thales inventory for appUser: " + (appUser != null ? appUser : "found null"));
-        return service.getThalesInventory(appUser);
+    public List<ProtegrityInventoryDTO> getProtegrityInventory(@QueryParam("appUser") String appUser) {
+        System.out.println("Fetching Protegrity inventory for appUser: " + (appUser != null ? appUser : "found null"));
+        return protegrityService.getProtegrityInventory(appUser);
     }
 
     @GET
@@ -428,603 +342,3 @@ public class Function {
 
 
 
-package com.sc.faas.entity.Protegrity;
-
-import jakarta.persistence.*;
-import java.util.Date;
-
-@Entity
-@Table(name = "CAAS_INVENTORY_TAB")
-public class ProtegrityInventoryEntity {
-
-    @Id
-    @Column(name = "CIT_SNO")
-    private Long citSno;
-
-    @Column(name = "CIT_TYPE")
-    private String citType;
-
-    @Column(name = "CIT_APPLICATION_NAME")
-    private String citApplicationName;
-
-    @Column(name = "CIT_APP_ONBOARD_DATE")
-    private Date citAppOnboardDate;
-
-    @Column(name = "CIT_APP_STATUS")
-    private String citAppStatus;
-
-    @Column(name = "CIT_ITAM_NO")
-    private String citItamNo;
-
-    @Column(name = "CIT_APP_OWNER")
-    private String citAppOwner;
-
-    @Column(name = "CIT_BUS_CRITICALLITY")
-    private String citBusCriticality;
-
-    @Column(name = "CIT_BUS_UNIT")
-    private String citBusUnit;
-
-    @Column(name = "CIT_PRI_CONTACT")
-    private String citPriContact;
-
-    @Column(name = "CIT_REM_GROUP")
-    private String citRemGroup;
-
-    @Column(name = "CIT_SEC_CONTACT")
-    private String citSecContact;
-
-    @Column(name = "CIT_SERVICE_PROVIDED")
-    private String citServiceProvided;
-
-    @Column(name = "CIT_SERVICE_MODEL")
-    private String citServiceModel;
-
-    @Column(name = "CIT_USE_CASE")
-    private String citUseCase;
-
-    @Column(name = "CIT_USECASE_OTHERS")
-    private String citUseCaseOthers;
-
-    @Column(name = "CIT_DATABASE")
-    private String citDatabase;
-
-    @Column(name = "CIT_DB_OTHERS")
-    private String citDbOthers;
-
-    @Column(name = "CIT_DB_HOSTED_TYPE")
-    private String citDbHostedType;
-
-    @Column(name = "CIT_STORAGE_DEVICES")
-    private String citStorageDevices;
-
-    @Column(name = "CIT_STORAGE_OTHERS")
-    private String citStorageOthers;
-
-    @Column(name = "CIT_BUSS_JUSTIFICATION")
-    private String citBussJustification;
-
-    @Column(name = "CIT_TYPE_PR_NONPR")
-    private String citTypePrNonpr;
-
-    @Column(name = "CIT_REQ_NO")
-    private String citReqNo;
-
-    @Column(name = "CIT_ACTIVITY")
-    private String citActivity;
-
-    @Column(name = "CIT_AMENDED_DATE")
-    private Date citAmendedDate;
-
-    @Column(name = "CIT_AMENDED_BY")
-    private String citAmendedBy;
-
-    @Column(name = "CIT_REMARKS")
-    private String citRemarks;
-
-    @Column(name = "CIT_ENT_SPOC")
-    private String citEntSpoc;
-
-    @Column(name = "CIT_PROD_DATE")
-    private Date citProdDate;
-
-    @Column(name = "CIT_PROD_CR_NO")
-    private String citProdCrNo;
-
-    @Column(name = "RECERT_DATE")
-    private Date recertDate;
-
-    @Column(name = "RECERT_BY")
-    private String recertBy;
-
-    @Column(name = "RECERT_APP_STATUS")
-    private String recertAppStatus;
-
-    @Column(name = "RECERT_APP_RENEWAL_DATE")
-    private Date recertAppRenewalDate;
-
-    // Getters and setters
-}
-
-
-package com.sc.faas.repository.Protegrity;
-
-import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.Query;
-
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryRepository implements PanacheRepository<ProtegrityInventoryEntity> {
-
-    public List<ProtegrityInventoryEntity> findByAppUser(String appUser) {
-        String sql = """
-            SELECT CIT_SNO,
-                   CIT_TYPE,
-                   CIT_APPLICATION_NAME,
-                   CIT_APP_ONBOARD_DATE,
-                   CIT_APP_STATUS,
-                   CIT_ITAM_NO,
-                   CIT_APP_OWNER,
-                   CIT_BUS_CRITICALLITY,
-                   CIT_BUS_UNIT,
-                   CIT_PRI_CONTACT,
-                   CIT_REM_GROUP,
-                   CIT_SEC_CONTACT,
-                   CIT_SERVICE_PROVIDED,
-                   CIT_SERVICE_MODEL,
-                   DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE,
-                   DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE,
-                   CIT_DB_HOSTED_TYPE,
-                   DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES,
-                   CIT_BUSS_JUSTIFICATION,
-                   CIT_TYPE_PR_NONPR,
-                   CIT_REQ_NO,
-                   CIT_ACTIVITY,
-                   CIT_AMENDED_DATE,
-                   CIT_AMENDED_BY,
-                   CIT_REMARKS,
-                   CIT_ENT_SPOC,
-                   CIT_PROD_DATE,
-                   CIT_PROD_CR_NO,
-                   RECERT_DATE,
-                   RECERT_BY,
-                   TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS,
-                   DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS
-            FROM CAAS_INVENTORY_TAB
-            WHERE CIT_TYPE = 'protegrity'
-              AND CIT_APP_STATUS NOT IN ('Decommissioned')
-              AND (
-                  CIT_REM_GROUP IN (
-                      SELECT DISTINCT DR_SUPP_GRP_NAME
-                      FROM CAAS_REMEDY
-                      WHERE DR_PSID = :APP_USER
-                        AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')
-                  )
-                  OR CIT_PRI_CONTACT = :APP_USER
-                  OR CIT_SEC_CONTACT = :APP_USER
-                  OR CIT_APP_OWNER = :APP_USER
-                  OR CIT_ENT_SPOC = :APP_USER
-                  OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
-              )
-        """;
-
-        Query query = getEntityManager().createNativeQuery(sql, ProtegrityInventoryEntity.class);
-        query.setParameter("APP_USER", appUser);
-
-        return query.getResultList();
-    }
-}
-
-
-package com.sc.faas.service.Protegrity;
-
-import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
-import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryService {
-
-    @Inject
-    private ProtegrityInventoryRepository repository;
-
-    public List<ProtegrityInventoryEntity> getProtegrityInventory(String appUser) {
-        try {
-            return repository.findByAppUser(appUser);
-        } catch (Exception e) {
-            System.err.println("Error fetching Protegrity inventory: " + e.getMessage());
-            throw new RuntimeException("Failed to fetch Protegrity inventory", e);
-        }
-    }
-}
-
-package com.sc.faas;
-
-import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
-import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import java.util.List;
-
-@Path("/api/process")
-public class Function {
-
-    @Inject
-    private ProtegrityInventoryService service;
-
-    @GET
-    @Path("/get/protegrity-inventory")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<ProtegrityInventoryEntity> getProtegrityInventory(@QueryParam("appUser") String appUser) {
-        System.out.println("Fetching Protegrity inventory for appUser: " + (appUser != null ? appUser : "found null"));
-        return service.getProtegrityInventory(appUser);
-    }
-}
-
-
-package com.sc.faas.dto.Protegrity;
-
-import java.util.Date;
-
-public class ProtegrityInventoryDTO {
-
-    public Long citSno;
-    public String citType;
-    public String citApplicationName;
-    public Date citAppOnboardDate;
-    public String citAppStatus;
-    public String citItamNo;
-    public String citAppOwner;
-    public String citBusCriticality;
-    public String citBusUnit;
-    public String citPriContact;
-    public String citRemGroup;
-    public String citSecContact;
-    public String citServiceProvided;
-    public String citServiceModel;
-    public String citUseCase;
-    public String citDatabase;
-    public String citDbHostedType;
-    public String citStorageDevices;
-    public String citBussJustification;
-    public String citTypePrNonpr;
-    public String citReqNo;
-    public String citActivity;
-    public Date citAmendedDate;
-    public String citAmendedBy;
-    public String citRemarks;
-    public String citEntSpoc;
-    public Date citProdDate;
-    public String citProdCrNo;
-    public Date recertDate;
-    public String recertBy;
-    public Long appExpDays;
-    public String recertAppStatus;
-
-    // Add a constructor for mapping
-    public ProtegrityInventoryDTO(Object[] row) {
-        int i = 0;
-        this.citSno = row[i] != null ? ((Number) row[i++]).longValue() : null;
-        this.citType = (String) row[i++];
-        this.citApplicationName = (String) row[i++];
-        this.citAppOnboardDate = (Date) row[i++];
-        this.citAppStatus = (String) row[i++];
-        this.citItamNo = (String) row[i++];
-        this.citAppOwner = (String) row[i++];
-        this.citBusCriticality = (String) row[i++];
-        this.citBusUnit = (String) row[i++];
-        this.citPriContact = (String) row[i++];
-        this.citRemGroup = (String) row[i++];
-        this.citSecContact = (String) row[i++];
-        this.citServiceProvided = (String) row[i++];
-        this.citServiceModel = (String) row[i++];
-        this.citUseCase = (String) row[i++];
-        this.citDatabase = (String) row[i++];
-        this.citDbHostedType = (String) row[i++];
-        this.citStorageDevices = (String) row[i++];
-        this.citBussJustification = (String) row[i++];
-        this.citTypePrNonpr = (String) row[i++];
-        this.citReqNo = (String) row[i++];
-        this.citActivity = (String) row[i++];
-        this.citAmendedDate = (Date) row[i++];
-        this.citAmendedBy = (String) row[i++];
-        this.citRemarks = (String) row[i++];
-        this.citEntSpoc = (String) row[i++];
-        this.citProdDate = (Date) row[i++];
-        this.citProdCrNo = (String) row[i++];
-        this.recertDate = (Date) row[i++];
-        this.recertBy = (String) row[i++];
-        this.appExpDays = row[i] != null ? ((Number) row[i++]).longValue() : null;
-        this.recertAppStatus = (String) row[i];
-    }
-}
-select "CIT_SNO",
-CIT_APPLICATION_NAME, 
-"CIT_TYPE",
-"CIT_APP_ONBOARD_DATE",
-"CIT_APP_STATUS",
-"CIT_ITAM_NO",
-"CIT_APP_OWNER",
-"CIT_BUS_CRITICALLITY",
-"CIT_BUS_UNIT",
-"CIT_PRI_CONTACT",
-"CIT_REM_GROUP",
-"CIT_SEC_CONTACT",
-"CIT_SERVICE_PROVIDED",
-"CIT_SERVICE_MODEL",
-decode(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) CIT_USE_CASE,
-decode(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) CIT_DATABASE,
-"CIT_DB_HOSTED_TYPE",
-decode(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) CIT_STORAGE_DEVICES,
-"CIT_BUSS_JUSTIFICATION",
-"CIT_TYPE_PR_NONPR",
-"CIT_REQ_NO",
-"CIT_ACTIVITY",
-"CIT_AMENDED_DATE",
-"CIT_AMENDED_BY",
-"CIT_REMARKS",
-"CIT_ENT_SPOC",
-"CIT_PROD_DATE",
-"CIT_PROD_CR_NO",
-'VIEW', 
-RECERT_DATE,RECERT_BY, trunc(RECERT_APP_RENEWAL_DATE) - trunc(sysdate) as APP_EXP_DAYS,
-DECODE(RECERT_APP_STATUS,'RECERT_RESPOND','INREVIEW','RECERT_COMPLETED','COMPLETED',RECERT_APP_STATUS) as RECERT_APP_STATUS 
-from "#OWNER#"."CAAS_INVENTORY_TAB" 
-where CIT_TYPE = 'protegrity'
-and CIT_APP_STATUS not in ('Decommisioned')
-and (CIT_REM_GROUP in (select distinct DR_SUPP_GRP_NAME from CAAS_REMEDY where DR_PSID = :APP_USER and DR_FUNC_ROLE in ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')) 
-or CIT_PRI_CONTACT = :APP_USER
-or CIT_SEC_CONTACT = :APP_USER 
-or CIT_APP_OWNER = :APP_USER
-or CIT_ENT_SPOC = :APP_USER
-or :APP_USER in (select CUM_USERID from CAAS_USER_MAPPING_TAB where CUM_STATUS = 'Active'))
-
-
-
-
-
-package com.sc.faas.dto.Protegrity;
-
-import jakarta.annotation.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.util.Date;
-
-@AllArgsConstructor
-@NoArgsConstructor
-public class ProtegrityInventoryDTO {
-    public Long citSno;
-    public String citApplicationName;
-    public String citType;
-    public LocalDate appOnboardDate;
-    public String citAppStatus;
-    public String citItamNo;
-    public String citAppOwner;
-    public String citBusCriticality;
-    public String citBusUnit;
-    public String citPriContact;
-    public String citRemGroup;
-    public String citSecContact;
-    public String citServiceProvided;
-    public String citUseCase;
-    public String citDatabase;
-    public String citServiceModel;
-    public String citBussJustification;
-    public String citDbHostedType;
-    public String citStorageDevices;
-    public String citTypePrNonPr;
-    public String citReqNo;
-    public String citActivity;
-    public LocalDate citAmendedDate;
-    public String citAmendedBy;
-    public String citRemarks;
-    public String citEntSpoc;
-    public LocalDate citProdDate;
-    public LocalDate recertDate;
-    public String recertBy;
-    public Long appExpDays;
-    public String recertAppStatus;
-    public String citProdCrNo;
-    public String view;
-
-    public ProtegrityInventoryDTO(Object[] row) {
-        int i = 0;
-        this.citSno = row[i] != null ? ((Number) row[i++]).longValue() : null;
-        this.citType = (String) row[i++];
-        this.citApplicationName = (String) row[i++];
-        this.appOnboardDate = (LocalDate) row[i++];
-        this.citAppStatus = (String) row[i++];
-        this.citItamNo = (String) row[i++];
-        this.citAppOwner = (String) row[i++];
-        this.citBusCriticality = (String) row[i++];
-        this.citBusUnit = (String) row[i++];
-        this.citPriContact = (String) row[i++];
-        this.citRemGroup = (String) row[i++];
-        this.citSecContact = (String) row[i++];
-        this.citServiceProvided = (String) row[i++];
-        this.citServiceModel = (String) row[i++];
-        this.citUseCase = (String) row[i++];
-        this.citDatabase = (String) row[i++];
-        this.citDbHostedType = (String) row[i++];
-        this.citStorageDevices = (String) row[i++];
-        this.citBussJustification = (String) row[i++];
-        this.citTypePrNonPr = (String) row[i++];
-        this.citReqNo = (String) row[i++];
-        this.citActivity = (String) row[i++];
-        this.citAmendedDate = (LocalDate) row[i++];
-        this.citAmendedBy = (String) row[i++];
-        this.citRemarks = (String) row[i++];
-        this.citEntSpoc = (String) row[i++];
-        this.citProdDate = (LocalDate) row[i++];
-        this.citProdCrNo = (String) row[i++];
-        this.recertDate = (LocalDate) row[i++];
-        this.recertBy = (String) row[i++];
-        this.appExpDays = row[i] != null ? ((Number) row[i++]).longValue() : null;
-        this.recertAppStatus = (String) row[i];
-    }
-
-}
-
-
-package com.sc.faas.repository.Protegrity;
-
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
-
-import java.util.ArrayList;
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryRepository{
-    @PersistenceContext
-    EntityManager entityManager;
-
-    public List<ProtegrityInventoryDTO> findByAppUser(String appUser) {
-        String query = """
-            SELECT CIT_SNO,
-                   CIT_TYPE,
-                   CIT_APPLICATION_NAME,
-                   CIT_APP_ONBOARD_DATE,
-                   CIT_APP_STATUS,
-                   CIT_ITAM_NO,
-                   CIT_APP_OWNER,
-                   CIT_BUS_CRITICALLITY,
-                   CIT_BUS_UNIT,
-                   CIT_PRI_CONTACT,
-                   CIT_REM_GROUP,
-                   CIT_SEC_CONTACT,
-                   CIT_SERVICE_PROVIDED,
-                   CIT_SERVICE_MODEL,
-                   DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE,
-                   DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE,
-                   CIT_DB_HOSTED_TYPE,
-                   DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES,
-                   CIT_BUSS_JUSTIFICATION,
-                   CIT_TYPE_PR_NONPR,
-                   CIT_REQ_NO,
-                   CIT_ACTIVITY,
-                   CIT_AMENDED_DATE,
-                   CIT_AMENDED_BY,
-                   CIT_REMARKS,
-                   CIT_ENT_SPOC,
-                   CIT_PROD_DATE,
-                   CIT_PROD_CR_NO,
-                   RECERT_DATE,
-                   RECERT_BY,
-                   TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS,
-                   DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS
-            FROM CAAS_INVENTORY_TAB
-            WHERE CIT_TYPE = 'protegrity'
-              AND CIT_APP_STATUS NOT IN ('Decommissioned')
-              AND (
-                  CIT_REM_GROUP IN (
-                      SELECT DISTINCT DR_SUPP_GRP_NAME
-                      FROM CAAS_REMEDY
-                      WHERE DR_PSID = :APP_USER
-                        AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')
-                  )
-                  OR CIT_PRI_CONTACT = :APP_USER
-                  OR CIT_SEC_CONTACT = :APP_USER
-                  OR CIT_APP_OWNER = :APP_USER
-                  OR CIT_ENT_SPOC = :APP_USER
-                  OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
-              )
-        """;
-        Query query1=entityManager.createNativeQuery(query);
-        query1.setParameter("APP_USER",appUser);
-
-        List<Object[]> results=query1.getResultList();
-        List<ProtegrityInventoryDTO> dtos=new ArrayList<>();
-
-        for(Object[] row:results)
-        {
-            dtos.add(new ProtegrityInventoryDTO(row));
-        }
-        return dtos;
-
-    }
-
-}
-
-
-
-package com.sc.faas.service.Protegrity;
-
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import java.util.List;
-
-@ApplicationScoped
-public class ProtegrityInventoryService {
-    @Inject
-    ProtegrityInventoryRepository repository;
-    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser){
-        try{
-            return repository.findByAppUser(appUser);
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error fetching Protegrity Inventory:"+e.getMessage());
-            throw new RuntimeException("Failed to Fetch Protegrity Inventory",e);
-        }
-
-    }
-}
-
-
-package com.sc.faas;
-
-import com.sc.faas.dto.Customer;
-import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
-import com.sc.faas.service.ProcessService;
-import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-import org.w3c.dom.stylesheets.LinkStyle;
-
-import java.util.List;
-
-
-@Path("/api/process/get/customer")
-public class Function {
-
-    @Inject
-    ProtegrityInventoryService protegrityInventoryService;
-
-    @Inject
-    private ProcessService processService;
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Customer getMockCustomer() {
-        return processService.getMockCustomer();
-    }
-
-    @GET
-    @Path("/protegrityapps")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(@QueryParam("appUser") String appUser){
-        return protegrityInventoryService.getAllProtegrityApplications(appUser);
-    }
-}
