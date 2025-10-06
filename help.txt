@@ -785,3 +785,246 @@ or CIT_SEC_CONTACT = :APP_USER
 or CIT_APP_OWNER = :APP_USER
 or CIT_ENT_SPOC = :APP_USER
 or :APP_USER in (select CUM_USERID from CAAS_USER_MAPPING_TAB where CUM_STATUS = 'Active'))
+
+
+
+
+
+package com.sc.faas.dto.Protegrity;
+
+import jakarta.annotation.Nullable;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.Date;
+
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProtegrityInventoryDTO {
+    public Long citSno;
+    public String citApplicationName;
+    public String citType;
+    public LocalDate appOnboardDate;
+    public String citAppStatus;
+    public String citItamNo;
+    public String citAppOwner;
+    public String citBusCriticality;
+    public String citBusUnit;
+    public String citPriContact;
+    public String citRemGroup;
+    public String citSecContact;
+    public String citServiceProvided;
+    public String citUseCase;
+    public String citDatabase;
+    public String citServiceModel;
+    public String citBussJustification;
+    public String citDbHostedType;
+    public String citStorageDevices;
+    public String citTypePrNonPr;
+    public String citReqNo;
+    public String citActivity;
+    public LocalDate citAmendedDate;
+    public String citAmendedBy;
+    public String citRemarks;
+    public String citEntSpoc;
+    public LocalDate citProdDate;
+    public LocalDate recertDate;
+    public String recertBy;
+    public Long appExpDays;
+    public String recertAppStatus;
+    public String citProdCrNo;
+    public String view;
+
+    public ProtegrityInventoryDTO(Object[] row) {
+        int i = 0;
+        this.citSno = row[i] != null ? ((Number) row[i++]).longValue() : null;
+        this.citType = (String) row[i++];
+        this.citApplicationName = (String) row[i++];
+        this.appOnboardDate = (LocalDate) row[i++];
+        this.citAppStatus = (String) row[i++];
+        this.citItamNo = (String) row[i++];
+        this.citAppOwner = (String) row[i++];
+        this.citBusCriticality = (String) row[i++];
+        this.citBusUnit = (String) row[i++];
+        this.citPriContact = (String) row[i++];
+        this.citRemGroup = (String) row[i++];
+        this.citSecContact = (String) row[i++];
+        this.citServiceProvided = (String) row[i++];
+        this.citServiceModel = (String) row[i++];
+        this.citUseCase = (String) row[i++];
+        this.citDatabase = (String) row[i++];
+        this.citDbHostedType = (String) row[i++];
+        this.citStorageDevices = (String) row[i++];
+        this.citBussJustification = (String) row[i++];
+        this.citTypePrNonPr = (String) row[i++];
+        this.citReqNo = (String) row[i++];
+        this.citActivity = (String) row[i++];
+        this.citAmendedDate = (LocalDate) row[i++];
+        this.citAmendedBy = (String) row[i++];
+        this.citRemarks = (String) row[i++];
+        this.citEntSpoc = (String) row[i++];
+        this.citProdDate = (LocalDate) row[i++];
+        this.citProdCrNo = (String) row[i++];
+        this.recertDate = (LocalDate) row[i++];
+        this.recertBy = (String) row[i++];
+        this.appExpDays = row[i] != null ? ((Number) row[i++]).longValue() : null;
+        this.recertAppStatus = (String) row[i];
+    }
+
+}
+
+
+package com.sc.faas.repository.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryRepository{
+    @PersistenceContext
+    EntityManager entityManager;
+
+    public List<ProtegrityInventoryDTO> findByAppUser(String appUser) {
+        String query = """
+            SELECT CIT_SNO,
+                   CIT_TYPE,
+                   CIT_APPLICATION_NAME,
+                   CIT_APP_ONBOARD_DATE,
+                   CIT_APP_STATUS,
+                   CIT_ITAM_NO,
+                   CIT_APP_OWNER,
+                   CIT_BUS_CRITICALLITY,
+                   CIT_BUS_UNIT,
+                   CIT_PRI_CONTACT,
+                   CIT_REM_GROUP,
+                   CIT_SEC_CONTACT,
+                   CIT_SERVICE_PROVIDED,
+                   CIT_SERVICE_MODEL,
+                   DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE,
+                   DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE,
+                   CIT_DB_HOSTED_TYPE,
+                   DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES,
+                   CIT_BUSS_JUSTIFICATION,
+                   CIT_TYPE_PR_NONPR,
+                   CIT_REQ_NO,
+                   CIT_ACTIVITY,
+                   CIT_AMENDED_DATE,
+                   CIT_AMENDED_BY,
+                   CIT_REMARKS,
+                   CIT_ENT_SPOC,
+                   CIT_PROD_DATE,
+                   CIT_PROD_CR_NO,
+                   RECERT_DATE,
+                   RECERT_BY,
+                   TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS,
+                   DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS
+            FROM CAAS_INVENTORY_TAB
+            WHERE CIT_TYPE = 'protegrity'
+              AND CIT_APP_STATUS NOT IN ('Decommissioned')
+              AND (
+                  CIT_REM_GROUP IN (
+                      SELECT DISTINCT DR_SUPP_GRP_NAME
+                      FROM CAAS_REMEDY
+                      WHERE DR_PSID = :APP_USER
+                        AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')
+                  )
+                  OR CIT_PRI_CONTACT = :APP_USER
+                  OR CIT_SEC_CONTACT = :APP_USER
+                  OR CIT_APP_OWNER = :APP_USER
+                  OR CIT_ENT_SPOC = :APP_USER
+                  OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
+              )
+        """;
+        Query query1=entityManager.createNativeQuery(query);
+        query1.setParameter("APP_USER",appUser);
+
+        List<Object[]> results=query1.getResultList();
+        List<ProtegrityInventoryDTO> dtos=new ArrayList<>();
+
+        for(Object[] row:results)
+        {
+            dtos.add(new ProtegrityInventoryDTO(row));
+        }
+        return dtos;
+
+    }
+
+}
+
+
+
+package com.sc.faas.service.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryService {
+    @Inject
+    ProtegrityInventoryRepository repository;
+    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser){
+        try{
+            return repository.findByAppUser(appUser);
+        }
+        catch (Exception e)
+        {
+            System.err.println("Error fetching Protegrity Inventory:"+e.getMessage());
+            throw new RuntimeException("Failed to Fetch Protegrity Inventory",e);
+        }
+
+    }
+}
+
+
+package com.sc.faas;
+
+import com.sc.faas.dto.Customer;
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import com.sc.faas.service.ProcessService;
+import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import org.w3c.dom.stylesheets.LinkStyle;
+
+import java.util.List;
+
+
+@Path("/api/process/get/customer")
+public class Function {
+
+    @Inject
+    ProtegrityInventoryService protegrityInventoryService;
+
+    @Inject
+    private ProcessService processService;
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Customer getMockCustomer() {
+        return processService.getMockCustomer();
+    }
+
+    @GET
+    @Path("/protegrityapps")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(@QueryParam("appUser") String appUser){
+        return protegrityInventoryService.getAllProtegrityApplications(appUser);
+    }
+}
