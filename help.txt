@@ -425,3 +425,245 @@ public class Function {
         return customerRepository.getMockCustomer();
     }
 }
+
+
+
+package com.sc.faas.entity.Protegrity;
+
+import jakarta.persistence.*;
+import java.util.Date;
+
+@Entity
+@Table(name = "CAAS_INVENTORY_TAB")
+public class ProtegrityInventoryEntity {
+
+    @Id
+    @Column(name = "CIT_SNO")
+    private Long citSno;
+
+    @Column(name = "CIT_TYPE")
+    private String citType;
+
+    @Column(name = "CIT_APPLICATION_NAME")
+    private String citApplicationName;
+
+    @Column(name = "CIT_APP_ONBOARD_DATE")
+    private Date citAppOnboardDate;
+
+    @Column(name = "CIT_APP_STATUS")
+    private String citAppStatus;
+
+    @Column(name = "CIT_ITAM_NO")
+    private String citItamNo;
+
+    @Column(name = "CIT_APP_OWNER")
+    private String citAppOwner;
+
+    @Column(name = "CIT_BUS_CRITICALLITY")
+    private String citBusCriticality;
+
+    @Column(name = "CIT_BUS_UNIT")
+    private String citBusUnit;
+
+    @Column(name = "CIT_PRI_CONTACT")
+    private String citPriContact;
+
+    @Column(name = "CIT_REM_GROUP")
+    private String citRemGroup;
+
+    @Column(name = "CIT_SEC_CONTACT")
+    private String citSecContact;
+
+    @Column(name = "CIT_SERVICE_PROVIDED")
+    private String citServiceProvided;
+
+    @Column(name = "CIT_SERVICE_MODEL")
+    private String citServiceModel;
+
+    @Column(name = "CIT_USE_CASE")
+    private String citUseCase;
+
+    @Column(name = "CIT_USECASE_OTHERS")
+    private String citUseCaseOthers;
+
+    @Column(name = "CIT_DATABASE")
+    private String citDatabase;
+
+    @Column(name = "CIT_DB_OTHERS")
+    private String citDbOthers;
+
+    @Column(name = "CIT_DB_HOSTED_TYPE")
+    private String citDbHostedType;
+
+    @Column(name = "CIT_STORAGE_DEVICES")
+    private String citStorageDevices;
+
+    @Column(name = "CIT_STORAGE_OTHERS")
+    private String citStorageOthers;
+
+    @Column(name = "CIT_BUSS_JUSTIFICATION")
+    private String citBussJustification;
+
+    @Column(name = "CIT_TYPE_PR_NONPR")
+    private String citTypePrNonpr;
+
+    @Column(name = "CIT_REQ_NO")
+    private String citReqNo;
+
+    @Column(name = "CIT_ACTIVITY")
+    private String citActivity;
+
+    @Column(name = "CIT_AMENDED_DATE")
+    private Date citAmendedDate;
+
+    @Column(name = "CIT_AMENDED_BY")
+    private String citAmendedBy;
+
+    @Column(name = "CIT_REMARKS")
+    private String citRemarks;
+
+    @Column(name = "CIT_ENT_SPOC")
+    private String citEntSpoc;
+
+    @Column(name = "CIT_PROD_DATE")
+    private Date citProdDate;
+
+    @Column(name = "CIT_PROD_CR_NO")
+    private String citProdCrNo;
+
+    @Column(name = "RECERT_DATE")
+    private Date recertDate;
+
+    @Column(name = "RECERT_BY")
+    private String recertBy;
+
+    @Column(name = "RECERT_APP_STATUS")
+    private String recertAppStatus;
+
+    @Column(name = "RECERT_APP_RENEWAL_DATE")
+    private Date recertAppRenewalDate;
+
+    // Getters and setters
+}
+
+
+package com.sc.faas.repository.Protegrity;
+
+import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.Query;
+
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryRepository implements PanacheRepository<ProtegrityInventoryEntity> {
+
+    public List<ProtegrityInventoryEntity> findByAppUser(String appUser) {
+        String sql = """
+            SELECT CIT_SNO,
+                   CIT_TYPE,
+                   CIT_APPLICATION_NAME,
+                   CIT_APP_ONBOARD_DATE,
+                   CIT_APP_STATUS,
+                   CIT_ITAM_NO,
+                   CIT_APP_OWNER,
+                   CIT_BUS_CRITICALLITY,
+                   CIT_BUS_UNIT,
+                   CIT_PRI_CONTACT,
+                   CIT_REM_GROUP,
+                   CIT_SEC_CONTACT,
+                   CIT_SERVICE_PROVIDED,
+                   CIT_SERVICE_MODEL,
+                   DECODE(CIT_USE_CASE, 'Others', CIT_USECASE_OTHERS, CIT_USE_CASE) AS CIT_USE_CASE,
+                   DECODE(CIT_DATABASE, 'Others', CIT_DB_OTHERS, CIT_DATABASE) AS CIT_DATABASE,
+                   CIT_DB_HOSTED_TYPE,
+                   DECODE(CIT_STORAGE_DEVICES, 'Others', CIT_STORAGE_OTHERS, CIT_STORAGE_DEVICES) AS CIT_STORAGE_DEVICES,
+                   CIT_BUSS_JUSTIFICATION,
+                   CIT_TYPE_PR_NONPR,
+                   CIT_REQ_NO,
+                   CIT_ACTIVITY,
+                   CIT_AMENDED_DATE,
+                   CIT_AMENDED_BY,
+                   CIT_REMARKS,
+                   CIT_ENT_SPOC,
+                   CIT_PROD_DATE,
+                   CIT_PROD_CR_NO,
+                   RECERT_DATE,
+                   RECERT_BY,
+                   TRUNC(RECERT_APP_RENEWAL_DATE) - TRUNC(SYSDATE) AS APP_EXP_DAYS,
+                   DECODE(RECERT_APP_STATUS, 'RECERT_RESPOND', 'INREVIEW', 'RECERT_COMPLETED', 'COMPLETED', RECERT_APP_STATUS) AS RECERT_APP_STATUS
+            FROM CAAS_INVENTORY_TAB
+            WHERE CIT_TYPE = 'protegrity'
+              AND CIT_APP_STATUS NOT IN ('Decommissioned')
+              AND (
+                  CIT_REM_GROUP IN (
+                      SELECT DISTINCT DR_SUPP_GRP_NAME
+                      FROM CAAS_REMEDY
+                      WHERE DR_PSID = :APP_USER
+                        AND DR_FUNC_ROLE IN ('Incident Manager', 'Support Group Manager', 'Support Group Admin', 'PIM', 'Work Order Assignee', 'Request Approver')
+                  )
+                  OR CIT_PRI_CONTACT = :APP_USER
+                  OR CIT_SEC_CONTACT = :APP_USER
+                  OR CIT_APP_OWNER = :APP_USER
+                  OR CIT_ENT_SPOC = :APP_USER
+                  OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
+              )
+        """;
+
+        Query query = getEntityManager().createNativeQuery(sql, ProtegrityInventoryEntity.class);
+        query.setParameter("APP_USER", appUser);
+
+        return query.getResultList();
+    }
+}
+
+
+package com.sc.faas.service.Protegrity;
+
+import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
+import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryService {
+
+    @Inject
+    private ProtegrityInventoryRepository repository;
+
+    public List<ProtegrityInventoryEntity> getProtegrityInventory(String appUser) {
+        try {
+            return repository.findByAppUser(appUser);
+        } catch (Exception e) {
+            System.err.println("Error fetching Protegrity inventory: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch Protegrity inventory", e);
+        }
+    }
+}
+
+package com.sc.faas;
+
+import com.sc.faas.entity.Protegrity.ProtegrityInventoryEntity;
+import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path("/api/process")
+public class Function {
+
+    @Inject
+    private ProtegrityInventoryService service;
+
+    @GET
+    @Path("/get/protegrity-inventory")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ProtegrityInventoryEntity> getProtegrityInventory(@QueryParam("appUser") String appUser) {
+        System.out.println("Fetching Protegrity inventory for appUser: " + (appUser != null ? appUser : "found null"));
+        return service.getProtegrityInventory(appUser);
+    }
+}
