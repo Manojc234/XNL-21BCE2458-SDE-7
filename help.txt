@@ -1,9 +1,63 @@
-package com.example.dto;
+package com.sc.faas.repository.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityInventoryRepository{
+    @PersistenceContext
+    EntityManager entityManager;
+
+    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser) {
+        String jpql = "SELECT new com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO(" +
+                "c.citSno, c.citApplicationName, c.citType, c.appOnboardDate, " +
+                "c.citAppStatus, c.citItamNo, c.citAppOwner, c.citBusCriticality, " +
+                "c.cetDusUnit, c.citPriContact, c.citRemGroup, c.citSlcContact, " +
+                "c.citServiceProvided, " +
+                "CASE WHEN c.citUseCase = 'Others' THEN c.citUseCaseOthers ELSE c.citUseCase END, " +
+                "CASE WHEN c.citDatabase = 'Others' THEN c.citDbOthers ELSE c.citDatabase END, " +
+                "c.citServiceModel, c.citBussJustification, c.citDoHostedType, " +
+                "CASE WHEN c.citStorageDevices = 'Others' THEN c.citStorageOthers ELSE c.citStorageDevices END, " +
+                "c.citTypePrNonPr, c.citReqNo, c.citActivity, c.citAmendedDate, " +
+                "c.citAmendedBy, c.citRemarks, c.citEntSpoc, c.citProdDate, " +
+                "c.recertDate, c.recertBy, TRUNC(c.recertAppRenewalDate), " +
+                "CASE WHEN c.recertAppStatus = 'RECERT RESPOND' THEN 'INREVIEW' " +
+                "WHEN c.recertAppStatus = 'RECERT COMPLETED' THEN 'COMPLETED' " +
+                "ELSE c.recertAppStatus END, " +
+                "c.citProdCrNo, 'VIEW') " +
+                "FROM CutApplicationEntity c " +
+                "WHERE c.citAppStatus != 'Decommissioned' " +
+                "AND c.citType = 'protegrity' " +
+                "AND (" +
+                "c.pim = :appUser OR c.workOrderAssignee = :appUser OR " +
+                "c.brquestApprover = :appUser OR c.citPriContact = :appUser OR " +
+                "c.citAppOwner = :appUser OR c.citIntSpoc = :appUser OR " +
+                "c.citSecContact = :appUser" +
+                ")";
+
+        return entityManager.createQuery(jpql, ProtegrityInventoryDTO.class)
+                .setParameter("appUser", appUser)
+                .getResultList();
+    }
+
+}
+package com.sc.faas.dto.Protegrity;
+
+import jakarta.annotation.Nullable;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-public class ProtegrityAppDTO {
-
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProtegrityInventoryDTO {
     public Long citSno;
     public String citApplicationName;
     public String citType;
@@ -36,129 +90,86 @@ public class ProtegrityAppDTO {
     public Long appExpDays;
     public String recertAppStatus;
     public String citProdCrNo;
-    public String view; // literal 'VIEW'
+    public String view;
 
-    // Constructor matching JPQL constructor expression
-    public ProtegrityAppDTO(
-        Long citSno,
-        String citApplicationName,
-        String citType,
-        LocalDate appOnboardDate,
-        String citAppStatus,
-        String citItamNo,
-        String citAppOwner,
-        String citBusCriticality,
-        String cetDusUnit,
-        String citPriContact,
-        String citRemGroup,
-        String citSlcContact,
-        String citServiceProvided,
-        String citUseCase,
-        String citDatabase,
-        String citServiceModel,
-        String citBussJustification,
-        String citDoHostedType,
-        String citStorageDevices,
-        String citTypePrNonPr,
-        String citReqNo,
-        String citActivity,
-        LocalDate citAmendedDate,
-        String citAmendedBy,
-        String citRemarks,
-        String citEntSpoc,
-        LocalDate citProdDate,
-        LocalDate recertDate,
-        String recertBy,
-        Long appExpDays,
-        String recertAppStatus,
-        String citProdCrNo,
-        String view
-    ) {
-        this.citSno = citSno;
-        this.citApplicationName = citApplicationName;
-        this.citType = citType;
-        this.appOnboardDate = appOnboardDate;
-        this.citAppStatus = citAppStatus;
-        this.citItamNo = citItamNo;
-        this.citAppOwner = citAppOwner;
-        this.citBusCriticality = citBusCriticality;
-        this.cetDusUnit = cetDusUnit;
-        this.citPriContact = citPriContact;
-        this.citRemGroup = citRemGroup;
-        this.citSlcContact = citSlcContact;
-        this.citServiceProvided = citServiceProvided;
-        this.citUseCase = citUseCase;
-        this.citDatabase = citDatabase;
-        this.citServiceModel = citServiceModel;
-        this.citBussJustification = citBussJustification;
-        this.citDoHostedType = citDoHostedType;
-        this.citStorageDevices = citStorageDevices;
-        this.citTypePrNonPr = citTypePrNonPr;
-        this.citReqNo = citReqNo;
-        this.citActivity = citActivity;
-        this.citAmendedDate = citAmendedDate;
-        this.citAmendedBy = citAmendedBy;
-        this.citRemarks = citRemarks;
-        this.citEntSpoc = citEntSpoc;
-        this.citProdDate = citProdDate;
-        this.recertDate = recertDate;
-        this.recertBy = recertBy;
-        this.appExpDays = appExpDays;
-        this.recertAppStatus = recertAppStatus;
-        this.citProdCrNo = citProdCrNo;
-        this.view = view;
-    }
-
-    // Default constructor for frameworks
-    public ProtegrityAppDTO() {}
 }
+package com.sc.faas.service.Protegrity;
 
-
-
-package com.example.repository;
-
-import com.example.dto.ProtegrityAppDTO;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import com.sc.faas.repository.Protegrity.ProtegrityInventoryRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import jakarta.inject.Inject;
+
 import java.util.List;
 
 @ApplicationScoped
-public class ProtegrityAppRepository implements PanacheRepositoryBase<ProtegrityAppDTO, Long> {
-
-    @PersistenceContext
-    EntityManager entityManager;
-
-    public List<ProtegrityAppDTO> getAllProtegrityApps(String appUser) {
-        String jpql = "SELECT new com.example.dto.ProtegrityAppDTO(" +
-                      "c.citSno, c.citApplicationName, c.citType, c.appOnboardDate, " +
-                      "c.citAppStatus, c.citItamNo, c.citAppOwner, c.citBusCriticality, " +
-                      "c.cetDusUnit, c.citPriContact, c.citRemGroup, c.citSlcContact, " +
-                      "c.citServiceProvided, " +
-                      "CASE WHEN c.citUseCase = 'Others' THEN c.citUseCaseOthers ELSE c.citUseCase END, " +
-                      "CASE WHEN c.citDatabase = 'Others' THEN c.citDbOthers ELSE c.citDatabase END, " +
-                      "c.citServiceModel, c.citBussJustification, c.citDoHostedType, " +
-                      "CASE WHEN c.citStorageDevices = 'Others' THEN c.citStorageOthers ELSE c.citStorageDevices END, " +
-                      "c.citTypePrNonPr, c.citReqNo, c.citActivity, c.citAmendedDate, " +
-                      "c.citAmendedBy, c.citRemarks, c.citEntSpoc, c.citProdDate, " +
-                      "c.recertDate, c.recertBy, TRUNC(c.recertAppRenewalDate), " +
-                      "CASE WHEN c.recertAppStatus = 'RECERT RESPOND' THEN 'INREVIEW' " +
-                      "WHEN c.recertAppStatus = 'RECERT COMPLETED' THEN 'COMPLETED' " +
-                      "ELSE c.recertAppStatus END, " +
-                      "c.citProdCrNo, 'VIEW') " +
-                      "FROM CutApplicationEntity c " +
-                      "WHERE c.citAppStatus != 'Decommissioned' " +
-                      "AND c.citType = 'protegrity' " +
-                      "AND (" +
-                      "c.pim = :appUser OR c.workOrderAssignee = :appUser OR " +
-                      "c.brquestApprover = :appUser OR c.citPriContact = :appUser OR " +
-                      "c.citAppOwner = :appUser OR c.citIntSpoc = :appUser OR " +
-                      "c.citSecContact = :appUser" +
-                      ")";
-        
-        return entityManager.createQuery(jpql, ProtegrityAppDTO.class)
-                            .setParameter("appUser", appUser)
-                            .getResultList();
+public class ProtegrityInventoryService {
+    @Inject
+    ProtegrityInventoryRepository repository;
+    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(String appUser){
+        return repository.getAllProtegrityApplications(appUser);
     }
 }
+package com.sc.faas;
+
+import com.sc.faas.dto.Customer;
+import com.sc.faas.dto.Protegrity.ProtegrityInventoryDTO;
+import com.sc.faas.service.ProcessService;
+import com.sc.faas.service.Protegrity.ProtegrityInventoryService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import org.w3c.dom.stylesheets.LinkStyle;
+
+import java.util.List;
+
+
+@Path("/api/process/get/customer")
+public class Function {
+
+    @Inject
+    ProtegrityInventoryService protegrityInventoryService;
+
+    @Inject
+    private ProcessService processService;
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Customer getMockCustomer() {
+        return processService.getMockCustomer();
+    }
+
+    @GET
+    @Path("/protegrityapps")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<ProtegrityInventoryDTO> getAllProtegrityApplications(@QueryParam("appUser") String appUser){
+        return protegrityInventoryService.getAllProtegrityApplications(appUser);
+    }
+}
+quarkus.http.port=8081
+quarkus.http.host=0.0.0.0
+quarkus.otel.enabled=false
+
+# Datasource configuration
+quarkus.datasource.db-kind=oracle
+quarkus.datasource.db-version=19c
+# DB details here like user and pass
+quarkus.datasource.username=app_bcbs_sit
+quarkus.datasource.password=HKMGrand#Sep#0924AMHGrand
+
+quarkus.datasource.jdbc.url=jdbc:oracle:thin:@(DESCRIPTION_LIST=(LOAD_BALANCE=off)(FAILOVER=on)(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=5)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=hklpdddas12cb-scan.hk.standardchartered.com)(PORT=1622)))(CONNECT_DATA=(SERVICE_NAME=COOLNXT_DEV.hk.standardchartered.com)))(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=5)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=xx.hk.standardchartered.com)(PORT=1622)))(CONNECT_DATA=(SERVICE_NAME=xx.hk.standardchartered.com))))
+
+# Optional: Configure Hibernate ORM
+quarkus.hibernate-orm.log.sql=true
+
+
+#Email
+quarkus.tls.trust-all=true
+NOTIFICATION_PROCESS_API_HOST=${GET_EMAIL_SERVICE_URL}
+
+#SC-IDP
+quarkus.rest-client."com.sc.faas.client.IDPClient".url=${SC_IDP_URL}
+SC_IDP_STORE_ID=${SC_IDP_STORE_ID}
