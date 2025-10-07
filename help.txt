@@ -203,3 +203,42 @@ quarkus.http.cors.access-control-allow-credentials=true
 "details": "Error id 518ad689-4aba-4726-8fe8-666e60aa1951-2, io.quarkus.funqy.runtime.ApplicationException: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto]\"",
     "stack": "io.quarkus.funqy.runtime.ApplicationException: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto]\"\r\n\tat io.quarkus.funqy.runtime.FunctionInvoker.invoke(FunctionInvoker.java:136)\r\n\tat io.quarkus.funqy.runtime.bindings.http.VertxRequestHandler.dispatch(VertxRequestHandler.java:143)\r\n\tat io.quarkus.funqy.runtime.bindings.http.VertxRequestHandler$1.run(VertxRequestHandler.java:118)\r\n\tat io.quarkus.vertx.core.runtime.VertxCoreRecorder$15.runWith(VertxCoreRecorder.java:639)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2675)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2654)\r\n\tat org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1627)\r\n\tat org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1594)\r\n\tat org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:11)\r\n\tat org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:11)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\nCaused by: com.expediagroup.graphql.generator.exceptions.TypeNotSupportedException: Cannot convert kotlin.Unit since it is not a valid GraphQL type or outside the supported packages \"[com.sc.devkit.graphql.dto.pagination.PageInfoDisplay, com.sc.faas.dto]\"\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.getCacheKeyString(TypesCache.kt:130)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.get$graphql_kotlin_schema_generator(TypesCache.kt:53)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.get$graphql_kotlin_schema_generator(TypesCache.kt:48)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.objectFromReflection(generateGraphQLType.kt:58)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.generateGraphQLType(generateGraphQLType.kt:45)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction(generateFunction.kt:56)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction$default(generateFunction.kt:34)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateObjectKt.generateObject(generateObject.kt:64)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.getGraphQLType(generateGraphQLType.kt:106)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.access$getGraphQLType(generateGraphQLType.kt:1)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt$objectFromReflection$1.invoke(generateGraphQLType.kt:67)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt$objectFromReflection$1.invoke(generateGraphQLType.kt:66)\r\n\tat com.expediagroup.graphql.generator.internal.state.TypesCache.buildIfNotUnderConstruction$graphql_kotlin_schema_generator(TypesCache.kt:150)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.objectFromReflection(generateGraphQLType.kt:66)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateGraphQLTypeKt.generateGraphQLType(generateGraphQLType.kt:45)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction(generateFunction.kt:56)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateFunctionKt.generateFunction$default(generateFunction.kt:34)\r\n\tat com.expediagroup.graphql.generator.internal.types.GenerateQueryKt.generateQueries(generateQuery.kt:43)\r\n\tat com.expediagroup.graphql.generator.SchemaGenerator.generateSchema(SchemaGenerator.kt:80)\r\n\tat com.expediagroup.graphql.generator.federation.FederatedSchemaGenerator.generateSchema(FederatedSchemaGenerator.kt:45)\r\n\tat com.expediagroup.graphql.generator.SchemaGenerator.generateSchema$default(SchemaGenerator.kt:58)\r\n\tat com.expediagroup.graphql.generator.federation.ToFederatedSchemaKt.toFederatedSchema(toFederatedSchema.kt:44)\r\n\tat com.expediagroup.graphql.generator.federation.ToFederatedSchemaKt.toFederatedSchema$default(toFederatedSchema.kt:35)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphqlSchema$2.invoke(GraphQLServer.kt:65)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphqlSchema$2.invoke(GraphQLServer.kt:45)\r\n\tat kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:74)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.getGraphqlSchema(GraphQLServer.kt:45)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.access$getGraphqlSchema(GraphQLServer.kt:36)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphQL$2.invoke(GraphQLServer.kt:90)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer$graphQL$2.invoke(GraphQLServer.kt:72)\r\n\tat kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:74)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.getGraphQL(GraphQLServer.kt:72)\r\n\tat com.sc.devkit.graphql.service.GraphQLServer.serve(GraphQLServer.kt:131)\r\n\tat com.sc.faas.Function.graphql(Function.java:40)\r\n\tat com.sc.faas.Function_ClientProxy.graphql(Unknown Source)\r\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)\r\n\tat io.quarkus.funqy.runtime.FunctionInvoker.invoke(FunctionInvoker.java:123)\r\n\t... 11 more"
 } 
+package com.sc.faas;
+
+import java.util.List;
+
+import com.expediagroup.graphql.generator.TopLevelObject;
+import com.sc.devkit.graphql.dto.Input;
+import com.sc.devkit.graphql.service.GraphQLServer;
+import com.sc.devkit.graphql.service.GraphQLUtil;
+import com.sc.faas.service.MutationService;
+import com.sc.faas.service.QueryService;
+
+import io.quarkus.funqy.Funq;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class Function {
+
+	@Inject
+	private QueryService queryService;
+	//@Inject
+	//private MutationService mutationService;
+	private GraphQLServer graphQLServer;
+
+	public GraphQLServer getGraphQLServer() {
+		if (graphQLServer == null) {
+			graphQLServer = new GraphQLServer.Builder().federatedSupportedPackages(List.of("com.sc.faas.dto"))
+					.queries(List.of(new TopLevelObject(queryService, GraphQLUtil.fromJavaClass(QueryService.class))))
+					//.mutations(List
+							//.of(new TopLevelObject(mutationService, GraphQLUtil.fromJavaClass(MutationService.class))))
+					.build();
+		}
+		return graphQLServer;
+	}
+	@Funq
+	public Object graphql(Input input) {
+		return getGraphQLServer().serve(input);
+	}
+}
