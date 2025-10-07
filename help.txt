@@ -384,3 +384,273 @@ public class Function {
         return customerRepository.getMockCustomer();
     }
 }
+
+
+
+
+package com.sc.faas.dto.Protegrity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
+public class ProtegrityServerInventoryDTO {
+
+    @Id
+    @Column(name = "SERVER_SNO")
+    private Long serverSno;
+
+    @Column(name = "CTSD_HSNO")
+    private Long ctsdHsno;
+
+    @Column(name = "CTSD_TYPE")
+    private String ctsdType;
+
+    @Column(name = "CTSD_SERVER_HOSTNAME")
+    private String ctsdServerHostname;
+
+    @Column(name = "CTSD_SERVER_IP")
+    private String ctsdServerIp;
+
+    @Column(name = "CTSD_SERVER_HOSTED")
+    private String ctsdServerHosted;
+
+    @Column(name = "CTSD_DC_HOSTED")
+    private String ctsdDcHosted;
+
+    @Column(name = "CTSD_DB_VERSION")
+    private String ctsdDbVersion;
+
+    @Column(name = "CTSD_OS_VERSION")
+    private String ctsdOsVersion;
+
+    @Column(name = "CTSD_VTE_VERSION")
+    private String ctsdVteVersion;
+
+    @Column(name = "CTSD_STATUS")
+    private String ctsdStatus;
+
+    @Column(name = "CTSD_SERVER_PLATFORM")
+    private String ctsdServerPlatform;
+
+    @Column(name = "CTSD_KERNEL_VERSION")
+    private String ctsdKernelVersion;
+
+    @Column(name = "CTSD_DSM_REGISTERED")
+    private String ctsdDsmRegistered;
+
+    @Column(name = "CTSD_GUARDED_PATH")
+    private String ctsdGuardedPath;
+
+    @Column(name = "PARENT_ID")
+    private Long parentId;
+
+    @Column(name = "CIT_TYPE")
+    private String citType;
+
+    @Column(name = "CIT_APPLICATION_NAME")
+    private String citApplicationName;
+
+    @Column(name = "CIT_APP_STATUS")
+    private String citAppStatus;
+
+    @Column(name = "CIT_ITAM_NO")
+    private String citItamNo;
+
+    @Column(name = "CIT_APP_OWNER")
+    private String citAppOwner;
+
+    @Column(name = "CIT_BUS_CRITICALLITY")
+    private String citBusCriticality;
+
+    @Column(name = "CIT_BUS_UNIT")
+    private String citBusUnit;
+
+    @Column(name = "CIT_REM_GROUP")
+    private String citRemGroup;
+
+    @Column(name = "CIT_SERVICE_MODEL")
+    private String citServiceModel;
+
+    // Getters and Setters
+    // -------------------
+
+    public Long getServerSno() { return serverSno; }
+    public void setServerSno(Long serverSno) { this.serverSno = serverSno; }
+
+    public Long getCtsdHsno() { return ctsdHsno; }
+    public void setCtsdHsno(Long ctsdHsno) { this.ctsdHsno = ctsdHsno; }
+
+    public String getCtsdType() { return ctsdType; }
+    public void setCtsdType(String ctsdType) { this.ctsdType = ctsdType; }
+
+    public String getCtsdServerHostname() { return ctsdServerHostname; }
+    public void setCtsdServerHostname(String ctsdServerHostname) { this.ctsdServerHostname = ctsdServerHostname; }
+
+    public String getCtsdServerIp() { return ctsdServerIp; }
+    public void setCtsdServerIp(String ctsdServerIp) { this.ctsdServerIp = ctsdServerIp; }
+
+    public String getCtsdServerHosted() { return ctsdServerHosted; }
+    public void setCtsdServerHosted(String ctsdServerHosted) { this.ctsdServerHosted = ctsdServerHosted; }
+
+    public String getCtsdDcHosted() { return ctsdDcHosted; }
+    public void setCtsdDcHosted(String ctsdDcHosted) { this.ctsdDcHosted = ctsdDcHosted; }
+
+    public String getCtsdDbVersion() { return ctsdDbVersion; }
+    public void setCtsdDbVersion(String ctsdDbVersion) { this.ctsdDbVersion = ctsdDbVersion; }
+
+    public String getCtsdOsVersion() { return ctsdOsVersion; }
+    public void setCtsdOsVersion(String ctsdOsVersion) { this.ctsdOsVersion = ctsdOsVersion; }
+
+    public String getCtsdVteVersion() { return ctsdVteVersion; }
+    public void setCtsdVteVersion(String ctsdVteVersion) { this.ctsdVteVersion = ctsdVteVersion; }
+
+    public String getCtsdStatus() { return ctsdStatus; }
+    public void setCtsdStatus(String ctsdStatus) { this.ctsdStatus = ctsdStatus; }
+
+    public String getCtsdServerPlatform() { return ctsdServerPlatform; }
+    public void setCtsdServerPlatform(String ctsdServerPlatform) { this.ctsdServerPlatform = ctsdServerPlatform; }
+
+    public String getCtsdKernelVersion() { return ctsdKernelVersion; }
+    public void setCtsdKernelVersion(String ctsdKernelVersion) { this.ctsdKernelVersion = ctsdKernelVersion; }
+
+    public String getCtsdDsmRegistered() { return ctsdDsmRegistered; }
+    public void setCtsdDsmRegistered(String ctsdDsmRegistered) { this.ctsdDsmRegistered = ctsdDsmRegistered; }
+
+    public String getCtsdGuardedPath() { return ctsdGuardedPath; }
+    public void setCtsdGuardedPath(String ctsdGuardedPath) { this.ctsdGuardedPath = ctsdGuardedPath; }
+
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
+
+    public String getCitType() { return citType; }
+    public void setCitType(String citType) { this.citType = citType; }
+
+    public String getCitApplicationName() { return citApplicationName; }
+    public void setCitApplicationName(String citApplicationName) { this.citApplicationName = citApplicationName; }
+
+    public String getCitAppStatus() { return citAppStatus; }
+    public void setCitAppStatus(String citAppStatus) { this.citAppStatus = citAppStatus; }
+
+    public String getCitItamNo() { return citItamNo; }
+    public void setCitItamNo(String citItamNo) { this.citItamNo = citItamNo; }
+
+    public String getCitAppOwner() { return citAppOwner; }
+    public void setCitAppOwner(String citAppOwner) { this.citAppOwner = citAppOwner; }
+
+    public String getCitBusCriticality() { return citBusCriticality; }
+    public void setCitBusCriticality(String citBusCriticality) { this.citBusCriticality = citBusCriticality; }
+
+    public String getCitBusUnit() { return citBusUnit; }
+    public void setCitBusUnit(String citBusUnit) { this.citBusUnit = citBusUnit; }
+
+    public String getCitRemGroup() { return citRemGroup; }
+    public void setCitRemGroup(String citRemGroup) { this.citRemGroup = citRemGroup; }
+
+    public String getCitServiceModel() { return citServiceModel; }
+    public void setCitServiceModel(String citServiceModel) { this.citServiceModel = citServiceModel; }
+}
+
+
+package com.sc.faas.repository.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityServerInventoryDTO;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.Query;
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityServerInventoryRepository implements PanacheRepository<ProtegrityServerInventoryDTO> {
+
+    public List<ProtegrityServerInventoryDTO> findByAppUser(String appUser) {
+        String sql = """
+            SELECT 
+                T1.CTSD_SNO AS SERVER_SNO,
+                T1.CTSD_HSNO,
+                T1.CTSD_TYPE,
+                T1.CTSD_SERVER_HOSTNAME,
+                T1.CTSD_SERVER_IP,
+                T1.CTSD_SERVER_HOSTED,
+                T1.CTSD_DC_HOSTED,
+                T1.CTSD_DB_VERSION,
+                T1.CTSD_OS_VERSION,
+                T1.CTSD_VTE_VERSION,
+                T1.CTSD_STATUS,
+                T1.CTSD_SERVER_PLATFORM,
+                T1.CTSD_KERNEL_VERSION,
+                T1.CTSD_DSM_REGISTERED,
+                T1.CTSD_GUARDED_PATH,
+                T2.CIT_SNO AS PARENT_ID,
+                T2.CIT_TYPE,
+                T2.CIT_APPLICATION_NAME,
+                T2.CIT_APP_STATUS,
+                T2.CIT_ITAM_NO,
+                T2.CIT_APP_OWNER,
+                T2.CIT_BUS_CRITICALLITY,
+                T2.CIT_BUS_UNIT,
+                T2.CIT_REM_GROUP,
+                T2.CIT_SERVICE_MODEL
+            FROM CAAS_INV_SERVER_DET T1
+            JOIN CAAS_INVENTORY_TAB T2 ON T1.CTSD_HSNO = T2.CIT_SNO
+            WHERE T2.CIT_TYPE = 'protegrity'
+              AND T2.CIT_APP_STATUS NOT IN ('Decommisioned')
+              AND T1.CTSD_TYPE = 'protegrity'
+              AND (
+                    T2.CIT_REM_GROUP IN (
+                        SELECT DISTINCT DR_SUPP_GRP_NAME 
+                        FROM CAAS_REMEDY 
+                        WHERE DR_PSID = :APP_USER
+                        AND DR_FUNC_ROLE IN ('Incident Manager','Support Group Manager','Support Group Admin','PIM','Work Order Assignee','Request Approver')
+                    )
+                    OR T2.CIT_PRI_CONTACT = :APP_USER
+                    OR T2.CIT_SEC_CONTACT = :APP_USER
+                    OR T2.CIT_APP_OWNER = :APP_USER
+                    OR T2.CIT_ENT_SPOC = :APP_USER
+                    OR :APP_USER IN (SELECT CUM_USERID FROM CAAS_USER_MAPPING_TAB WHERE CUM_STATUS = 'Active')
+                  )
+            ORDER BY T1.CTSD_SNO, T2.CIT_SNO ASC
+        """;
+
+        Query query = getEntityManager().createNativeQuery(sql, ProtegrityServerInventoryDTO.class);
+        query.setParameter("APP_USER", appUser);
+        return query.getResultList();
+    }
+}
+
+
+
+package com.sc.faas.service.Protegrity;
+
+import com.sc.faas.dto.Protegrity.ProtegrityServerInventoryDTO;
+import com.sc.faas.repository.Protegrity.ProtegrityServerInventoryRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import java.util.List;
+
+@ApplicationScoped
+public class ProtegrityServerInventoryService {
+
+    @Inject
+    private ProtegrityServerInventoryRepository repository;
+
+    public List<ProtegrityServerInventoryDTO> getServerInventory(String appUser) {
+        try {
+            return repository.findByAppUser(appUser);
+        } catch (Exception e) {
+            System.err.println("Error fetching Protegrity Server inventory: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch server inventory", e);
+        }
+    }
+}
+
+
+@GET
+@Path("/get/protegrity-server-inventory")
+@Produces(MediaType.APPLICATION_JSON)
+public List<ProtegrityServerInventoryDTO> getProtegrityServerInventory(@QueryParam("appUser") String appUser) {
+    System.out.println("Fetching Protegrity Server inventory for appUser: " + (appUser != null ? appUser : "found null"));
+    return new ProtegrityServerInventoryService().getServerInventory(appUser);
+}
+
